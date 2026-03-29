@@ -1,0 +1,75 @@
+.wrapper {
+  padding: 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  color: var(--tgui--link_color);
+  padding: 0 4px 4px;
+  text-align: left;
+  width: fit-content;
+}
+
+.header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tgui--hint_color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+  margin-bottom: 4px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  background: var(--tgui--bg_color);
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+
+.item:active {
+  opacity: 0.7;
+}
+
+.itemIcon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.itemText {
+  flex: 1;
+}
+
+.itemTitle {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--tgui--text_color);
+  display: block;
+}
+
+.itemSubtitle {
+  font-size: 14px;
+  color: var(--tgui--hint_color);
+  display: block;
+  margin-top: 2px;
+}
+
+.arrow {
+  font-size: 20px;
+  color: var(--tgui--hint_color);
+  flex-shrink: 0;
+}

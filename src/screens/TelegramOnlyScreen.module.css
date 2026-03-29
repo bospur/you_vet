@@ -1,0 +1,45 @@
+.wrapper {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  background: #efeff3;
+  gap: 16px;
+}
+
+.icon {
+  font-size: 64px;
+  line-height: 1;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.text {
+  font-size: 15px;
+  color: #8e8e93;
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 14px 28px;
+  background: #2481cc;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+}
