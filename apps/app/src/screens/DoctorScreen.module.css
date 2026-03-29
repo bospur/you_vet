@@ -1,0 +1,95 @@
+.wrapper {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  color: var(--tgui--link_color);
+  padding: 0;
+  text-align: left;
+  width: 100%;
+  align-self: flex-start;
+  margin-bottom: 8px;
+}
+
+.photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+}
+
+.name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--tgui--text_color);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.field {
+  width: 100%;
+  background: var(--tgui--bg_color);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--tgui--hint_color);
+}
+
+.value {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tgui--text_color);
+}
+
+.phone {
+  font-size: 15px;
+  color: var(--tgui--link_color);
+  text-decoration: none;
+}
+
+.scheduleSection {
+  width: 100%;
+  background: var(--tgui--bg_color);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.scheduleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scheduleDate {
+  font-size: 15px;
+  color: var(--tgui--text_color);
+}
+
+.scheduleTime {
+  font-size: 14px;
+  color: var(--tgui--hint_color);
+  font-variant-numeric: tabular-nums;
+}

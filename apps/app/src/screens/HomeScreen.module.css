@@ -1,0 +1,51 @@
+.wrapper {
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tgui--text_color);
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 20px;
+  background: var(--tgui--bg_color);
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+
+.button:active {
+  opacity: 0.7;
+}
+
+.icon {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tgui--text_color);
+  flex: 1;
+}
+
+.arrow {
+  font-size: 20px;
+  color: var(--tgui--hint_color);
+  flex-shrink: 0;
+}
