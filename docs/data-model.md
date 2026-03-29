@@ -1,0 +1,87 @@
+# Схема базы данных
+
+PostgreSQL. Все таблицы содержат `clinic_id` для мультитенантности.
+
+## Миграции
+
+| Файл | Содержимое |
+|---|---|
+| `001_create_animals` | Таблица `animals` |
+| `002_create_categories` | Таблица `categories` |
+| `003_create_articles` | Таблицы `articles`, `article_categories` (M2M) |
+| `004_add_multitenancy` | Добавляет `clinic_id` во все таблицы, таблица `clinics` |
+| `005_add_article_status` | Поле `status` (`draft`/`published`) в `articles` |
+| `006_create_doctors` | `doctors`, `doctor_schedules`, `doctor_schedule_exceptions`, `clinic_settings` |
+| `007_create_grooming` | `grooming_breeds`, `grooming_weekly_template`, `grooming_appointments` |
+
+## Схема
+
+### Клиники и пользователи
+
+```
+clinics
+  id, slug, name
+
+users
+  id, clinic_id, login, password_hash, role (admin/editor/groomer)
+```
+
+### Контент (статьи)
+
+```
+animals
+  id, clinic_id, name, slug
+
+categories
+  id, clinic_id, animal_id, name, slug
+
+articles
+  id, clinic_id, title, slug, content (HTML), status (draft/published)
+
+article_categories  (M2M)
+  article_id, category_id
+```
+
+### Врачи и расписание
+
+```
+doctors
+  id, clinic_id, full_name, specialization, description, photo_url
+  status (draft/published)
+
+doctor_schedules
+  id, doctor_id, day_of_week (0=Вс..6=Сб), time_from, time_to
+
+doctor_schedule_exceptions
+  id, doctor_id, date, is_working, time_from, time_to, reason
+
+clinic_settings
+  id, clinic_id, schedule_display_weeks
+```
+
+### Груминг
+
+```
+grooming_breeds
+  id, clinic_id, breed (название), duration (мин), price (nullable), description (nullable)
+
+grooming_weekly_template
+  id, clinic_id, day_of_week (0=Вс..6=Сб), time_from, time_to
+
+grooming_appointments
+  id, clinic_id, breed_id → grooming_breeds
+  date, pet_name, owner_phone
+  start_time, end_time (вычисляется из start_time + breed.duration)
+```
+
+## Форматы полей
+
+### day_of_week
+PostgreSQL-конвенция: `0=Вс, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб`
+
+### status (articles, doctors)
+`draft` — черновик (создаётся по умолчанию)
+`published` — опубликован (виден в публичном API и боте)
+
+### content (articles)
+HTML-строка, генерируется TipTap WYSIWYG редактором.
