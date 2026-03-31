@@ -39,10 +39,10 @@ import type { Doctor, GroomingBreed } from '@you-vet/types';
 | 0. Подготовка | ✅ Готово | Все PR смержены в dev во всех трёх репо |
 | 1. Структура монорепо | ✅ Готово | Turborepo, package.json, turbo.json |
 | 2. Перенос кода | ✅ Готово | git subtree из dev каждого репо |
-| 3. packages/types | ⏳ В процессе | Создать пакет, заменить импорты |
-| 4. Единый docker-compose | ❌ Не начато | Локальный запуск одной командой |
-| 5. CI/CD (path-based) | ❌ Не начато | Деплой только изменившегося app |
-| 6. Архивация старых репо | ❌ Не начато | После стабилизации CI/CD |
+| 3. packages/types | ✅ Готово | Пакет создан, tygo удалён, импорты обновлены |
+| 4. Единый docker-compose | ✅ Готово | docker-compose.yml в корне монорепо |
+| 5. CI/CD (path-based) | ✅ Готово | .github/workflows/deploy-{server,admin,app}.yml |
+| 6. Архивация старых репо | ❌ Не начато | После переноса секретов на GitHub |
 
 ## Turborepo команды
 

@@ -1,0 +1,44 @@
+name: Deploy app
+
+on:
+  push:
+    branches:
+      - Bospur
+    paths:
+      - 'apps/app/**'
+      - 'packages/types/**'
+      - '.github/workflows/deploy-app.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+        working-directory: apps/app
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_CLINIC_SLUG: ${{ secrets.VITE_CLINIC_SLUG }}
+
+      - name: Deploy dist to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: apps/app/dist/
+          target: /var/www/vp-bot-app/
+          strip_components: 3
