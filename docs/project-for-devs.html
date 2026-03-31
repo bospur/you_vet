@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>YouVet — Project Overview для разработчиков</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #ffffff;
+      max-width: 900px;
+      margin: 48px auto;
+      padding: 0 40px 80px;
+      line-height: 1.7;
+    }
+
+    /* Header */
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 40px; }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .header .subtitle { font-size: 16px; color: #555; margin-top: 6px; }
+    .header .meta { margin-top: 14px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .header .meta a { color: #1a1a1a; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ccc; }
+
+    /* Sections */
+    h2 { font-size: 19px; font-weight: 700; margin: 44px 0 16px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+    h3 { font-size: 15px; font-weight: 700; margin: 24px 0 8px; color: #1a1a1a; }
+    h4 { font-size: 13px; font-weight: 700; margin: 16px 0 6px; color: #444; text-transform: uppercase; letter-spacing: 0.4px; }
+    p { margin-bottom: 12px; }
+    a { color: #0066cc; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+    th { background: #f5f5f5; text-align: left; padding: 8px 12px; font-weight: 600; border: 1px solid #ddd; }
+    td { padding: 7px 12px; border: 1px solid #ddd; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Code */
+    code {
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 12.5px;
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #c7254e;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px 20px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    }
+    pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+    /* Lists */
+    ul, ol { padding-left: 22px; margin-bottom: 12px; }
+    li { margin-bottom: 5px; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-right: 4px;
+    }
+    .badge-go { background: #e8f5e9; color: #2e7d32; }
+    .badge-ts { background: #e3f2fd; color: #1565c0; }
+    .badge-react { background: #e8f4f8; color: #0277bd; }
+    .badge-pg { background: #f3e5f5; color: #6a1b9a; }
+
+    /* Tree */
+    .tree { font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; line-height: 1.8; background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px 20px; margin: 12px 0 20px; }
+    .tree .comment { color: #888; }
+
+    /* Tip box */
+    .tip { background: #f0f7ff; border-left: 3px solid #0066cc; padding: 12px 16px; border-radius: 0 4px 4px 0; margin: 12px 0 20px; font-size: 13px; }
+    .warn { background: #fff8e1; border-left: 3px solid #f59e0b; padding: 12px 16px; border-radius: 0 4px 4px 0; margin: 12px 0 20px; font-size: 13px; }
+
+    /* Role cards */
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 12px 0 20px; }
+    .role-card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 14px 16px; }
+    .role-card h4 { margin: 0 0 8px; font-size: 13px; color: #1a1a1a; text-transform: none; letter-spacing: 0; }
+    .role-card ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: #444; }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid #eee; margin: 32px 0; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>YouVet — Project Overview</h1>
+  <div class="subtitle">SaaS-платформа для ветеринарных клиник · Telegram Mini App + Веб-панель</div>
+  <div class="meta">
+    <a href="https://github.com/bospur/you_vet">GitHub: bospur/you_vet</a>
+    <a href="https://admin.snzbeachvolleyball25.ru">Admin Panel (prod)</a>
+    <a href="https://api.snzbeachvolleyball25.ru">API (prod)</a>
+    <a href="https://app.snzbeachvolleyball25.ru">Mini App (prod)</a>
+  </div>
+</div>
+
+
+<h2>Что за продукт</h2>
+
+<p>Клиника подключается к сервису и получает два инструмента:</p>
+<ul>
+  <li><strong>Telegram Mini App</strong> — для клиентов. Владельцы питомцев читают статьи по первой помощи, смотрят врачей и расписание.</li>
+  <li><strong>Веб-панель (admin)</strong> — для персонала клиники. Редактор ведёт контент, администратор управляет врачами и пользователями, грумер — своими записями.</li>
+</ul>
+<p>Мультитенантность: одна инсталляция сервера обслуживает несколько клиник через <code>clinic_id</code> во всех таблицах.</p>
+
+
+<h2>Структура монорепо</h2>
+
+<div class="tree">
+you_vet/<br>
+├── apps/<br>
+│   ├── server/    <span class="comment">← Go бэкенд + Telegram бот</span><br>
+│   ├── admin/     <span class="comment">← Веб-панель (React + MUI)</span><br>
+│   └── app/       <span class="comment">← Telegram Mini App (React + TG UI)</span><br>
+├── packages/<br>
+│   └── types/     <span class="comment">← @you-vet/types — общие TypeScript типы</span><br>
+├── docker-compose.yml  <span class="comment">← локальный запуск (db + server)</span><br>
+├── turbo.json<br>
+└── package.json   <span class="comment">← npm workspaces</span>
+</div>
+
+<div class="tip">
+  <strong>Go не входит в npm workspaces.</strong> <code>apps/server</code> управляет зависимостями через <code>go.mod</code> независимо. Turborepo оркестрирует только <code>admin</code> и <code>app</code>.
+</div>
+
+
+<h2>Стек технологий</h2>
+
+<h3>Backend <span class="badge badge-go">Go</span></h3>
+
+<table>
+  <tr><th>Компонент</th><th>Решение</th><th>Зачем</th></tr>
+  <tr><td>Язык</td><td>Go 1.25</td><td>Скорость, простота деплоя (один бинарник)</td></tr>
+  <tr><td>HTTP роутер</td><td>net/http (stdlib)</td><td>Без фреймворков — чисто и предсказуемо</td></tr>
+  <tr><td>База данных</td><td>PostgreSQL 16 + lib/pq</td><td>—</td></tr>
+  <tr><td>Миграции</td><td>golang-migrate</td><td>SQL-файлы, применяются при старте</td></tr>
+  <tr><td>Auth</td><td>JWT (golang-jwt)</td><td>24ч токены, роль в claims</td></tr>
+  <tr><td>Telegram бот</td><td>Telebot (long polling)</td><td>Отправка статей, ссылки на Mini App</td></tr>
+</table>
+
+<h3>Admin Panel <span class="badge badge-react">React 19</span> <span class="badge badge-ts">TypeScript</span></h3>
+
+<table>
+  <tr><th>Компонент</th><th>Решение</th></tr>
+  <tr><td>Сборка</td><td>Vite 8</td></tr>
+  <tr><td>UI-компоненты</td><td>MUI v7 (Material UI)</td></tr>
+  <tr><td>Роутинг</td><td>React Router v7 (Data Router)</td></tr>
+  <tr><td>Серверное состояние</td><td>TanStack Query v5</td></tr>
+  <tr><td>Формы + валидация</td><td>React Hook Form + Valibot</td></tr>
+  <tr><td>WYSIWYG редактор</td><td>TipTap v2</td></tr>
+  <tr><td>HTTP-клиент</td><td>Axios (interceptor для Bearer токена)</td></tr>
+</table>
+
+<h3>Telegram Mini App <span class="badge badge-react">React 18</span> <span class="badge badge-ts">TypeScript</span></h3>
+
+<table>
+  <tr><th>Компонент</th><th>Решение</th></tr>
+  <tr><td>Сборка</td><td>Vite 8</td></tr>
+  <tr><td>Telegram SDK</td><td>@telegram-apps/sdk-react v3</td></tr>
+  <tr><td>UI-компоненты</td><td>@telegram-apps/telegram-ui v2 (нативный TG-стиль)</td></tr>
+  <tr><td>Серверное состояние</td><td>TanStack Query v5</td></tr>
+  <tr><td>Роутинг</td><td>React Router v7</td></tr>
+</table>
+
+<h3>Инфраструктура</h3>
+
+<table>
+  <tr><th>Компонент</th><th>Решение</th></tr>
+  <tr><td>Сервер</td><td>VPS Ubuntu (194.87.0.94)</td></tr>
+  <tr><td>Reverse proxy</td><td>Nginx (SSL termination, SPA routing)</td></tr>
+  <tr><td>SSL</td><td>Let's Encrypt (auto-renew)</td></tr>
+  <tr><td>Контейнеризация</td><td>Docker + docker-compose (Go + PostgreSQL)</td></tr>
+  <tr><td>CI/CD</td><td>GitHub Actions (path-based, 3 отдельных workflow)</td></tr>
+  <tr><td>Монорепо</td><td>Turborepo + npm workspaces</td></tr>
+</table>
+
+
+<h2>Архитектура бэкенда</h2>
+
+<p>Слоёная архитектура: <strong>HTTP → Middleware → Handler → Repository → PostgreSQL</strong></p>
+
+<div class="tree">
+apps/server/<br>
+├── main.go                 <span class="comment">← инициализация, регистрация роутов</span><br>
+└── internal/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── handler/        <span class="comment">← HTTP обработчики (animals, articles, doctors, grooming, admin)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── repository/     <span class="comment">← SQL запросы (чистый database/sql, без ORM)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── middleware/     <span class="comment">← JWT auth, CORS</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── bot/            <span class="comment">← Telegram бот (long polling, HTML→TG конвертация)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── db/             <span class="comment">← подключение к БД, запуск миграций</span>
+</div>
+
+<h3>API — два контекста</h3>
+<table>
+  <tr><th>Prefix</th><th>Auth</th><th>Кто использует</th></tr>
+  <tr><td><code>/api/clinics/{slug}/...</code></td><td>Нет</td><td>Telegram Mini App (публичный)</td></tr>
+  <tr><td><code>/api/admin/...</code></td><td>JWT Bearer</td><td>Admin Panel</td></tr>
+</table>
+
+<h3>База данных — 7 миграций</h3>
+<table>
+  <tr><th>#</th><th>Что создаёт</th></tr>
+  <tr><td>001</td><td><code>animals</code> — животные (slug, icon, sort_order)</td></tr>
+  <tr><td>002</td><td><code>categories</code> — категории статей, привязанные к животному</td></tr>
+  <tr><td>003</td><td><code>articles</code> + M2M таблица <code>article_categories</code></td></tr>
+  <tr><td>004</td><td><code>clinics</code> + <code>clinic_id</code> во все таблицы (мультитенантность)</td></tr>
+  <tr><td>005</td><td><code>status</code> у статей (draft / published)</td></tr>
+  <tr><td>006</td><td><code>doctors</code>, <code>doctor_schedules</code>, <code>schedule_exceptions</code>, <code>clinic_settings</code></td></tr>
+  <tr><td>007</td><td><code>grooming_breeds</code>, <code>grooming_template</code>, <code>grooming_appointments</code></td></tr>
+</table>
+
+<div class="tip">
+  <strong>Конвенция:</strong> <code>day_of_week</code> везде: 0 = Вс, 1 = Пн, … 6 = Сб (PostgreSQL стандарт).
+</div>
+
+
+<h2>Ролевая модель</h2>
+
+<div class="role-grid">
+  <div class="role-card">
+    <h4>admin</h4>
+    <ul>
+      <li>Полный доступ</li>
+      <li>Публикация статей и врачей</li>
+      <li>Управление пользователями</li>
+      <li>Настройки клиники</li>
+    </ul>
+  </div>
+  <div class="role-card">
+    <h4>editor</h4>
+    <ul>
+      <li>Создание и редактирование черновиков</li>
+      <li>Нельзя публиковать</li>
+      <li>Нельзя редактировать опубликованное</li>
+    </ul>
+  </div>
+  <div class="role-card">
+    <h4>groomer</h4>
+    <ul>
+      <li>Доступ только к <code>/grooming</code></li>
+      <li>Управление породами, шаблоном, записями</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tip">
+  Роль хранится в JWT claim и проверяется на <strong>бэкенде</strong>. Фронтенд только скрывает UI-элементы для удобства — это не единственная защита.
+</div>
+
+
+<h2>Пакет @you-vet/types</h2>
+
+<p>Общий TypeScript пакет (<code>packages/types/</code>) — единый источник моделей данных для <code>admin</code> и <code>app</code>.</p>
+
+<pre><code>import type { Doctor, GroomingBreed, Article } from '@you-vet/types';</code></pre>
+
+<p>Файлы: <code>animals.ts</code>, <code>articles.ts</code>, <code>doctors.ts</code>, <code>grooming.ts</code>, <code>users.ts</code>, <code>index.ts</code></p>
+
+<div class="tip">
+  Tygo (кодогенерация из Go) удалён. Типы поддерживаются вручную. При изменении Go структур — обновляй <code>packages/types</code>.
+</div>
+
+
+<h2>Локальная разработка</h2>
+
+<h3>Требования</h3>
+<ul>
+  <li>Node.js 22+, npm</li>
+  <li>Go 1.25+</li>
+  <li>Docker + docker-compose</li>
+</ul>
+
+<h3>Запуск</h3>
+
+<pre><code># 1. Клонировать и поставить зависимости
+git clone https://github.com/bospur/you_vet.git
+cd you_vet
+npm install
+
+# 2. Настроить окружение для сервера
+cp apps/server/.env.example apps/server/.env
+# Отредактировать .env: задать BOT_TOKEN, JWT_SECRET, пароли
+
+# 3. Запустить базу данных и сервер
+docker compose up -d
+# Go сервер автоматически применит миграции при старте
+
+# 4. Запустить фронтенд (в отдельном терминале)
+cp apps/admin/.env.example apps/admin/.env.local  # задать VITE_API_URL=http://localhost:8080
+cp apps/app/.env.example apps/app/.env.local      # задать VITE_CLINIC_SLUG
+npm run dev   # turbo запустит admin и app параллельно</code></pre>
+
+<h3>Переменные окружения</h3>
+
+<h4>apps/server/.env</h4>
+<table>
+  <tr><th>Переменная</th><th>Описание</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td><code>postgres://user:pass@db:5432/dbname?sslmode=disable</code></td></tr>
+  <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Токен бота от BotFather</td></tr>
+  <tr><td><code>CLINIC_SLUG</code></td><td>Slug клиники по умолчанию (напр. <code>vpract</code>)</td></tr>
+  <tr><td><code>PORT</code></td><td>Порт сервера (8080)</td></tr>
+  <tr><td><code>JWT_SECRET</code></td><td>Случайная строка для подписи токенов</td></tr>
+  <tr><td><code>ADMIN_LOGIN</code></td><td>Логин первого администратора</td></tr>
+  <tr><td><code>ADMIN_PASSWORD</code></td><td>Пароль первого администратора</td></tr>
+</table>
+
+<h4>apps/admin/.env.local</h4>
+<table>
+  <tr><th>Переменная</th><th>Описание</th></tr>
+  <tr><td><code>VITE_API_URL</code></td><td>URL бэкенда (напр. <code>http://localhost:8080</code>)</td></tr>
+</table>
+
+<h4>apps/app/.env.local</h4>
+<table>
+  <tr><th>Переменная</th><th>Описание</th></tr>
+  <tr><td><code>VITE_API_URL</code></td><td>URL бэкенда</td></tr>
+  <tr><td><code>VITE_CLINIC_SLUG</code></td><td>Slug клиники (напр. <code>vpract</code>)</td></tr>
+</table>
+
+<div class="warn">
+  <strong>Telegram Mini App требует HTTPS.</strong> Для локального тестирования используй ngrok или аналог, чтобы пробросить localhost через HTTPS туннель.
+</div>
+
+
+<h2>Turborepo команды</h2>
+
+<pre><code># Из корня монорепо
+npm run dev      # запускает admin и app параллельно (turbo dev)
+npm run build    # сборка всех приложений с учётом зависимостей
+npm run lint     # линтинг всех приложений</code></pre>
+
+
+<h2>Git workflow</h2>
+
+<pre><code>Bospur  ← prod, только через PR (никогда не пушить напрямую)
+dev     ← интеграция, только через PR
+feature/*, fix/*, chore/*  ← рабочие ветки</code></pre>
+
+<p>Стандартный цикл:</p>
+<ol>
+  <li>Создать ветку от <code>dev</code>: <code>git checkout -b feature/my-feature dev</code></li>
+  <li>Написать код, закоммитить</li>
+  <li>PR → <code>dev</code></li>
+  <li>После тестирования на dev — PR <code>dev</code> → <code>Bospur</code></li>
+</ol>
+
+<div class="warn">
+  <strong>Никогда не пушить напрямую в <code>dev</code> или <code>Bospur</code>.</strong>
+</div>
+
+
+<h2>CI/CD</h2>
+
+<p>Три GitHub Actions workflow в <code>.github/workflows/</code>, каждый триггерится только при изменениях своего приложения:</p>
+
+<table>
+  <tr><th>Workflow</th><th>Триггер (paths)</th><th>Что делает</th></tr>
+  <tr><td><code>deploy-server.yml</code></td><td><code>apps/server/**</code></td><td>SSH на VPS → <code>git pull</code> → <code>docker compose up --build -d</code></td></tr>
+  <tr><td><code>deploy-admin.yml</code></td><td><code>apps/admin/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
+  <tr><td><code>deploy-app.yml</code></td><td><code>apps/app/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
+</table>
+
+<p>Секреты в GitHub Repository Settings: <code>VPS_HOST</code>, <code>VPS_USER</code>, <code>VPS_SSH_KEY</code>, <code>VITE_API_URL</code>, <code>VITE_CLINIC_SLUG</code></p>
+
+
+<h2>Деплой на VPS</h2>
+
+<table>
+  <tr><th>Компонент</th><th>Расположение</th></tr>
+  <tr><td>Go сервер</td><td>Docker (<code>/home/deploy/you_vet/apps/server</code>)</td></tr>
+  <tr><td>Admin Panel</td><td>Nginx → <code>/var/www/vp-bot-admin/</code></td></tr>
+  <tr><td>Mini App</td><td>Nginx → <code>/var/www/vp-bot-app/</code></td></tr>
+  <tr><td>Домены</td><td><code>api.*</code>, <code>admin.*</code>, <code>app.*</code> .snzbeachvolleyball25.ru</td></tr>
+</table>
+
+
+<h2>Паттерны в коде</h2>
+
+<h3>Backend (Go) — типичный handler</h3>
+<pre><code>func (h *Handler) GetDoctors(w http.ResponseWriter, r *http.Request) {
+    claims := middleware.ClaimsFromContext(r.Context())  // JWT из контекста
+    doctors, err := h.repo.GetDoctors(r.Context(), claims.ClinicID)
+    if err != nil {
+        http.Error(w, "internal error", http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(doctors)
+}</code></pre>
+
+<h3>Admin (React) — useQuery + useMutation</h3>
+<pre><code>const { data: doctors } = useQuery({
+    queryKey: ['doctors'],
+    queryFn: getDoctors,
+});
+
+const deleteMutation = useMutation({
+    mutationFn: deleteDoctor,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['doctors'] }),
+});</code></pre>
+
+<h3>Mini App (React) — публичный API без авторизации</h3>
+<pre><code>// Telegram BackButton управляется через SDK
+const { backButton } = useLaunchParams();
+
+// Данные из публичного API
+const { data } = useQuery({
+    queryKey: ['doctors'],
+    queryFn: () => api.get(`/api/clinics/${CLINIC_SLUG}/doctors`),
+});</code></pre>
+
+
+<h2>Документация в репо</h2>
+
+<table>
+  <tr><th>Файл</th><th>Описание</th></tr>
+  <tr><td><code>docs/architecture.md</code></td><td>Системная архитектура, схема взаимодействия</td></tr>
+  <tr><td><code>docs/api.md</code></td><td>Полный справочник API (все эндпоинты)</td></tr>
+  <tr><td><code>docs/data-model.md</code></td><td>Схема БД, конвенции полей</td></tr>
+  <tr><td><code>docs/roles.md</code></td><td>Ролевая матрица прав</td></tr>
+  <tr><td><code>docs/deployment.md</code></td><td>Деплой, VPS, Nginx, SSL</td></tr>
+  <tr><td><code>docs/development.md</code></td><td>Локальная разработка, git workflow</td></tr>
+  <tr><td><code>docs/monorepo.md</code></td><td>Устройство монорепо, Turborepo</td></tr>
+</table>
+
+<hr>
+
+<p style="color:#888; font-size:12px; text-align:center;">YouVet · github.com/bospur/you_vet · вопросы — в Issues или напрямую</p>
+
+</body>
+</html>

@@ -22,7 +22,8 @@
 
 | Путь | Что |
 |---|---|
-| `/home/deploy/vp-bot-server` | Go бэкенд (git + docker compose) |
+| `/home/deploy/you_vet` | Монорепо (git + docker compose в apps/server) |
+| `/home/deploy/you_vet/apps/server` | Go бэкенд (docker compose up здесь) |
 | `/var/www/vp-bot-admin` | Статика админ-панели |
 | `/var/www/vp-bot-app` | Статика Mini App |
 | `/etc/nginx/sites-available/` | Nginx конфиги |
@@ -71,8 +72,9 @@ Push в `dev` → GitHub Actions:
 
 ```bash
 ssh vps
-cd /home/deploy/vp-bot-server
+cd /home/deploy/you_vet
 git pull origin dev
+cd apps/server
 docker compose up --build -d
 docker compose logs -f app   # проверить логи
 ```
