@@ -3,7 +3,7 @@ name: Deploy admin
 on:
   push:
     branches:
-      - Bospur
+      - dev
     paths:
       - 'apps/admin/**'
       - 'packages/types/**'
