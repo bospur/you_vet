@@ -2,8 +2,8 @@
 
 ## Требования
 
-- Go 1.21+
-- Node.js 20+, npm 10+
+- Go 1.25+
+- Node.js 22+, npm
 - Docker + Docker Compose
 - PostgreSQL (или запустить через Docker)
 
@@ -63,8 +63,7 @@ npm run dev   # localhost:5174
 ## Git workflow
 
 ```
-Bospur (prod) ← PR-only  ← релизы
-dev           ← PR-only  ← интеграционная
+dev           ← основная ветка, только через PR
 feature/...   fix/...   chore/...
 ```
 
@@ -85,7 +84,7 @@ git commit -m "feat: описание изменения"
 git push --set-upstream origin feature/my-feature
 ```
 
-**Никогда** не пушить напрямую в `dev` или `Bospur`.
+**Никогда** не пушить напрямую в `dev`.
 
 ## Conventional Commits
 
@@ -108,14 +107,13 @@ npm run lint   # линтинг всего
 
 ## Добавление нового модуля в admin (чеклист)
 
-1. Типы → `apps/admin/src/modules/<module>/domain/types.ts`
-2. API → `apps/admin/src/data/source/<module>.ts`
-3. Таблица/список → `apps/admin/src/modules/<module>/features/<Module>Table/`
-4. Экран → `apps/admin/src/screens/<Module>Screen/`
-5. Роут → `apps/admin/src/App.tsx` (lazy import)
-6. Навигация → `NAV_ITEMS` в `apps/admin/src/shared/ui/Layout/index.tsx`
-
-Общие типы (если нужны в app тоже) → `packages/types/src/`
+1. Shared типы (если нужны в app тоже) → `packages/types/src/<module>.ts` + реэкспорт в `packages/types/src/index.ts`
+2. Типы модуля (FormValues, UI-специфичное) → `apps/admin/src/modules/<module>/domain/types.ts`
+3. API → `apps/admin/src/data/source/<module>.ts`
+4. Таблица/список → `apps/admin/src/modules/<module>/features/<Module>Table/`
+5. Экран → `apps/admin/src/screens/<Module>Screen/`
+6. Роут → `apps/admin/src/App.tsx` (lazy import)
+7. Навигация → `NAV_ITEMS` в `apps/admin/src/shared/ui/Layout/index.tsx`
 
 ## Мобильная адаптация (паттерн для admin)
 
