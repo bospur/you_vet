@@ -1,10 +1,4 @@
-export interface Animal {
-  id: number;
-  name: string;
-  slug: string;
-  icon: string;
-  sort_order: number;
-}
+export type { Animal, AnimalInput } from '@you-vet/types';
 
 export interface AnimalFormValues {
   name: string;

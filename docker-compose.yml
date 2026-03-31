@@ -1,0 +1,34 @@
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: ./apps/server/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  # ── Go бэкенд ────────────────────────────────────────────────────────────────
+  server:
+    build: ./apps/server
+    restart: unless-stopped
+    env_file: ./apps/server/.env
+    ports:
+      - "127.0.0.1:8080:8080"   # Nginx проксирует снаружи
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - db
+    networks:
+      - internal
+
+# admin и app запускаются локально через: npm run dev (turbo dev)
+
+networks:
+  internal:
+
+volumes:
+  postgres_data:
+  uploads_data:
