@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { fetchGroomingBreeds } from '../api';
-import { Preloader } from '../components/Preloader/Preloader';
-import { useNotification } from '../hooks/useNotification';
-import styles from './GroomingBreedsScreen.module.css';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchGroomingBreeds } from "../api";
+import { Preloader } from "../components/Preloader/Preloader";
+import { useNotification } from "../hooks/useNotification";
+import styles from "./GroomingBreedsScreen.module.css";
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} мин`;
@@ -14,21 +14,21 @@ function formatDuration(minutes: number): string {
 }
 
 function formatPrice(price: number | null): string {
-  if (price === null || price === undefined) return 'По запросу';
-  return `${price.toLocaleString('ru-RU')} ₽`;
+  if (price === null || price === undefined) return "По запросу";
+  return `${price.toLocaleString("ru-RU")} ₽`;
 }
 
 export default function GroomingBreedsScreen() {
   const navigate = useNavigate();
   const notify = useNotification();
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['grooming-breeds'],
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["grooming-breeds"],
     queryFn: fetchGroomingBreeds,
   });
 
   useEffect(() => {
-    if (isError) notify('Не удалось загрузить список услуг. Попробуйте позже.', 'error');
-  }, [isError, notify]);
+    if (isError && error) notify(error.message, "error");
+  }, [isError, notify, error]);
 
   if (isLoading) return <Preloader />;
 
@@ -45,7 +45,9 @@ export default function GroomingBreedsScreen() {
             <span className={styles.price}>{formatPrice(breed.price)}</span>
           </div>
           <div className={styles.cardMeta}>
-            <span className={styles.duration}>⏱ {formatDuration(breed.duration)}</span>
+            <span className={styles.duration}>
+              ⏱ {formatDuration(breed.duration)}
+            </span>
           </div>
           {breed.description && (
             <p className={styles.description}>{breed.description}</p>
