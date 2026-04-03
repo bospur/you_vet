@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchDoctors, fetchSchedule } from '../api';
+import { DoctorAvatar } from '../components/DoctorAvatar/DoctorAvatar';
 import styles from './DoctorScreen.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
@@ -38,13 +39,11 @@ export default function DoctorScreen() {
     <div className={styles.wrapper}>
       <button className={styles.back} onClick={() => navigate(-1)}>‹ Назад</button>
 
-      {doctor.photo_url && (
-        <img
-          src={`${API_URL}${doctor.photo_url}`}
-          alt={doctor.full_name}
-          className={styles.photo}
-        />
-      )}
+      <DoctorAvatar
+        name={doctor.full_name}
+        photoUrl={doctor.photo_url ? `${API_URL}${doctor.photo_url}` : undefined}
+        size={120}
+      />
 
       <h1 className={styles.name}>{doctor.full_name}</h1>
 

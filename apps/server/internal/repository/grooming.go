@@ -349,3 +349,55 @@ func (r *GroomingRepository) DeleteAppointment(id string, clinicID int) error {
 	)
 	return err
 }
+
+// ── Публичные методы (по slug клиники) ────────────────────────────────────────
+
+// GetAllBreedsBySlug возвращает породы/услуги для мини-приложения по slug клиники
+func (r *GroomingRepository) GetAllBreedsBySlug(clinicSlug string) ([]GroomingBreed, error) {
+	rows, err := r.db.Query(`
+		SELECT gb.id, gb.clinic_id, gb.breed, gb.duration, gb.price, gb.description
+		FROM grooming_breeds gb
+		JOIN clinics c ON c.id = gb.clinic_id
+		WHERE c.slug = $1
+		ORDER BY gb.breed
+	`, clinicSlug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var breeds []GroomingBreed
+	for rows.Next() {
+		var b GroomingBreed
+		if err := rows.Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description); err != nil {
+			return nil, err
+		}
+		breeds = append(breeds, b)
+	}
+	return breeds, nil
+}
+
+// GetTemplateBySlug возвращает шаблон рабочей недели по slug клиники
+func (r *GroomingRepository) GetTemplateBySlug(clinicSlug string) ([]GroomingTemplateSlot, error) {
+	rows, err := r.db.Query(`
+		SELECT gt.id, gt.clinic_id, gt.day_of_week, gt.time_from::text, gt.time_to::text
+		FROM grooming_weekly_template gt
+		JOIN clinics c ON c.id = gt.clinic_id
+		WHERE c.slug = $1
+		ORDER BY gt.day_of_week
+	`, clinicSlug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var slots []GroomingTemplateSlot
+	for rows.Next() {
+		var s GroomingTemplateSlot
+		if err := rows.Scan(&s.ID, &s.ClinicID, &s.DayOfWeek, &s.TimeFrom, &s.TimeTo); err != nil {
+			return nil, err
+		}
+		slots = append(slots, s)
+	}
+	return slots, nil
+}

@@ -30,6 +30,7 @@ export default function CategoriesScreen() {
       items={(data ?? []).map((category) => ({
         key: category.id,
         title: category.name,
+        icon: category.icon || undefined,
         onClick: () => navigate(`/animals/${animalSlug}/categories/${category.slug}/articles`),
       }))}
     />

@@ -5,6 +5,7 @@ import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchDoctors } from '../api';
 import { useNotification } from '../hooks/useNotification';
 import { NavList } from '../components/NavList/NavList';
+import { DoctorAvatar } from '../components/DoctorAvatar/DoctorAvatar';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
 
@@ -27,9 +28,13 @@ export default function DoctorsScreen() {
         key: doctor.id,
         title: doctor.full_name,
         subtitle: doctor.specialty,
-        before: doctor.photo_url
-          ? <img src={`${API_URL}${doctor.photo_url}`} alt={doctor.full_name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
-          : '👨‍⚕️',
+        before: (
+          <DoctorAvatar
+            name={doctor.full_name}
+            photoUrl={doctor.photo_url ? `${API_URL}${doctor.photo_url}` : undefined}
+            size={40}
+          />
+        ),
         onClick: () => navigate(`/doctors/${doctor.id}`),
       }))}
     />

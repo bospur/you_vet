@@ -1,0 +1,76 @@
+.wrapper {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tgui--hint_color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+  margin-bottom: 4px;
+}
+
+.empty {
+  font-size: 15px;
+  color: var(--tgui--hint_color);
+  text-align: center;
+  padding: 24px 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+
+.rowActive {
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.rowOff {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dayName {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tgui--text_color);
+}
+
+.hours {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2e7d32;
+  font-variant-numeric: tabular-nums;
+}
+
+.closed {
+  font-size: 14px;
+  color: var(--tgui--hint_color);
+}
+
+.back {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2e7d32;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  border-radius: 14px;
+  padding: 12px 20px;
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+
+.back:active {
+  opacity: 0.7;
+}
