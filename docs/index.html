@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouVet — Документация</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f7f7f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: #4caf50;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .logo-sub {
+      font-size: 13px;
+      color: #888;
+      margin-top: 1px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #999;
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-decoration: none;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid #e8e8e8;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .card:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      border-color: #d0d0d0;
+    }
+
+    .card-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      width: 40px;
+      text-align: center;
+    }
+
+    .card-body { flex: 1; }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.4;
+    }
+
+    .card-arrow {
+      color: #ccc;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 8px;
+      vertical-align: middle;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    .footer a { color: #bbb; text-decoration: none; border-bottom: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="logo">
+    <div class="logo-icon">🐾</div>
+    <div>
+      <div class="logo-text">YouVet</div>
+      <div class="logo-sub">Документация проекта</div>
+    </div>
+  </div>
+
+  <div class="section-title">Для команды</div>
+  <div class="cards">
+    <a class="card" href="project-for-devs.html">
+      <div class="card-icon">⚙️</div>
+      <div class="card-body">
+        <div class="card-title">Project Overview <span class="badge">Dev</span></div>
+        <div class="card-desc">Стек, архитектура, API, миграции, CI/CD, локальная разработка</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+
+    <a class="card" href="design-brief.html">
+      <div class="card-icon">🎨</div>
+      <div class="card-body">
+        <div class="card-title">Дизайн-бриф <span class="badge" style="background:#e3f2fd;color:#1565c0;">Design</span></div>
+        <div class="card-desc">ТЗ для дизайнера — компоненты, стиль, палитра, UX-требования</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+  </div>
+
+  <div class="footer">
+    <a href="https://github.com/bospur/you_vet">github.com/bospur/you_vet</a>
+  </div>
+
+</div>
+</body>
+</html>
