@@ -28,8 +28,8 @@ export default function GroomingBreedsScreen() {
   });
 
   useEffect(() => {
-    if (isError && error) notify(error.message, "error");
-  }, [isError, notify, error]);
+    if (isError) notify('Не удалось загрузить список услуг. Попробуйте позже.', 'error');
+  }, [isError, notify]);
 
   if (isLoading) return <Preloader />;
 
