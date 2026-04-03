@@ -23,7 +23,7 @@
   font-size: 15px;
   color: var(--tgui--text_color);
   background: var(--tgui--bg_color);
-  border: 1px solid var(--tgui--divider_color);
+  border: 1.5px solid rgba(76, 175, 80, 0.5);
   border-radius: 12px;
   outline: none;
   margin-bottom: 2px;
@@ -34,7 +34,8 @@
 }
 
 .search:focus {
-  border-color: rgba(76, 175, 80, 0.5);
+  border-color: #2e7d32;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
 }
 
 .empty {

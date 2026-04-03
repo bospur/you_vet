@@ -1,3 +1,109 @@
+.wrapper {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tgui--hint_color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--tgui--divider_color);
+  background: var(--tgui--bg_color);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.chipActive {
+  border-color: #2e7d32;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.chipDay {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tgui--hint_color);
+  text-transform: capitalize;
+}
+
+.chipActive .chipDay {
+  color: #2e7d32;
+}
+
+.chipDate {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tgui--text_color);
+}
+
+.chipActive .chipDate {
+  color: #2e7d32;
+}
+
+.slotsHeader {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tgui--text_color);
+  padding: 4px 4px 0;
+  text-transform: capitalize;
+}
+
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--tgui--bg_color);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.slotName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--tgui--text_color);
+}
+
+.slotTime {
+  font-size: 14px;
+  color: var(--tgui--hint_color);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.empty {
+  font-size: 15px;
+  color: var(--tgui--hint_color);
+  text-align: center;
+  padding: 32px 0;
+  margin: 0;
+}
+
 .back {
   cursor: pointer;
   font-size: 16px;
@@ -9,9 +115,8 @@
   padding: 12px 20px;
   text-align: center;
   width: 100%;
-  margin: 8px 16px 16px;
+  margin-top: 4px;
   box-sizing: border-box;
-  width: calc(100% - 32px);
   transition: opacity 0.15s;
 }
 
