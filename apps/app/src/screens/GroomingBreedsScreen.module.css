@@ -1,5 +1,6 @@
 .wrapper {
   padding: 16px;
+  padding-bottom: 80px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -13,6 +14,27 @@
   letter-spacing: 0.5px;
   padding: 0 4px;
   margin-bottom: 4px;
+}
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--tgui--text_color);
+  background: var(--tgui--bg_color);
+  border: 1px solid var(--tgui--divider_color);
+  border-radius: 12px;
+  outline: none;
+  margin-bottom: 2px;
+}
+
+.search::placeholder {
+  color: var(--tgui--hint_color);
+}
+
+.search:focus {
+  border-color: rgba(76, 175, 80, 0.5);
 }
 
 .empty {
@@ -69,19 +91,30 @@
   margin: 0;
 }
 
+.backSpacer {
+  display: none;
+}
+
 .back {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
   color: #2e7d32;
   background: rgba(76, 175, 80, 0.12);
-  border: 1px solid rgba(76, 175, 80, 0.35);
-  border-radius: 14px;
-  padding: 12px 20px;
+  border: none;
+  border-top: 1px solid rgba(76, 175, 80, 0.25);
+  padding: 14px 20px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
   text-align: center;
   width: 100%;
-  margin-top: 4px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: opacity 0.15s;
+  z-index: 10;
 }
 
 .back:active {

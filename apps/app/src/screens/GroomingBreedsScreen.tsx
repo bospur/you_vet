@@ -1,10 +1,10 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { fetchGroomingBreeds } from "../api";
-import { Preloader } from "../components/Preloader/Preloader";
-import { useNotification } from "../hooks/useNotification";
-import styles from "./GroomingBreedsScreen.module.css";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { fetchGroomingBreeds } from '../api';
+import { Preloader } from '../components/Preloader/Preloader';
+import { useNotification } from '../hooks/useNotification';
+import styles from './GroomingBreedsScreen.module.css';
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} мин`;
@@ -21,8 +21,9 @@ function formatPrice(price: number | null): string {
 export default function GroomingBreedsScreen() {
   const navigate = useNavigate();
   const notify = useNotification();
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["grooming-breeds"],
+  const [search, setSearch] = useState('');
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['grooming-breeds'],
     queryFn: fetchGroomingBreeds,
   });
 
@@ -32,13 +33,26 @@ export default function GroomingBreedsScreen() {
 
   if (isLoading) return <Preloader />;
 
+  const filtered = (data ?? []).filter((b) =>
+    b.breed.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className={styles.wrapper}>
       <p className={styles.header}>Услуги и породы</p>
-      {(data ?? []).length === 0 && (
-        <p className={styles.empty}>Услуги ещё не добавлены</p>
+      <input
+        className={styles.search}
+        type="search"
+        placeholder="Поиск по породе..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      {filtered.length === 0 && (
+        <p className={styles.empty}>
+          {search ? 'Ничего не найдено' : 'Услуги ещё не добавлены'}
+        </p>
       )}
-      {(data ?? []).map((breed) => (
+      {filtered.map((breed) => (
         <div key={breed.id} className={styles.card}>
           <div className={styles.cardTop}>
             <span className={styles.breedName}>{breed.breed}</span>
@@ -54,6 +68,7 @@ export default function GroomingBreedsScreen() {
           )}
         </div>
       ))}
+      <div className={styles.backSpacer} />
       <button className={styles.back} onClick={() => navigate(-1)}>
         ‹ Назад
       </button>
