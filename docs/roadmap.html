@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouVet — Roadmap</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #ffffff;
+      max-width: 860px;
+      margin: 48px auto;
+      padding: 0 40px 80px;
+      line-height: 1.7;
+    }
+
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 40px; }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .header .subtitle { font-size: 15px; color: #555; margin-top: 6px; }
+    .header .meta { margin-top: 14px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+    .header .meta a { color: #1a1a1a; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ccc; }
+
+    h2 { font-size: 19px; font-weight: 700; margin: 44px 0 16px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+    h3 { font-size: 15px; font-weight: 700; margin: 24px 0 8px; }
+    p { margin-bottom: 12px; color: #333; }
+    a { color: #0066cc; }
+
+    /* Status blocks */
+    .phase {
+      margin-bottom: 32px;
+    }
+
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .phase-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-done    { background: #4caf50; }
+    .dot-active  { background: #ff9800; }
+    .dot-planned { background: #e0e0e0; }
+    .dot-future  { background: #e3f2fd; border: 2px solid #90caf9; }
+
+    .phase-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .phase-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+      margin-left: auto;
+    }
+    .badge-done    { background: #e8f5e9; color: #2e7d32; }
+    .badge-active  { background: #fff3e0; color: #e65100; }
+    .badge-planned { background: #f5f5f5; color: #666; }
+    .badge-future  { background: #e3f2fd; color: #1565c0; }
+
+    /* Items */
+    .items { display: flex; flex-direction: column; gap: 8px; }
+
+    .item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+
+    .item.done    { border-color: #c8e6c9; background: #f9fef9; }
+    .item.active  { border-color: #ffe0b2; background: #fffdf9; }
+    .item.planned { border-color: #e0e0e0; background: #fafafa; }
+    .item.future  { border-color: #e3f2fd; background: #f8fbff; }
+
+    .item-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    .item-body { flex: 1; }
+    .item-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .item-desc  { font-size: 13px; color: #777; line-height: 1.4; }
+
+    .item-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      align-self: center;
+    }
+    .tag-blocker { background: #ffebee; color: #c62828; }
+    .tag-core    { background: #e8f5e9; color: #2e7d32; }
+    .tag-ux      { background: #f3e5f5; color: #6a1b9a; }
+    .tag-infra   { background: #e3f2fd; color: #1565c0; }
+    .tag-saas    { background: #fff8e1; color: #f57f17; }
+
+    /* Note box */
+    .note {
+      background: #f0f7ff;
+      border-left: 3px solid #4caf50;
+      padding: 14px 18px;
+      border-radius: 0 6px 6px 0;
+      margin: 20px 0;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .note.warn {
+      background: #fff8e1;
+      border-left-color: #f59e0b;
+    }
+
+    /* Stats row */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 20px 0 32px;
+    }
+
+    .stat {
+      border: 1px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      color: #4caf50;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #888;
+    }
+
+    hr { border: none; border-top: 1px solid #eee; margin: 32px 0; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>YouVet — Roadmap</h1>
+  <div class="subtitle">Состояние прое��та · что сделано · что планируется</div>
+  <div class="meta">
+    <a href="index.html">← Все документы</a>
+    <span style="color:#888; font-size:12px;">Обновлено: апрель 2026</span>
+  </div>
+</div>
+
+
+<h2>О проекте</h2>
+
+<p>
+  <strong>YouVet</strong> — Telegram Mini App для ветеринарных клиник. Владельцы питомцев получают доступ к информации о клинике, статьям по первой помощи, расписанию врачей и услугам груминга прямо в Telegram. Клиника управляет всем через веб-панель администратора.
+</p>
+
+<p>
+  Архитектура изначально рассчитана на несколько клиник (<code>clinic_id</code> во всех таблицах) — подключение новой клиники не требует изменений в коде.
+</p>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-num">3</div>
+    <div class="stat-label">приложения в монорепо</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">8</div>
+    <div class="stat-label">миграций БД</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">10+</div>
+    <div class="stat-label">экранов в админке</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">3</div>
+    <div class="stat-label">роли пользователей</div>
+  </div>
+</div>
+
+
+<h2>Фазы разработки</h2>
+
+<!-- ФАЗА 1 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-done"></div>
+    <div class="phase-title">Фаза 1 — Фундамент</div>
+    <span class="phase-badge badge-done">Завершено</span>
+  </div>
+  <div class="items">
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Монорепо и инфраструктура</div>
+        <div class="item-desc">Turborepo + npm workspaces, Go бэкенд, PostgreSQL, Docker, CI/CD через GitHub Actions</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Мультитенантность</div>
+        <div class="item-desc">clinic_id во всех таблицах, JWT с ClinicID + Role в claims</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Ролевая система</div>
+        <div class="item-desc">Роли admin / editor / groomer — бэкенд + фронтенд</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Статьи по первой помощи</div>
+        <div class="item-desc">WYSIWYG редактор (TipTap), статусы draft/published, привязка к видам животных</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Telegram бот</div>
+        <div class="item-desc">Long polling, отправка статей, ссылки на Mini App</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+  </div>
+</div>
+
+<!-- ФАЗА 2 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-done"></div>
+    <div class="phase-title">Фаза 2 — Клиника и расписание</div>
+    <span class="phase-badge badge-done">Завершено</span>
+  </div>
+  <div class="items">
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Профили врачей</div>
+        <div class="item-desc">Фото, специализация, описание, загрузка изображений (до 5MB)</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Расписание приёма</div>
+        <div class="item-desc">Слоты по датам, исключения, горизонтальная карусель дат в Mini App</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Груминг</div>
+        <div class="item-desc">Породы + цены, шаблон рабочих дней, запись через админку</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Информация о клинике</div>
+        <div class="item-desc">Название, описание, телефон, адрес, email, сайт, логотип, баннер</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Персистентный хедер в Mini App</div>
+        <div class="item-desc">Логотип клиники (или котик-фолбэк), название, кнопка звонка — на всех экранах</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">CI/CD через GHCR</div>
+        <div class="item-desc">Docker образ сервера собирается в CI и пушится в GitHub Container Registry. VPS только тянет готовый образ — никаких PAT</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Документационный портал</div>
+        <div class="item-desc">docs.snzbeachvolleyball25.ru — автодеплой при изменении docs/</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+  </div>
+</div>
+
+<!-- ФАЗА 3 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-active"></div>
+    <div class="phase-title">Фаза 3 — Готовность к запуску</div>
+    <span class="phase-badge badge-active">В работе</span>
+  </div>
+
+  <div class="note warn">
+    Эти задачи блокируют или существенно влияют на запуск реальных пользователей.
+  </div>
+
+  <div class="items">
+    <div class="item active">
+      <div class="item-icon">🔴</div>
+      <div class="item-body">
+        <div class="item-title">Скрытие груминга если раздел не настроен</div>
+        <div class="item-desc">Плитка «Груминг» всегда видна в меню. Нужно скрывать если breeds и schedule пустые</div>
+      </div>
+      <span class="item-tag tag-blocker">Блокер</span>
+    </div>
+    <div class="item active">
+      <div class="item-icon">🔴</div>
+      <div class="item-body">
+        <div class="item-title">Telegram initData валидация</div>
+        <div class="item-desc">Проверить и при необходимости добавить валидацию подписи initData на бэкенде</div>
+      </div>
+      <span class="item-tag tag-blocker">Блокер</span>
+    </div>
+    <div class="item active">
+      <div class="item-icon">🟡</div>
+      <div class="item-body">
+        <div class="item-title">Пересмотр архитектуры статей</div>
+        <div class="item-desc">Возможно убрать категории и отдавать все статьи по виду животного — решить до масштабирования контента</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+  </div>
+</div>
+
+<!-- ФАЗА 4 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-planned"></div>
+    <div class="phase-title">Фаза 4 — Запись на приём</div>
+    <span class="phase-badge badge-planned">Запланировано</span>
+  </div>
+
+  <div class="note">
+    Ключевая фича для реальных пользоват��лей. Требует детального UX-плана — автоматическое подтверждение не подходит, т.к. клиники работают в смешанном режиме (поток + запись).
+  </div>
+
+  <div class="items">
+    <div class="item planned">
+      <div class="item-icon">📋</div>
+      <div class="item-body">
+        <div class="item-title">Заявка на запись (pending flow)</div>
+        <div class="item-desc">Пользователь выбирает врача → слот → отправляет заявку. Статус: pending</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">📋</div>
+      <div class="item-body">
+        <div class="item-title">Подтверждение клиникой</div>
+        <div class="item-desc">Экран заявок в админке. Клиника подтверждает или отклоняет → статус меняется</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">📋</div>
+      <div class="item-body">
+        <div class="item-title">Уведомления через бота</div>
+        <div class="item-desc">При смене статуса бот пишет пользователю в Telegram. Бот уже работает — нужно сохранять telegram_user_id и вызывать SendMessage</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+  </div>
+</div>
+
+<!-- ФАЗА 5 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-planned"></div>
+    <div class="phase-title">Фаза 5 — Аналитика</div>
+    <span class="phase-badge badge-planned">Запланировано</span>
+  </div>
+  <div class="items">
+    <div class="item planned">
+      <div class="item-icon">📊</div>
+      <div class="item-body">
+        <div class="item-title">Сбор событий</div>
+        <div class="item-desc">Middleware записывает события (открытие разделов, просмотр врача и т.д.) в таблицу analytics_events. Можно добавить раньше UI — начать копить данные</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">📊</div>
+      <div class="item-body">
+        <div class="item-title">Дашборд в админке</div>
+        <div class="item-desc">Уникальные пользователи за день/неделю/месяц, популярные разделы</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+  </div>
+</div>
+
+<!-- ФАЗА 6 — SaaS -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-future"></div>
+    <div class="phase-title">Фаза 6 — SaaS и масштабирование</div>
+    <span class="phase-badge badge-future">Будущее</span>
+  </div>
+
+  <div class="note">
+    Архитектура уже готова к этому — мультитенантность реализована с первого дня. Фаза не требует рефакторинга кода, только продуктовых и бизнесовых решений.
+  </div>
+
+  <div class="items">
+    <div class="item future">
+      <div class="item-icon">🔵</div>
+      <div class="item-body">
+        <div class="item-title">Онбординг новой клиники</div>
+        <div class="item-desc">Self-service регистрация, создание slug, первый admin-пользователь</div>
+      </div>
+      <span class="item-tag tag-saas">SaaS</span>
+    </div>
+    <div class="item future">
+      <div class="item-icon">🔵</div>
+      <div class="item-body">
+        <div class="item-title">Биллинг и тарифы</div>
+        <div class="item-desc">Подписка, ограничения по тарифу (кол-во врачей, статей и т.д.)</div>
+      </div>
+      <span class="item-tag tag-saas">SaaS</span>
+    </div>
+    <div class="item future">
+      <div class="item-icon">🔵</div>
+      <div class="item-body">
+        <div class="item-title">Управление клиниками</div>
+        <div class="item-desc">Super-admin панель для управления всеми клиниками на платформе</div>
+      </div>
+      <span class="item-tag tag-saas">SaaS</span>
+    </div>
+  </div>
+</div>
+
+<hr>
+<p style="color:#888; font-size:12px; text-align:center;">YouVet · <a href="index.html" style="color:#bbb;">docs.snzbeachvolleyball25.ru</a></p>
+
+</body>
+</html>
