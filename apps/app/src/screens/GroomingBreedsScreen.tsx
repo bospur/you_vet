@@ -14,8 +14,8 @@ function formatDuration(minutes: number): string {
 }
 
 function formatPrice(price: number | null): string {
-  if (price === null || price === undefined) return 'По запросу';
-  return `${price.toLocaleString('ru-RU')} ₽`;
+  if (price === null || price === undefined) return "По запросу";
+  return `${price.toLocaleString("ru-RU")} ₽`;
 }
 
 export default function GroomingBreedsScreen() {
@@ -28,8 +28,8 @@ export default function GroomingBreedsScreen() {
   });
 
   useEffect(() => {
-    if (isError) notify('Не удалось загрузить список услуг. Попробуйте позже.', 'error');
-  }, [isError, notify]);
+    if (isError && error) notify(error.message, "error");
+  }, [isError, notify, error]);
 
   if (isLoading) return <Preloader />;
 
@@ -59,7 +59,9 @@ export default function GroomingBreedsScreen() {
             <span className={styles.price}>{formatPrice(breed.price)}</span>
           </div>
           <div className={styles.cardMeta}>
-            <span className={styles.duration}>⏱ {formatDuration(breed.duration)}</span>
+            <span className={styles.duration}>
+              ⏱ {formatDuration(breed.duration)}
+            </span>
           </div>
           {breed.description && (
             <p className={styles.description}>{breed.description}</p>
