@@ -73,11 +73,20 @@
   color: #2e7d32;
 }
 
+.slotsCard {
+  background: rgba(76, 175, 80, 0.06);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .slotsHeader {
   font-size: 15px;
   font-weight: 600;
-  color: var(--tgui--text_color);
-  padding: 4px 4px 0;
+  color: #2e7d32;
   text-transform: capitalize;
 }
 
@@ -92,7 +101,7 @@
   justify-content: space-between;
   align-items: center;
   background: var(--tgui--bg_color);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 12px 14px;
 }
 

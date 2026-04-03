@@ -104,15 +104,16 @@ export default function ScheduleScreen() {
         ))}
       </div>
 
-      <div className={styles.slotsHeader}>{formatFullDate(active)}</div>
-
-      <div className={styles.slots}>
-        {slots.map((slot, i) => (
-          <div key={i} className={styles.slot}>
-            <span className={styles.slotName}>{slot.full_name}</span>
-            <span className={styles.slotTime}>{slot.time_from.slice(0, 5)} — {slot.time_to.slice(0, 5)}</span>
-          </div>
-        ))}
+      <div className={styles.slotsCard}>
+        <div className={styles.slotsHeader}>{formatFullDate(active)}</div>
+        <div className={styles.slots}>
+          {slots.map((slot, i) => (
+            <div key={i} className={styles.slot}>
+              <span className={styles.slotName}>{slot.full_name}</span>
+              <span className={styles.slotTime}>{slot.time_from.slice(0, 5)} — {slot.time_to.slice(0, 5)}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <button className={styles.back} onClick={() => navigate(-1)}>‹ Назад</button>
