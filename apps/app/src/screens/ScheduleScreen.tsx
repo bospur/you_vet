@@ -6,6 +6,7 @@ import { fetchSchedule } from '../api';
 import type { ScheduleEntry } from '../api';
 import { useNotification } from '../hooks/useNotification';
 import { Preloader } from '../components/Preloader/Preloader';
+import styles from './ScheduleScreen.module.css';
 
 function groupByDate(slots: ScheduleEntry[]): Record<string, ScheduleEntry[]> {
   return slots.reduce<Record<string, ScheduleEntry[]>>((acc, slot) => {
@@ -37,10 +38,7 @@ export default function ScheduleScreen() {
   }, [isError, notify]);
 
   const backBtn = (
-    <button
-      onClick={() => navigate(-1)}
-      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, color: 'var(--tgui--link_color)', padding: '12px 16px 4px', display: 'block' }}
-    >
+    <button className={styles.back} onClick={() => navigate(-1)}>
       ‹ Назад
     </button>
   );
@@ -48,12 +46,12 @@ export default function ScheduleScreen() {
   if (isLoading) return <Preloader />;
   if (!data?.length) return (
     <>
-      {backBtn}
       <List>
         <Section>
           <Cell>Расписание не добавлено</Cell>
         </Section>
       </List>
+      {backBtn}
     </>
   );
 
@@ -61,7 +59,6 @@ export default function ScheduleScreen() {
 
   return (
     <>
-      {backBtn}
       <List>
       {Object.entries(grouped).map(([date, slots]) => (
         <Section key={date} header={formatDate(date)}>
@@ -76,6 +73,7 @@ export default function ScheduleScreen() {
         </Section>
       ))}
       </List>
+      {backBtn}
     </>
   );
 }
