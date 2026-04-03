@@ -30,12 +30,8 @@ export default function GroomingScheduleScreen() {
   });
 
   useEffect(() => {
-    if (isError)
-      notify(
-        "Не удалось загрузить график. Попробуйте позже." + error.message,
-        "error",
-      );
-  }, [isError, notify]);
+    if (isError && error) notify(error.message, "error");
+  }, [isError, notify, error]);
 
   if (isLoading) return <Preloader />;
 
