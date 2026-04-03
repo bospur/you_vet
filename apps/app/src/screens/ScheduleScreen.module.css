@@ -16,9 +16,20 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: row;
   gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  scrollbar-width: none;
+}
+
+.grid::-webkit-scrollbar {
+  display: none;
 }
 
 .chip {
@@ -26,11 +37,13 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 10px 8px;
+  padding: 10px 14px;
   border-radius: 12px;
   border: 1.5px solid var(--tgui--divider_color);
   background: var(--tgui--bg_color);
   cursor: pointer;
+  flex-shrink: 0;
+  scroll-snap-align: start;
   transition: border-color 0.15s, background 0.15s;
 }
 
