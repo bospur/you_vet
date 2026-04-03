@@ -93,6 +93,8 @@ func main() {
 	http.HandleFunc("/api/clinics/{clinicSlug}/articles/{slug}", articleHandler.GetArticle)
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/doctors", doctorHandler.GetPublicDoctors)
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/schedule", doctorHandler.GetPublicSchedule)
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/breeds", groomingHandler.GetPublicBreeds)
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/schedule", groomingHandler.GetPublicSchedule)
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))

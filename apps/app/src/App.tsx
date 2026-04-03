@@ -8,6 +8,9 @@ import ArticleScreen from './screens/ArticleScreen';
 import DoctorsScreen from './screens/DoctorsScreen';
 import DoctorScreen from './screens/DoctorScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
+import GroomingScreen from './screens/GroomingScreen';
+import GroomingBreedsScreen from './screens/GroomingBreedsScreen';
+import GroomingScheduleScreen from './screens/GroomingScheduleScreen';
 import TelegramOnlyScreen from './screens/TelegramOnlyScreen';
 
 function BackButtonHandler() {
@@ -67,6 +70,9 @@ export default function App() {
         <Route path="/doctors" element={<DoctorsScreen />} />
         <Route path="/doctors/:doctorId" element={<DoctorScreen />} />
         <Route path="/schedule" element={<ScheduleScreen />} />
+        <Route path="/grooming" element={<GroomingScreen />} />
+        <Route path="/grooming/breeds" element={<GroomingBreedsScreen />} />
+        <Route path="/grooming/schedule" element={<GroomingScheduleScreen />} />
       </Routes>
     </BrowserRouter>
   );

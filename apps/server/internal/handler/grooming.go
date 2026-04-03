@@ -283,3 +283,45 @@ func scanInt(s string, out *int) (int, error) {
 	*out = n
 	return n, nil
 }
+
+// ── Публичные эндпоинты (без авторизации, по slug клиники) ───────────────────
+
+// GetPublicBreeds обрабатывает GET /api/clinics/{clinicSlug}/grooming/breeds
+func (h *GroomingHandler) GetPublicBreeds(w http.ResponseWriter, r *http.Request) {
+	clinicSlug := r.PathValue("clinicSlug")
+	if clinicSlug == "" {
+		http.Error(w, "неверный запрос", http.StatusBadRequest)
+		return
+	}
+
+	breeds, err := h.groomingRepo.GetAllBreedsBySlug(clinicSlug)
+	if err != nil {
+		log.Printf("ошибка получения пород груминга (public): %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if breeds == nil {
+		breeds = []repository.GroomingBreed{}
+	}
+	writeJSON(w, http.StatusOK, breeds)
+}
+
+// GetPublicSchedule обрабатывает GET /api/clinics/{clinicSlug}/grooming/schedule
+func (h *GroomingHandler) GetPublicSchedule(w http.ResponseWriter, r *http.Request) {
+	clinicSlug := r.PathValue("clinicSlug")
+	if clinicSlug == "" {
+		http.Error(w, "неверный запрос", http.StatusBadRequest)
+		return
+	}
+
+	slots, err := h.groomingRepo.GetTemplateBySlug(clinicSlug)
+	if err != nil {
+		log.Printf("ошибка получения шаблона груминга (public): %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if slots == nil {
+		slots = []repository.GroomingTemplateSlot{}
+	}
+	writeJSON(w, http.StatusOK, slots)
+}

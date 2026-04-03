@@ -24,6 +24,7 @@ export default function AnimalsScreen() {
       items={(data ?? []).map((animal) => ({
         key: animal.id,
         title: animal.name,
+        icon: animal.icon || undefined,
         onClick: () => navigate(`/animals/${animal.slug}/categories`),
       }))}
     />

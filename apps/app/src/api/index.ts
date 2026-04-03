@@ -4,12 +4,14 @@ export interface Animal {
   id: number;
   name: string;
   slug: string;
+  icon: string;
 }
 
 export interface Category {
   id: number;
   name: string;
   slug: string;
+  icon: string;
 }
 
 export interface ArticleListItem {
@@ -66,3 +68,24 @@ export const fetchSchedule = () =>
   apiClient
     .get<{ entries: ScheduleEntry[] }>('/schedule')
     .then((r) => r.data.entries ?? []);
+
+export interface GroomingBreed {
+  id: number;
+  breed: string;
+  duration: number;
+  price: number | null;
+  description: string | null;
+}
+
+export interface GroomingScheduleSlot {
+  id: number;
+  day_of_week: number;
+  time_from: string;
+  time_to: string;
+}
+
+export const fetchGroomingBreeds = () =>
+  apiClient.get<GroomingBreed[]>('/grooming/breeds').then((r) => r.data);
+
+export const fetchGroomingSchedule = () =>
+  apiClient.get<GroomingScheduleSlot[]>('/grooming/schedule').then((r) => r.data);

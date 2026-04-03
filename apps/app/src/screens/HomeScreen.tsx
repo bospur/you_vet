@@ -5,6 +5,7 @@ const MENU = [
   { icon: '🐾', label: 'Первая помощь животным', path: '/animals' },
   { icon: '👨‍⚕️', label: 'Наши врачи', path: '/doctors' },
   { icon: '📅', label: 'Расписание приёма', path: '/schedule' },
+  { icon: '✂️', label: 'Груминг', path: '/grooming' },
 ];
 
 export default function HomeScreen() {
