@@ -90,7 +90,8 @@ export const fetchGroomingBreeds = () =>
 export const fetchGroomingSchedule = () =>
   apiClient.get<GroomingScheduleSlot[]>('/grooming/schedule').then((r) => r.data);
 
-export type { ClinicInfo } from '@you-vet/types';
+import type { ClinicInfo } from '@you-vet/types';
+export type { ClinicInfo };
 
 export const fetchClinicInfo = () =>
   apiClient.get<ClinicInfo>('/clinic-info').then((r) => r.data);
