@@ -104,6 +104,7 @@
     <a href="https://admin.snzbeachvolleyball25.ru">Admin Panel (prod)</a>
     <a href="https://api.snzbeachvolleyball25.ru">API (prod)</a>
     <a href="https://app.snzbeachvolleyball25.ru">Mini App (prod)</a>
+    <span style="color:#888; font-size:12px;">Обновлено: 2026-04-04</span>
   </div>
 </div>
 
@@ -112,10 +113,10 @@
 
 <p>Клиника подключается к сервису и получает два инструмента:</p>
 <ul>
-  <li><strong>Telegram Mini App</strong> — для клиентов. Владельцы питомцев читают статьи по первой помощи, смотрят врачей и расписание.</li>
-  <li><strong>Веб-панель (admin)</strong> — для персонала клиники. Редактор ведёт контент, администратор управляет врачами и пользователями, грумер — своими записями.</li>
+  <li><strong>Telegram Mini App</strong> — для клиентов. Владельцы питомцев видят информацию о клинике (лого, баннер, телефон, адрес), читают статьи по первой помощи, смотрят врачей и расписание, записываются на груминг.</li>
+  <li><strong>Веб-панель (admin)</strong> — для персонала клиники. Редактор ведёт контент, администратор управляет врачами, пользователями и информацией о клинике, грумер — своими записями.</li>
 </ul>
-<p>Мультитенантность: одна инсталляция сервера обслуживает несколько клиник через <code>clinic_id</code> во всех таблицах.</p>
+<p>Мультитенантность: одна инсталляция сервера обслуживает несколько клиник через <code>clinic_id</code> во всех таблицах. Добавить клинику = новая строка в <code>clinics</code>, никакого рефакторинга не требуется.</p>
 
 
 <h2>Структура монорепо</h2>
@@ -211,7 +212,30 @@ apps/server/<br>
   <tr><td><code>/api/admin/...</code></td><td>JWT Bearer</td><td>Admin Panel</td></tr>
 </table>
 
-<h3>База данных — 7 миграций</h3>
+<h3>Публичные эндпоинты Mini App</h3>
+<table>
+  <tr><th>Метод</th><th>Путь</th><th>Описание</th></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/clinic-info</code></td><td>Профиль клиники (лого, баннер, контакты)</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/doctors</code></td><td>Список врачей</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/schedule</code></td><td>Расписание приёма</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/grooming/breeds</code></td><td>Породы и цены груминга</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/grooming/schedule</code></td><td>Расписание груминга</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/animals</code></td><td>Виды животных</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/articles/{slug}</code></td><td>Статья по первой помощи</td></tr>
+</table>
+
+<h3>Admin эндпоинты (JWT)</h3>
+<table>
+  <tr><th>Ресурс</th><th>Эндпоинты</th></tr>
+  <tr><td>Clinic info</td><td>GET/PUT <code>/api/admin/clinic-info</code>, POST <code>/logo</code>, POST <code>/banner</code></td></tr>
+  <tr><td>Doctors</td><td>CRUD + фото + расписание + исключения</td></tr>
+  <tr><td>Articles</td><td>CRUD + статус + категории</td></tr>
+  <tr><td>Grooming</td><td>Породы, шаблон недели, записи</td></tr>
+  <tr><td>Settings</td><td>GET/PATCH <code>/api/admin/settings</code></td></tr>
+  <tr><td>Users</td><td>CRUD (только admin)</td></tr>
+</table>
+
+<h3>База данных — 8 миграций</h3>
 <table>
   <tr><th>#</th><th>Что создаёт</th></tr>
   <tr><td>001</td><td><code>animals</code> — животные (slug, icon, sort_order)</td></tr>
@@ -221,6 +245,7 @@ apps/server/<br>
   <tr><td>005</td><td><code>status</code> у статей (draft / published)</td></tr>
   <tr><td>006</td><td><code>doctors</code>, <code>doctor_schedules</code>, <code>schedule_exceptions</code>, <code>clinic_settings</code></td></tr>
   <tr><td>007</td><td><code>grooming_breeds</code>, <code>grooming_template</code>, <code>grooming_appointments</code></td></tr>
+  <tr><td>008</td><td><code>clinic_info</code> — профиль клиники (name, description, phone, address, email, website, logo_url, banner_url)</td></tr>
 </table>
 
 <div class="tip">
@@ -369,10 +394,14 @@ feature/*, fix/*, chore/*  ← рабочие ветки</code></pre>
 
 <table>
   <tr><th>Workflow</th><th>Триггер (paths)</th><th>Что делает</th></tr>
-  <tr><td><code>deploy-server.yml</code></td><td><code>apps/server/**</code></td><td>SSH на VPS → <code>git pull</code> → <code>docker compose up --build -d</code></td></tr>
+  <tr><td><code>deploy-server.yml</code></td><td><code>apps/server/**</code></td><td>Сборка Docker образа → push в GHCR → SSH на VPS → <code>docker compose pull && up -d</code></td></tr>
   <tr><td><code>deploy-admin.yml</code></td><td><code>apps/admin/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
   <tr><td><code>deploy-app.yml</code></td><td><code>apps/app/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
 </table>
+
+<div class="tip">
+  <strong>Server деплой использует GHCR</strong> (GitHub Container Registry). Образ собирается в CI и пушится как <code>ghcr.io/bospur/you_vet-server:latest</code>. VPS только тянет готовый образ — никакого git на сервере не нужно. Аутентификация через <code>GITHUB_TOKEN</code> (автоматический, не истекает).
+</div>
 
 <p>Секреты в GitHub Repository Settings: <code>VPS_HOST</code>, <code>VPS_USER</code>, <code>VPS_SSH_KEY</code>, <code>VITE_API_URL</code>, <code>VITE_CLINIC_SLUG</code></p>
 
@@ -413,15 +442,43 @@ const deleteMutation = useMutation({
 });</code></pre>
 
 <h3>Mini App (React) — публичный API без авторизации</h3>
-<pre><code>// Telegram BackButton управляется через SDK
-const { backButton } = useLaunchParams();
-
-// Данные из публичного API
+<pre><code>// Данные из публичного API
 const { data } = useQuery({
     queryKey: ['doctors'],
     queryFn: () => api.get(`/api/clinics/${CLINIC_SLUG}/doctors`),
-});</code></pre>
+});
 
+// Telegram BackButton — управляется нативно через Telegram.WebApp
+// показывается на всех экранах кроме "/"</code></pre>
+
+<h3>Mini App — архитектура экранов</h3>
+<p>Все экраны обёрнуты в <code>AppLayout</code> (React Router nested route) — постоянный хедер с лого клиники, названием и кнопкой звонка. Данные клиники фетчатся один раз в <code>AppLayout</code> и передаются дочерним экранам через <code>useOutletContext()</code>.</p>
+<pre><code>// AppLayout.tsx — лейаут верхнего уровня
+&lt;Route element={&lt;AppLayout /&gt;}&gt;
+  &lt;Route path="/" element={&lt;HomeScreen /&gt;} /&gt;
+  &lt;Route path="/doctors" element={&lt;DoctorsScreen /&gt;} /&gt;
+  ...
+&lt;/Route&gt;
+
+// HomeScreen.tsx — получает данные клиники от лейаута
+const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
+
+
+<h2>Статус готовности к запуску</h2>
+
+<table>
+  <tr><th>Функция</th><th>Статус</th><th>Примечание</th></tr>
+  <tr><td>Профили врачей + расписание</td><td>✅ Готово</td><td></td></tr>
+  <tr><td>Статьи по первой помощи (WYSIWYG)</td><td>✅ Готово</td><td></td></tr>
+  <tr><td>Груминг (породы, цены, расписание)</td><td>✅ Готово</td><td></td></tr>
+  <tr><td>Информация о клинике (лого, баннер, контакты)</td><td>✅ Готово</td><td></td></tr>
+  <tr><td>Кнопка "Позвонить" в хедере</td><td>✅ Готово</td><td></td></tr>
+  <tr><td>Персистентный хедер во всём приложении</td><td>✅ Готово</td><td>AppLayout</td></tr>
+  <tr><td>Скрытие груминга если раздел не настроен</td><td>🔴 Не сделано</td><td>Блокирует запуск</td></tr>
+  <tr><td>Telegram initData валидация</td><td>🔴 Не проверено</td><td>Безопасность</td></tr>
+  <tr><td>Запись на приём (pending/confirm flow)</td><td>🔴 Не сделано</td><td>Ключевая фича</td></tr>
+  <tr><td>Аналитика посещений</td><td>🟡 Не начато</td><td>После записи</td></tr>
+</table>
 
 <h2>Документация в репо</h2>
 
