@@ -6,10 +6,9 @@
   style.textContent = `
     .youvet-cat {
       position: fixed;
-      z-index: 0;
-      opacity: 0.12;
+      z-index: 1;
+      opacity: 0.08;
       pointer-events: none;
-      transition: opacity 0.5s;
     }
 
     .youvet-cat-body {
