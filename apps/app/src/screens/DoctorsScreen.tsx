@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchDoctors } from '../api';
 import { useNotification } from '../hooks/useNotification';
 import { NavList } from '../components/NavList/NavList';
 import { DoctorAvatar } from '../components/DoctorAvatar/DoctorAvatar';
+import { Preloader } from '../components/Preloader/Preloader';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
 
@@ -18,7 +18,7 @@ export default function DoctorsScreen() {
     if (isError) notify('Не удалось загрузить список врачей. Попробуйте позже.', 'error');
   }, [isError, notify]);
 
-  if (isLoading) return <Spinner size="m" />;
+  if (isLoading) return <Preloader />;
 
   return (
     <NavList

@@ -12,11 +12,10 @@
   cursor: pointer;
   font-size: 17px;
   color: var(--tgui--link_color);
-  padding: 0;
-  text-align: left;
+  padding: 12px 0;
+  text-align: center;
   width: 100%;
-  align-self: flex-start;
-  margin-bottom: 8px;
+  margin-top: 16px;
 }
 
 .photo {

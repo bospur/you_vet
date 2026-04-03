@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { List, Section, Cell, Spinner } from '@telegram-apps/telegram-ui';
+import { List, Section, Cell } from '@telegram-apps/telegram-ui';
 import { fetchSchedule } from '../api';
 import type { ScheduleEntry } from '../api';
 import { useNotification } from '../hooks/useNotification';
+import { Preloader } from '../components/Preloader/Preloader';
 
 function groupByDate(slots: ScheduleEntry[]): Record<string, ScheduleEntry[]> {
   return slots.reduce<Record<string, ScheduleEntry[]>>((acc, slot) => {
@@ -44,7 +45,7 @@ export default function ScheduleScreen() {
     </button>
   );
 
-  if (isLoading) return <Spinner size="m" />;
+  if (isLoading) return <Preloader />;
   if (!data?.length) return (
     <>
       {backBtn}
