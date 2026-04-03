@@ -48,6 +48,7 @@
   align-items: flex-start;
   gap: 14px;
   padding: 0 16px;
+  padding-top: 12px;
 }
 
 .logo {
@@ -64,6 +65,7 @@
   flex-direction: column;
   gap: 4px;
   padding-top: 4px;
+  flex: 1;
 }
 
 .clinicName {
@@ -79,36 +81,30 @@
   line-height: 1.4;
 }
 
+.callBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.callBtn:active {
+  opacity: 0.8;
+}
+
 /* ── Контакты ── */
 .contacts {
   padding: 0 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.phoneBtn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  background: #4caf50;
-  color: #fff;
-  border-radius: 14px;
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 600;
-  transition: opacity 0.15s;
-}
-
-.phoneBtn:active {
-  opacity: 0.8;
-}
-
-.phoneBtnIcon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
 }
 
 .address {
