@@ -121,9 +121,9 @@
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
-  color: var(--tgui--link_color);
-  background: var(--tgui--bg_color);
-  border: 1px solid var(--tgui--divider_color);
+  color: #2e7d32;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.35);
   border-radius: 14px;
   padding: 12px 20px;
   text-align: center;
