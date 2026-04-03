@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchDoctors, fetchSchedule } from '../api';
+import { Preloader } from '../components/Preloader/Preloader';
 import { DoctorAvatar } from '../components/DoctorAvatar/DoctorAvatar';
 import styles from './DoctorScreen.module.css';
 
@@ -32,13 +32,11 @@ export default function DoctorScreen() {
   const doctor = doctors?.find((d) => String(d.id) === doctorId);
   const doctorSchedule = scheduleEntries?.filter((e) => String(e.doctor_id) === doctorId) ?? [];
 
-  if (loadingDoctors) return <Spinner size="m" />;
+  if (loadingDoctors) return <Preloader />;
   if (!doctor) return null;
 
   return (
     <div className={styles.wrapper}>
-      <button className={styles.back} onClick={() => navigate(-1)}>‹ Назад</button>
-
       <DoctorAvatar
         name={doctor.full_name}
         photoUrl={doctor.photo_url ? `${API_URL}${doctor.photo_url}` : undefined}
@@ -81,6 +79,8 @@ export default function DoctorScreen() {
           ))}
         </div>
       )}
+
+      <button className={styles.back} onClick={() => navigate(-1)}>‹ Назад</button>
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchArticle } from '../api';
 import { useNotification } from '../hooks/useNotification';
+import { Preloader } from '../components/Preloader/Preloader';
 import styles from './ArticleScreen.module.css';
 
 export default function ArticleScreen() {
@@ -21,7 +21,7 @@ export default function ArticleScreen() {
     if (isError) notify('Не удалось загрузить статью. Попробуйте позже.', 'error');
   }, [isError, notify]);
 
-  if (isLoading) return <Spinner size="m" />;
+  if (isLoading) return <Preloader />;
   if (!data) return null;
 
   return (

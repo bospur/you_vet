@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchGroomingSchedule } from '../api';
+import { Preloader } from '../components/Preloader/Preloader';
 import { useNotification } from '../hooks/useNotification';
 import styles from './GroomingScheduleScreen.module.css';
 
@@ -25,7 +25,7 @@ export default function GroomingScheduleScreen() {
     if (isError) notify('Не удалось загрузить график. Попробуйте позже.', 'error');
   }, [isError, notify]);
 
-  if (isLoading) return <Spinner size="m" />;
+  if (isLoading) return <Preloader />;
 
   const slotMap = new Map((data ?? []).map((s) => [s.day_of_week, s]));
 

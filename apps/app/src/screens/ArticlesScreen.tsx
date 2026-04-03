@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchArticles } from '../api';
 import { useNotification } from '../hooks/useNotification';
 import { NavList } from '../components/NavList/NavList';
+import { Preloader } from '../components/Preloader/Preloader';
 
 export default function ArticlesScreen() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function ArticlesScreen() {
     if (isError) notify('Не удалось загрузить данные. Попробуйте позже.', 'error');
   }, [isError, notify]);
 
-  if (isLoading) return <Spinner size="m" />;
+  if (isLoading) return <Preloader />;
 
   return (
     <NavList

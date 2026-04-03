@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Spinner } from '@telegram-apps/telegram-ui';
 import { fetchGroomingBreeds } from '../api';
+import { Preloader } from '../components/Preloader/Preloader';
 import { useNotification } from '../hooks/useNotification';
 import styles from './GroomingBreedsScreen.module.css';
 
@@ -30,7 +30,7 @@ export default function GroomingBreedsScreen() {
     if (isError) notify('Не удалось загрузить список услуг. Попробуйте позже.', 'error');
   }, [isError, notify]);
 
-  if (isLoading) return <Spinner size="m" />;
+  if (isLoading) return <Preloader />;
 
   return (
     <div className={styles.wrapper}>
