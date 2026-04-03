@@ -1,27 +1,7 @@
 import axiosInstance from './axiosInstance';
+import type { ClinicInfo, ClinicInfoInput } from '@you-vet/types';
 
-export interface ClinicInfo {
-  id: number;
-  clinic_id: number;
-  name: string;
-  description: string;
-  phone: string;
-  address: string;
-  email: string;
-  website: string;
-  logo_url: string;
-  banner_url: string;
-  updated_at: string;
-}
-
-export interface ClinicInfoInput {
-  name: string;
-  description: string;
-  phone: string;
-  address: string;
-  email: string;
-  website: string;
-}
+export type { ClinicInfo, ClinicInfoInput };
 
 export async function getClinicInfo(): Promise<ClinicInfo> {
   const { data } = await axiosInstance.get<ClinicInfo>('/api/admin/clinic-info');
