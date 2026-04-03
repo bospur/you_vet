@@ -1,33 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { CatLogo } from '@you-vet/cat';
 import { fetchClinicInfo } from '../../api';
 import type { ClinicInfo } from '../../api';
 import styles from './AppLayout.module.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
-
-function CatLogo() {
-  return (
-    <div className={styles.catWrap}>
-      <div className={styles.catBody}>
-        <div className={styles.catEars}>
-          <div className={styles.catEar} />
-          <div className={styles.catEar} />
-        </div>
-        <div className={styles.catHead}>
-          <div className={styles.catEyes}>
-            <div className={styles.catEye} />
-            <div className={styles.catEye} />
-          </div>
-          <div className={styles.catNose} />
-        </div>
-        <div className={styles.catBodyPart}>
-          <div className={styles.catTail} />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function AppLayout() {
   const navigate = useNavigate();

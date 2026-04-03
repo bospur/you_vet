@@ -1,0 +1,96 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: idle 2s ease-in-out infinite;
+}
+
+@keyframes idle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-2px); }
+}
+
+.ears {
+  display: flex;
+  justify-content: space-between;
+  width: 26px;
+  margin-bottom: -2px;
+}
+
+.ear {
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 9px solid #4caf50;
+}
+
+.head {
+  width: 26px;
+  height: 22px;
+  background: #4caf50;
+  border-radius: 50% 50% 45% 45%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyes {
+  display: flex;
+  gap: 5px;
+  margin-top: -2px;
+}
+
+.eye {
+  width: 4px; height: 4px;
+  background: var(--tgui--bg_color, #fff);
+  border-radius: 50%;
+  animation: blink 4s ease-in-out infinite;
+}
+
+.eye:nth-child(2) { animation-delay: 0.1s; }
+
+@keyframes blink {
+  0%, 85%, 100% { transform: scaleY(1); }
+  90%            { transform: scaleY(0.1); }
+}
+
+.nose {
+  position: absolute;
+  bottom: 5px; left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 3px;
+  background: #ff7eb3;
+  border-radius: 50%;
+}
+
+.torso {
+  width: 22px;
+  height: 16px;
+  background: #4caf50;
+  border-radius: 40% 40% 50% 50%;
+  margin-top: -1px;
+  position: relative;
+}
+
+.tail {
+  position: absolute;
+  right: -10px; bottom: 4px;
+  width: 14px; height: 5px;
+  background: #4caf50;
+  border-radius: 0 4px 4px 0;
+  transform-origin: left center;
+  animation: wag 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes wag {
+  from { transform: rotate(-25deg); }
+  to   { transform: rotate(25deg); }
+}
