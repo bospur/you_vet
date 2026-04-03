@@ -8,25 +8,46 @@ on:
       - 'apps/server/**'
       - '.github/workflows/deploy-server.yml'
 
+env:
+  IMAGE: ghcr.io/bospur/you_vet-server
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/server
+          push: true
+          tags: ${{ env.IMAGE }}:latest
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GH_PAT
+          envs: GHCR_TOKEN,GHCR_USER
           script: |
-            cd /home/deploy/you_vet
-            git remote set-url origin https://x-access-token:${GH_PAT}@github.com/bospur/you_vet.git
-            git fetch origin
-            git checkout dev
-            git reset --hard origin/dev
-            cd apps/server
-            docker compose up --build -d
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            cd /home/deploy/you_vet/apps/server
+            docker compose pull
+            docker compose up -d
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}

@@ -2,7 +2,7 @@ services:
 
   # ── Go приложение ────────────────────────────────────────────────────────────
   app:
-    build: .
+    image: ghcr.io/bospur/you_vet-server:latest
     restart: unless-stopped
     env_file: .env                  # переменные окружения из файла .env
     ports:
