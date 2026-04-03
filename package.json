@@ -1,7 +1,10 @@
 {
   "name": "you-vet",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -9,5 +12,6 @@
   },
   "devDependencies": {
     "turbo": "latest"
-  }
+  },
+  "packageManager": "npm@10.5.0"
 }
