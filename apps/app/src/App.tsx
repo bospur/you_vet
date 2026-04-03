@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
+import AppLayout from './components/AppLayout/AppLayout';
 import HomeScreen from './screens/HomeScreen';
 import AnimalsScreen from './screens/AnimalsScreen';
 import CategoriesScreen from './screens/CategoriesScreen';
@@ -62,17 +63,19 @@ export default function App() {
     <BrowserRouter>
       <BackButtonHandler />
       <Routes>
-        <Route path="/" element={<HomeScreen />} />
-        <Route path="/animals" element={<AnimalsScreen />} />
-        <Route path="/animals/:animalSlug/categories" element={<CategoriesScreen />} />
-        <Route path="/animals/:animalSlug/categories/:categorySlug/articles" element={<ArticlesScreen />} />
-        <Route path="/articles/:articleSlug" element={<ArticleScreen />} />
-        <Route path="/doctors" element={<DoctorsScreen />} />
-        <Route path="/doctors/:doctorId" element={<DoctorScreen />} />
-        <Route path="/schedule" element={<ScheduleScreen />} />
-        <Route path="/grooming" element={<GroomingScreen />} />
-        <Route path="/grooming/breeds" element={<GroomingBreedsScreen />} />
-        <Route path="/grooming/schedule" element={<GroomingScheduleScreen />} />
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<HomeScreen />} />
+          <Route path="/animals" element={<AnimalsScreen />} />
+          <Route path="/animals/:animalSlug/categories" element={<CategoriesScreen />} />
+          <Route path="/animals/:animalSlug/categories/:categorySlug/articles" element={<ArticlesScreen />} />
+          <Route path="/articles/:articleSlug" element={<ArticleScreen />} />
+          <Route path="/doctors" element={<DoctorsScreen />} />
+          <Route path="/doctors/:doctorId" element={<DoctorScreen />} />
+          <Route path="/schedule" element={<ScheduleScreen />} />
+          <Route path="/grooming" element={<GroomingScreen />} />
+          <Route path="/grooming/breeds" element={<GroomingBreedsScreen />} />
+          <Route path="/grooming/schedule" element={<GroomingScheduleScreen />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

@@ -1,0 +1,60 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--tgui--bg_color);
+  border-bottom: 1px solid var(--tgui--divider);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.clinicName {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tgui--text_color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.callBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.callBtn:active {
+  opacity: 0.8;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

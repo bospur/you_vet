@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { fetchClinicInfo } from '../api';
+import { useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { ClinicInfo } from '../api';
 import { NavGrid } from '../components/NavGrid/NavGrid';
 import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
@@ -11,14 +10,10 @@ const BANNER_DISMISSED_KEY = 'banner_dismissed_v1';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
-  const [info, setInfo] = useState<ClinicInfo | null>(null);
+  const info = useOutletContext<ClinicInfo | null>();
   const [bannerClosed, setBannerClosed] = useState(
     () => sessionStorage.getItem(BANNER_DISMISSED_KEY) === '1',
   );
-
-  useEffect(() => {
-    fetchClinicInfo().then(setInfo).catch(() => {});
-  }, []);
 
   const handleCloseBanner = () => {
     sessionStorage.setItem(BANNER_DISMISSED_KEY, '1');
@@ -33,7 +28,6 @@ export default function HomeScreen() {
   ];
 
   const bannerUrl = info?.banner_url ? `${BASE_URL}${info.banner_url}` : null;
-  const logoUrl = info?.logo_url ? `${BASE_URL}${info.logo_url}` : null;
 
   return (
     <div className={styles.wrapper}>
@@ -47,31 +41,10 @@ export default function HomeScreen() {
         </div>
       )}
 
-      {/* Шапка клиники */}
-      <div className={styles.header}>
-        {logoUrl && (
-          <img src={logoUrl} alt="logo" className={styles.logo} />
-        )}
-        <div className={styles.headerText}>
-          <p className={styles.clinicName}>
-            {info?.name || 'Ветеринарная клиника'}
-          </p>
-          {info?.description && (
-            <p className={styles.description}>{info.description}</p>
-          )}
-        </div>
-        {info?.phone && (
-          <a
-            href={`tel:${info.phone.replace(/\s/g, '')}`}
-            className={styles.callBtn}
-            aria-label="Позвонить"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C9.6 21 3 14.4 3 6c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="currentColor"/>
-            </svg>
-          </a>
-        )}
-      </div>
+      {/* Описание */}
+      {info?.description && (
+        <p className={styles.description}>{info.description}</p>
+      )}
 
       {/* Адрес */}
       {info?.address && (

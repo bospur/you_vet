@@ -42,61 +42,10 @@
   background: rgba(0, 0, 0, 0.65);
 }
 
-/* ── Шапка клиники ── */
-.header {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 0 16px;
-  padding-top: 12px;
-}
-
-.logo {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  border-radius: 12px;
-  flex-shrink: 0;
-  background: rgba(76, 175, 80, 0.08);
-}
-
-.headerText {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 4px;
-  flex: 1;
-}
-
-.clinicName {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--tgui--text_color);
-  line-height: 1.2;
-}
-
 .description {
   font-size: 14px;
   color: var(--tgui--hint_color);
   line-height: 1.4;
-}
-
-.callBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #4caf50;
-  color: #fff;
-  text-decoration: none;
-  transition: opacity 0.15s;
-}
-
-.callBtn:active {
-  opacity: 0.8;
 }
 
 /* ── Контакты ── */
