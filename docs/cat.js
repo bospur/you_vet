@@ -1,31 +1,21 @@
 (() => {
   const CAT_COLOR = '#4caf50';
   const CAT_SECONDARY = '#388e3c';
-  const NOSE_COLOR = '#ff7eb3';
-  const EYE_COLOR = '#fff';
 
   const style = document.createElement('style');
   style.textContent = `
     .youvet-cat {
       position: fixed;
-      bottom: 18px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      z-index: 0;
+      opacity: 0.12;
       pointer-events: none;
-      animation: catWalk linear infinite;
-    }
-
-    @keyframes catWalk {
-      from { transform: translateX(110vw) scaleX(-1); }
-      49%  { transform: translateX(-120px) scaleX(-1); }
-      50%  { transform: translateX(-120px) scaleX(1); }
-      99%  { transform: translateX(110vw) scaleX(1); }
-      to   { transform: translateX(110vw) scaleX(-1); }
+      transition: opacity 0.5s;
     }
 
     .youvet-cat-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       animation: catBounce 0.45s ease-in-out infinite;
     }
 
@@ -49,8 +39,7 @@
     }
 
     .youvet-cat-head {
-      width: 28px;
-      height: 24px;
+      width: 28px; height: 24px;
       background: ${CAT_COLOR};
       border-radius: 50% 50% 45% 45%;
       position: relative;
@@ -59,19 +48,15 @@
       justify-content: center;
     }
 
-    .youvet-cat-eyes {
-      display: flex;
-      gap: 6px;
-      margin-top: -2px;
-    }
+    .youvet-cat-eyes { display: flex; gap: 6px; margin-top: -2px; }
 
     .youvet-cat-eye {
       width: 5px; height: 5px;
-      background: ${EYE_COLOR};
+      background: #fff;
       border-radius: 50%;
       animation: catBlink 4s ease-in-out infinite;
     }
-    .youvet-cat-eye:nth-child(2) { animation-delay: 0.1s; }
+    .youvet-cat-eye:nth-child(2) { animation-delay: 0.15s; }
 
     @keyframes catBlink {
       0%, 88%, 100% { transform: scaleY(1); }
@@ -83,7 +68,7 @@
       bottom: 5px; left: 50%;
       transform: translateX(-50%);
       width: 4px; height: 3px;
-      background: ${NOSE_COLOR};
+      background: #ff7eb3;
       border-radius: 50%;
     }
 
@@ -110,12 +95,7 @@
       to   { transform: rotate(30deg); }
     }
 
-    .youvet-cat-legs {
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      margin-top: -1px;
-    }
+    .youvet-cat-legs { display: flex; justify-content: center; gap: 4px; margin-top: -1px; }
 
     .youvet-cat-leg {
       width: 5px; height: 10px;
@@ -139,10 +119,9 @@
   `;
   document.head.appendChild(style);
 
-  function createCat(duration) {
+  function createCatEl() {
     const cat = document.createElement('div');
     cat.className = 'youvet-cat';
-    cat.style.animationDuration = duration + 's';
     cat.innerHTML = `
       <div class="youvet-cat-body">
         <div class="youvet-cat-ears">
@@ -170,8 +149,69 @@
     return cat;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const cat = createCat(18);
+  const CAT_W = 50;
+  const CAT_H = 60;
+  const SPEED = 0.6; // px per frame
+
+  function randomDir() {
+    const angle = Math.random() * Math.PI * 2;
+    return { dx: Math.cos(angle), dy: Math.sin(angle) };
+  }
+
+  function spawnCat() {
+    const cat = createCatEl();
     document.body.appendChild(cat);
+
+    let x = Math.random() * (window.innerWidth - CAT_W);
+    let y = Math.random() * (window.innerHeight - CAT_H);
+    let { dx, dy } = randomDir();
+
+    // Меняем направление случайно каждые 3-6 секунд
+    let dirTimer = 0;
+    let nextDirChange = 3000 + Math.random() * 3000;
+
+    let last = performance.now();
+
+    function tick(now) {
+      const dt = now - last;
+      last = now;
+
+      dirTimer += dt;
+      if (dirTimer >= nextDirChange) {
+        // Плавный поворот — немного корректируем направление
+        const turn = (Math.random() - 0.5) * Math.PI;
+        const angle = Math.atan2(dy, dx) + turn;
+        dx = Math.cos(angle);
+        dy = Math.sin(angle);
+        dirTimer = 0;
+        nextDirChange = 3000 + Math.random() * 3000;
+      }
+
+      x += dx * SPEED * dt / 16;
+      y += dy * SPEED * dt / 16;
+
+      const maxX = window.innerWidth - CAT_W;
+      const maxY = window.innerHeight - CAT_H;
+
+      // Отражение от краёв
+      if (x < 0)    { x = 0;    dx = Math.abs(dx); }
+      if (x > maxX) { x = maxX; dx = -Math.abs(dx); }
+      if (y < 0)    { y = 0;    dy = Math.abs(dy); }
+      if (y > maxY) { y = maxY; dy = -Math.abs(dy); }
+
+      cat.style.left = x + 'px';
+      cat.style.top  = y + 'px';
+
+      // Зеркалим если идёт влево
+      cat.style.transform = dx < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    spawnCat();
   });
 })();
