@@ -5,6 +5,7 @@ import { AppRoot } from '@telegram-apps/telegram-ui';
 import './index.css';
 import App from './App';
 import { NotificationProvider } from './hooks/useNotification';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 window.Telegram?.WebApp?.ready();
 window.Telegram?.WebApp?.expand();
@@ -32,13 +33,15 @@ function Root() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppRoot appearance={appearance}>
-        <NotificationProvider>
-          <App />
-        </NotificationProvider>
-      </AppRoot>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppRoot appearance={appearance}>
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
+        </AppRoot>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
