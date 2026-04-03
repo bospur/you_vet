@@ -13,6 +13,7 @@ PostgreSQL. Все таблицы содержат `clinic_id` для мульт
 | `005_add_article_status` | Поле `status` (`draft`/`published`) в `articles` |
 | `006_create_doctors` | `doctors`, `doctor_schedules`, `doctor_schedule_exceptions`, `clinic_settings` |
 | `007_create_grooming` | `grooming_breeds`, `grooming_weekly_template`, `grooming_appointments` |
+| `008_create_clinic_info` | `clinic_info` — информация о клинике для главного экрана приложения |
 
 ## Схема
 
@@ -26,14 +27,30 @@ users
   id, clinic_id, login, password_hash, role (admin/editor/groomer)
 ```
 
+### Информация о клинике
+
+```
+clinic_info                     — одна запись на клинику (UNIQUE clinic_id)
+  id, clinic_id
+  name        — название клиники
+  description — описание
+  phone       — телефон (отображается как кнопка «Позвонить» в приложении)
+  address     — адрес
+  email
+  website
+  logo_url    — путь к файлу логотипа (/uploads/...)
+  banner_url  — путь к файлу баннера (/uploads/...)
+  updated_at
+```
+
 ### Контент (статьи)
 
 ```
 animals
-  id, clinic_id, name, slug
+  id, clinic_id, name, slug, icon, sort_order
 
 categories
-  id, clinic_id, animal_id, name, slug
+  id, clinic_id, animal_id, name, slug, icon
 
 articles
   id, clinic_id, title, slug, content (HTML), status (draft/published)
@@ -46,14 +63,14 @@ article_categories  (M2M)
 
 ```
 doctors
-  id, clinic_id, full_name, specialization, description, photo_url
-  status (draft/published)
+  id, clinic_id, full_name, specialty, description, contacts, photo_url
+  status (draft/published), sort_order
 
 doctor_schedules
   id, doctor_id, day_of_week (0=Вс..6=Сб), time_from, time_to
 
 doctor_schedule_exceptions
-  id, doctor_id, date, is_working, time_from, time_to, reason
+  id, doctor_id, date, is_day_off, time_from (nullable), time_to (nullable)
 
 clinic_settings
   id, clinic_id, schedule_display_weeks
@@ -63,7 +80,7 @@ clinic_settings
 
 ```
 grooming_breeds
-  id, clinic_id, breed (название), duration (мин), price (nullable), description (nullable)
+  id, clinic_id, breed, duration (мин), price (nullable), description (nullable)
 
 grooming_weekly_template
   id, clinic_id, day_of_week (0=Вс..6=Сб), time_from, time_to
@@ -71,7 +88,7 @@ grooming_weekly_template
 grooming_appointments
   id, clinic_id, breed_id → grooming_breeds
   date, pet_name, owner_phone
-  start_time, end_time (вычисляется из start_time + breed.duration)
+  start_time, end_time (вычисляется: start_time + breed.duration)
 ```
 
 ## Форматы полей

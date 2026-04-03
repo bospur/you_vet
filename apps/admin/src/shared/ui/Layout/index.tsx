@@ -22,6 +22,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
+import InfoIcon from '@mui/icons-material/Info';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../../config/AuthContext';
@@ -29,6 +30,7 @@ import { useNotification } from '../Notification/NotificationContext';
 import { styles, appBarSx, mainSx } from './styles';
 
 const NAV_ITEMS = [
+  { label: 'О клинике', to: '/clinic-info', icon: <InfoIcon />, roles: ['admin', 'editor'] },
   { label: 'Животные', to: '/animals', icon: <PetsIcon />, roles: ['admin', 'editor'] },
   { label: 'Категории', to: '/categories', icon: <CategoryIcon />, roles: ['admin', 'editor'] },
   { label: 'Статьи', to: '/articles', icon: <ArticleIcon />, roles: ['admin', 'editor'] },

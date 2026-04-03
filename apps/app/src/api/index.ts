@@ -89,3 +89,17 @@ export const fetchGroomingBreeds = () =>
 
 export const fetchGroomingSchedule = () =>
   apiClient.get<GroomingScheduleSlot[]>('/grooming/schedule').then((r) => r.data);
+
+export interface ClinicInfo {
+  name: string;
+  description: string;
+  phone: string;
+  address: string;
+  email: string;
+  website: string;
+  logo_url: string;
+  banner_url: string;
+}
+
+export const fetchClinicInfo = () =>
+  apiClient.get<ClinicInfo>('/clinic-info').then((r) => r.data);

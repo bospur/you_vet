@@ -26,6 +26,7 @@ const DoctorsScreen = lazy(() => import('./screens/DoctorsScreen').then((m) => (
 const DoctorEditorScreen = lazy(() => import('./screens/DoctorEditorScreen').then((m) => ({ default: m.DoctorEditorScreen })));
 const ScheduleScreen = lazy(() => import('./screens/ScheduleScreen').then((m) => ({ default: m.ScheduleScreen })));
 const GroomingScreen = lazy(() => import('./screens/GroomingScreen').then((m) => ({ default: m.GroomingScreen })));
+const ClinicInfoScreen = lazy(() => import('./screens/ClinicInfoScreen').then((m) => ({ default: m.ClinicInfoScreen })));
 
 const Loader = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       {
         element: <NonGroomerRoute />,
         children: [
+          { path: '/clinic-info', element: <Suspense fallback={<Loader />}><ClinicInfoScreen /></Suspense> },
           { path: '/animals', element: <Suspense fallback={<Loader />}><AnimalsScreen /></Suspense> },
           { path: '/categories', element: <Suspense fallback={<Loader />}><CategoriesScreen /></Suspense> },
           { path: '/articles', element: <Suspense fallback={<Loader />}><ArticlesScreen /></Suspense> },

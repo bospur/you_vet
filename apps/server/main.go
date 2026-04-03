@@ -60,6 +60,7 @@ func main() {
 	userRepo := repository.NewUserRepository(database)
 	doctorRepo := repository.NewDoctorRepository(database)
 	groomingRepo := repository.NewGroomingRepository(database)
+	clinicInfoRepo := repository.NewClinicInfoRepository(database)
 
 	// Создаём первого admin пользователя если таблица users пустая
 	if adminLogin != "" && adminPass != "" {
@@ -85,6 +86,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(animalRepo, articleRepo, userRepo, jwtSecret)
 	doctorHandler := handler.NewDoctorHandler(doctorRepo, uploadsDir)
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
+	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
 
 	// ── Публичные роуты ──────────────────────────────────────────────────────
 	http.HandleFunc("/api/clinics/{clinicSlug}/animals", animalHandler.GetAnimals)
@@ -95,6 +97,7 @@ func main() {
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/schedule", doctorHandler.GetPublicSchedule)
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/breeds", groomingHandler.GetPublicBreeds)
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/schedule", groomingHandler.GetPublicSchedule)
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/clinic-info", clinicInfoHandler.GetPublicClinicInfo)
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
@@ -155,6 +158,12 @@ func main() {
 	// Settings
 	http.HandleFunc("GET /api/admin/settings", auth(doctorHandler.GetSettings))
 	http.HandleFunc("PATCH /api/admin/settings", auth(doctorHandler.UpdateSettings))
+
+	// Clinic info
+	http.HandleFunc("GET /api/admin/clinic-info", auth(clinicInfoHandler.GetClinicInfo))
+	http.HandleFunc("PUT /api/admin/clinic-info", auth(clinicInfoHandler.UpdateClinicInfo))
+	http.HandleFunc("POST /api/admin/clinic-info/logo", auth(clinicInfoHandler.UploadLogo))
+	http.HandleFunc("POST /api/admin/clinic-info/banner", auth(clinicInfoHandler.UploadBanner))
 
 	// Grooming breeds
 	http.HandleFunc("GET /api/admin/grooming/breeds", auth(groomingHandler.GetBreeds))

@@ -1,0 +1,257 @@
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Avatar, Box, Button, CircularProgress, Grid, Paper,
+  Stack, TextField, Typography,
+} from '@mui/material';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import ImageIcon from '@mui/icons-material/Image';
+import { Layout } from '../../shared/ui/Layout';
+import { useNotification } from '../../shared/ui/Notification/NotificationContext';
+import {
+  getClinicInfo, updateClinicInfo, uploadClinicLogo, uploadClinicBanner,
+} from '../../data/source/clinic_info';
+import type { ClinicInfoInput } from '../../data/source/clinic_info';
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? '';
+
+const EMPTY: ClinicInfoInput = {
+  name: '', description: '', phone: '', address: '', email: '', website: '',
+};
+
+export function ClinicInfoScreen() {
+  const { notify } = useNotification();
+  const queryClient = useQueryClient();
+
+  const [form, setForm] = useState<ClinicInfoInput>(EMPTY);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['clinic-info'],
+    queryFn: getClinicInfo,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setForm({
+        name: data.name,
+        description: data.description,
+        phone: data.phone,
+        address: data.address,
+        email: data.email,
+        website: data.website,
+      });
+      setIsDirty(false);
+    }
+  }, [data]);
+
+  const saveMutation = useMutation({
+    mutationFn: () => updateClinicInfo(form),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinic-info'] });
+      setIsDirty(false);
+      notify('Сохранено', 'success');
+    },
+    onError: () => notify('Ошибка сохранения', 'error'),
+  });
+
+  const logoMutation = useMutation({
+    mutationFn: (file: File) => uploadClinicLogo(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinic-info'] });
+      setLogoPreview(null);
+      notify('Логотип обновлён', 'success');
+    },
+    onError: () => notify('Ошибка загрузки логотипа', 'error'),
+  });
+
+  const bannerMutation = useMutation({
+    mutationFn: (file: File) => uploadClinicBanner(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clinic-info'] });
+      setBannerPreview(null);
+      notify('Баннер обновлён', 'success');
+    },
+    onError: () => notify('Ошибка загрузки баннера', 'error'),
+  });
+
+  const handleField = (field: keyof ClinicInfoInput) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, [field]: e.target.value }));
+    setIsDirty(true);
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoPreview(URL.createObjectURL(file));
+    logoMutation.mutate(file);
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerPreview(URL.createObjectURL(file));
+    bannerMutation.mutate(file);
+  };
+
+  const logoSrc = logoPreview ?? (data?.logo_url ? `${BASE_URL}${data.logo_url}` : undefined);
+  const bannerSrc = bannerPreview ?? (data?.banner_url ? `${BASE_URL}${data.banner_url}` : undefined);
+
+  if (isLoading) {
+    return (
+      <Layout title="О клинике">
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout title="О клинике">
+      <Typography variant="h5" fontWeight={600} mb={3}>О клинике</Typography>
+
+      <Grid container spacing={3}>
+        {/* ── Основная информация ── */}
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight={600} mb={2}>Основная информация</Typography>
+            <Stack spacing={2}>
+              <TextField
+                label="Название клиники"
+                fullWidth
+                value={form.name}
+                onChange={handleField('name')}
+              />
+              <TextField
+                label="Описание"
+                fullWidth
+                multiline
+                rows={4}
+                value={form.description}
+                onChange={handleField('description')}
+              />
+              <TextField
+                label="Телефон"
+                fullWidth
+                placeholder="+7 (999) 123-45-67"
+                value={form.phone}
+                onChange={handleField('phone')}
+              />
+              <TextField
+                label="Адрес"
+                fullWidth
+                value={form.address}
+                onChange={handleField('address')}
+              />
+              <TextField
+                label="Email"
+                fullWidth
+                type="email"
+                value={form.email}
+                onChange={handleField('email')}
+              />
+              <TextField
+                label="Сайт"
+                fullWidth
+                placeholder="https://"
+                value={form.website}
+                onChange={handleField('website')}
+              />
+            </Stack>
+            <Box sx={{ mt: 3 }}>
+              <Button
+                variant="contained"
+                onClick={() => saveMutation.mutate()}
+                disabled={saveMutation.isPending || !isDirty}
+              >
+                {saveMutation.isPending ? 'Сохранение…' : 'Сохранить'}
+              </Button>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* ── Изображения ── */}
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Stack spacing={3}>
+            {/* Логотип */}
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="subtitle1" fontWeight={600} mb={2}>Логотип</Typography>
+              <Avatar
+                src={logoSrc}
+                variant="rounded"
+                sx={{ width: 120, height: 120, mx: 'auto', mb: 2, bgcolor: 'grey.100' }}
+              >
+                <PhotoCameraIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+              </Avatar>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                ref={logoInputRef}
+                style={{ display: 'none' }}
+                onChange={handleLogoChange}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<PhotoCameraIcon />}
+                onClick={() => logoInputRef.current?.click()}
+                disabled={logoMutation.isPending}
+              >
+                {logoMutation.isPending ? 'Загрузка…' : 'Загрузить логотип'}
+              </Button>
+              <Typography variant="caption" display="block" color="text.secondary" mt={1}>
+                JPG, PNG, WebP · до 5 МБ
+              </Typography>
+            </Paper>
+
+            {/* Баннер */}
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="subtitle1" fontWeight={600} mb={2}>Баннер</Typography>
+              {bannerSrc ? (
+                <Box
+                  component="img"
+                  src={bannerSrc}
+                  sx={{ width: '100%', borderRadius: 1, mb: 2, objectFit: 'cover', maxHeight: 160 }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: '100%', height: 120, mb: 2, borderRadius: 1,
+                    bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <ImageIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+                </Box>
+              )}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                ref={bannerInputRef}
+                style={{ display: 'none' }}
+                onChange={handleBannerChange}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ImageIcon />}
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={bannerMutation.isPending}
+              >
+                {bannerMutation.isPending ? 'Загрузка…' : 'Загрузить баннер'}
+              </Button>
+              <Typography variant="caption" display="block" color="text.secondary" mt={1}>
+                Рекомендуемое соотношение 16:9 · до 5 МБ
+              </Typography>
+            </Paper>
+          </Stack>
+        </Grid>
+      </Grid>
+    </Layout>
+  );
+}

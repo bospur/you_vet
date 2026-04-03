@@ -10,8 +10,6 @@ Telegram
    │      └── GET /api/clinics/{slug}/*
    │
    └── Бот (long polling, внутри Go сервера)
-          │
-          └── GET /api/clinics/{slug}/* (внутренний)
 
 Браузер (сотрудники клиники)
    │
@@ -40,11 +38,11 @@ Nginx (Ubuntu VPS, системный)
 main.go
 internal/
 ├── db/           — подключение к БД, запуск миграций
-├── repository/   — SQL запросы (animals, articles, doctors, users, grooming)
+├── repository/   — SQL запросы (animals, articles, clinic_info, doctors, users, grooming)
 ├── handler/      — HTTP хендлеры
 ├── middleware/   — JWT auth, CORS
 └── bot/          — Telegram бот (long polling, htmlformat)
-migrations/       — SQL файлы up/down (001–007)
+migrations/       — SQL файлы up/down (001–008)
 ```
 
 Слои: `HTTP → middleware → handler → repository → PostgreSQL`
@@ -59,6 +57,7 @@ src/
 │       ├── domain/types.ts   — типы модуля
 │       └── features/         — компоненты (таблицы, диалоги)
 ├── screens/          — страницы (Layout + модули + логика)
+│   └── ClinicInfoScreen/     — О клинике: название, контакты, лого, баннер
 └── shared/           — AuthContext, Layout, ProtectedRoute, ui-компоненты
 ```
 
@@ -66,38 +65,37 @@ src/
 
 ```
 src/
-├── api/          — запросы к публичному API
-├── screens/      — Home, Animals, Categories, Articles, Article, Doctors, Doctor, Schedule
-└── components/   — переиспользуемые компоненты
+├── api/          — запросы к публичному API (fetchClinicInfo, fetchAnimals…)
+├── screens/      — Home, Animals, Categories, Articles, Doctors, Schedule, Grooming
+└── components/   — NavGrid (2×2 сетка), NavList, DoctorAvatar…
 ```
 
 ### packages/types — Общие TypeScript типы
 
-Shared-пакет `@you-vet/types`, используется в `apps/admin` и `apps/app`.
+`@you-vet/types` — используется в `apps/admin` и `apps/app`.
+
+## Схема данных
 
 ```
-src/
-├── animals.ts    — Animal, Category
-├── articles.ts   — Article, ArticleStatus
-├── doctors.ts    — Doctor, DoctorSchedule, ClinicSettings, ScheduleEntry
-├── grooming.ts   — GroomingBreed, GroomingTemplateSlot, GroomingAppointment
-├── users.ts      — User
-└── index.ts      — реэкспорт всего
+clinics
+  └── users (admin/editor/groomer)
+  └── clinic_info (название, описание, телефон, адрес, email, сайт, logo_url, banner_url)
+  └── animals
+       └── categories
+            └── article_categories (M2M)
+                     └── articles (content — HTML от TipTap, status: draft/published)
+  └── doctors (status: draft/published)
+       └── doctor_schedules (еженедельные слоты)
+       └── doctor_schedule_exceptions (исключения на дату)
+  └── clinic_settings (schedule_display_weeks)
+  └── grooming_breeds (порода, duration, price)
+  └── grooming_weekly_template (рабочие дни грумера)
+  └── grooming_appointments (записи на конкретную дату)
 ```
 
-## Мультитенантность
-
-| Контекст | Как определяется клиника |
-|---|---|
-| Публичный API | `clinicSlug` в URL-пути |
-| Admin API | `clinic_id` из JWT токена |
-| Telegram бот | `CLINIC_SLUG` из переменной окружения |
-
-## Контент статей
-
-Статьи хранятся как HTML-строка (генерируется TipTap в админке):
-- **Mini App** — рендерит HTML напрямую
-- **Telegram бот** — конвертирует HTML → Telegram HTML через `htmlToTelegram()` (`internal/bot/htmlformat.go`)
+Публичный API: клиника по `clinicSlug` в URL
+Admin API: клиника из JWT (`clinic_id`)
+Telegram бот: клиника из `CLINIC_SLUG` env
 
 ## CI/CD
 
