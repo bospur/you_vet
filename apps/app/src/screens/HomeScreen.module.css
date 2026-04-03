@@ -43,9 +43,12 @@
 }
 
 .description {
-  font-size: 14px;
-  color: var(--tgui--hint_color);
-  line-height: 1.4;
+  font-size: 15px;
+  color: var(--tgui--text_color);
+  line-height: 1.5;
+  text-align: center;
+  padding: 0 20px;
+  opacity: 0.75;
 }
 
 /* ── Контакты ── */
@@ -53,16 +56,20 @@
   padding: 0 16px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
 .address {
-  display: flex;
-  align-items: flex-start;
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  font-size: 13px;
-  color: var(--tgui--hint_color);
-  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.08);
+  padding: 6px 14px;
+  border-radius: 20px;
 }
 
 /* ── Сетка навигации ── */

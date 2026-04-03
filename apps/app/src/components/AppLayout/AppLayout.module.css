@@ -10,10 +10,17 @@
   gap: 12px;
   padding: 10px 16px;
   background: var(--tgui--bg_color);
-  border-bottom: 1px solid var(--tgui--divider);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.logoLink {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 .logo {
@@ -21,7 +28,6 @@
   height: 36px;
   object-fit: contain;
   border-radius: 8px;
-  flex-shrink: 0;
   background: rgba(76, 175, 80, 0.08);
 }
 
@@ -29,7 +35,10 @@
   flex: 1;
   font-size: 16px;
   font-weight: 700;
-  color: var(--tgui--text_color);
+  background: linear-gradient(90deg, #4caf50, #2e7d32);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,18 +52,123 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #4caf50;
-  color: #fff;
+  background: transparent;
+  color: #4caf50;
   text-decoration: none;
   transition: opacity 0.15s;
 }
 
 .callBtn:active {
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+/* ── Котик-лого ── */
+.catWrap {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: catIdle 2s ease-in-out infinite;
+}
+
+@keyframes catIdle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-2px); }
+}
+
+.catEars {
+  display: flex;
+  justify-content: space-between;
+  width: 26px;
+  margin-bottom: -2px;
+}
+
+.catEar {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 9px solid #4caf50;
+}
+
+.catHead {
+  width: 26px;
+  height: 22px;
+  background: #4caf50;
+  border-radius: 50% 50% 45% 45%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catEyes {
+  display: flex;
+  gap: 5px;
+  margin-top: -2px;
+}
+
+.catEye {
+  width: 4px;
+  height: 4px;
+  background: var(--tgui--bg_color, #fff);
+  border-radius: 50%;
+  animation: catBlink 4s ease-in-out infinite;
+}
+
+@keyframes catBlink {
+  0%, 85%, 100% { transform: scaleY(1); }
+  90%            { transform: scaleY(0.1); }
+}
+
+.catNose {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 3px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.catBodyPart {
+  width: 22px;
+  height: 16px;
+  background: #4caf50;
+  border-radius: 40% 40% 50% 50%;
+  margin-top: -1px;
+  position: relative;
+}
+
+.catTail {
+  position: absolute;
+  right: -10px;
+  bottom: 4px;
+  width: 14px;
+  height: 5px;
+  background: #4caf50;
+  border-radius: 0 4px 4px 0;
+  transform-origin: left center;
+  animation: catTailWag 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes catTailWag {
+  from { transform: rotate(-25deg); }
+  to   { transform: rotate(25deg); }
 }

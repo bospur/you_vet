@@ -1,12 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { fetchClinicInfo } from '../../api';
 import type { ClinicInfo } from '../../api';
 import styles from './AppLayout.module.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
+function CatLogo() {
+  return (
+    <div className={styles.catWrap}>
+      <div className={styles.catBody}>
+        <div className={styles.catEars}>
+          <div className={styles.catEar} />
+          <div className={styles.catEar} />
+        </div>
+        <div className={styles.catHead}>
+          <div className={styles.catEyes}>
+            <div className={styles.catEye} />
+            <div className={styles.catEye} />
+          </div>
+          <div className={styles.catNose} />
+        </div>
+        <div className={styles.catBodyPart}>
+          <div className={styles.catTail} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AppLayout() {
+  const navigate = useNavigate();
   const [info, setInfo] = useState<ClinicInfo | null>(null);
 
   useEffect(() => {
@@ -18,9 +42,12 @@ export default function AppLayout() {
   return (
     <div className={styles.root}>
       <header className={styles.header}>
-        {logoUrl && (
-          <img src={logoUrl} alt="logo" className={styles.logo} />
-        )}
+        <a className={styles.logoLink} onClick={() => navigate('/')} role="button">
+          {logoUrl
+            ? <img src={logoUrl} alt="logo" className={styles.logo} />
+            : <CatLogo />
+          }
+        </a>
         <p className={styles.clinicName}>
           {info?.name || 'Ветеринарная клиника'}
         </p>
