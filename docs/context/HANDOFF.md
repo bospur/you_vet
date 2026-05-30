@@ -2,27 +2,27 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия work-audit-clear (завершена)
+## Сессия 2026-05-30
 
-**Ветка:** `work-audit-clear`
+**Ветка:** `work-arcticles` / `dev` (PRD-02 + фиксы)
 
 ### Сделано
 
-- [x] **PRD-01** — скрытие груминга в Mini App если breeds + schedule пусты
-- [x] **INF-01** — `.github/workflows/ci.yml` (go test, lint, build admin+app на PR → dev)
-- [x] **INF-02** — `packages/cat/**` в paths `deploy-app.yml`
-- [x] **SEC-07** — initData на API (HMAC + Ed25519 для iOS), prod проверен ✅
-- [x] PR → `dev`, деплой app + server
+- [x] PRD-02 в prod: животное → статьи, без категорий, миграция 009
+- [x] `GET /api/admin/animals` — админка не ходит на публичный API (401 после SEC-07)
+- [x] Mini App: FAB «Наверх» на экране статьи (`ScrollToTopFab`)
+- [x] Документация: `roadmap.html`, `STATUS.md`, `app/overview.md`, `project-for-devs.html`
 
 ### Следующая сессия
 
+- [ ] PRD-03: запись на приём (фаза 4)
 - [ ] SEC-04: JWT → httpOnly cookie (опционально)
-- [x] PRD-02: статьи — животное → статьи, slug auto, категории удалены
+- [ ] SEC-06: валидация загрузки по MIME
 
 ### Заметки
 
-- Prod Mini App работает с валидацией initData (без `TELEGRAM_INITDATA_SKIP`)
-- Локально без Telegram: `TELEGRAM_INITDATA_SKIP=1` в server `.env`
+- CI: на PR — quality gate; после merge в `dev` — снова CI + path-based deploy
+- Prod Mini App: initData обязателен; локально `TELEGRAM_INITDATA_SKIP=1`
 
 ---
 

@@ -37,12 +37,12 @@
 | ID | Pri | Проблема | Статус |
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
-| PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto |
+| PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
 | PRD-03 | ⚪ | Запись на приём | planned |
 | PRD-04 | ⚪ | Аналитика | planned |
 
 ## Следующие шаги
 
-1. Merge `work-audit-clear` → `dev` (PRD-01 + INF + SEC-07)
+1. PRD-03 — запись на приём (pending/confirm flow)
 2. SEC-04 — JWT из localStorage в httpOnly cookie
 3. SEC-06 — валидация загрузки файлов по MIME

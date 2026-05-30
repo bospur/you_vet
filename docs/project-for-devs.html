@@ -239,6 +239,7 @@ apps/server/<br>
   <tr><td>GET</td><td><code>/api/clinics/{slug}/grooming/breeds</code></td><td>Породы и цены груминга</td></tr>
   <tr><td>GET</td><td><code>/api/clinics/{slug}/grooming/schedule</code></td><td>Расписание груминга</td></tr>
   <tr><td>GET</td><td><code>/api/clinics/{slug}/animals</code></td><td>Виды животных</td></tr>
+  <tr><td>GET</td><td><code>/api/clinics/{slug}/animals/{animalSlug}/articles</code></td><td>Список статей животного</td></tr>
   <tr><td>GET</td><td><code>/api/clinics/{slug}/articles/{slug}</code></td><td>Статья по первой помощи</td></tr>
 </table>
 
@@ -247,23 +248,24 @@ apps/server/<br>
   <tr><th>Ресурс</th><th>Эндпоинты</th></tr>
   <tr><td>Clinic info</td><td>GET/PUT <code>/api/admin/clinic-info</code>, POST <code>/logo</code>, POST <code>/banner</code></td></tr>
   <tr><td>Doctors</td><td>CRUD + фото + расписание + исключения</td></tr>
-  <tr><td>Articles</td><td>CRUD + статус + категории</td></tr>
+  <tr><td>Animals</td><td>GET/POST/PUT/DELETE <code>/api/admin/animals</code></td></tr>
+  <tr><td>Articles</td><td>CRUD + статус, <code>animal_id</code>, slug auto</td></tr>
   <tr><td>Grooming</td><td>Породы, шаблон недели, записи</td></tr>
   <tr><td>Settings</td><td>GET/PATCH <code>/api/admin/settings</code></td></tr>
   <tr><td>Users</td><td>CRUD (только admin)</td></tr>
 </table>
 
-<h3>База данных — 8 миграций</h3>
+<h3>База данных — 9 миграций</h3>
 <table>
   <tr><th>#</th><th>Что создаёт</th></tr>
   <tr><td>001</td><td><code>animals</code> — животные (slug, icon, sort_order)</td></tr>
-  <tr><td>002</td><td><code>categories</code> — категории статей, привязанные к животному</td></tr>
-  <tr><td>003</td><td><code>articles</code> + M2M таблица <code>article_categories</code></td></tr>
+  <tr><td>002–003</td><td>исторически categories + articles (см. 009)</td></tr>
   <tr><td>004</td><td><code>clinics</code> + <code>clinic_id</code> во все таблицы (мультитенантность)</td></tr>
   <tr><td>005</td><td><code>status</code> у статей (draft / published)</td></tr>
   <tr><td>006</td><td><code>doctors</code>, <code>doctor_schedules</code>, <code>schedule_exceptions</code>, <code>clinic_settings</code></td></tr>
   <tr><td>007</td><td><code>grooming_breeds</code>, <code>grooming_template</code>, <code>grooming_appointments</code></td></tr>
-  <tr><td>008</td><td><code>clinic_info</code> — профиль клиники (name, description, phone, address, email, website, logo_url, banner_url)</td></tr>
+  <tr><td>008</td><td><code>clinic_info</code> — профиль клиники</td></tr>
+  <tr><td>009</td><td><code>articles.animal_id</code>, удаление categories / article_categories</td></tr>
 </table>
 
 <div class="tip">
@@ -498,11 +500,13 @@ const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
   <tr><td>Информация о клинике (лого, баннер, контакты)</td><td>✅ Готово</td><td></td></tr>
   <tr><td>Кнопка "Позвонить" в хедере</td><td>✅ Готово</td><td></td></tr>
   <tr><td>Персистентный хедер во всём приложении</td><td>✅ Готово</td><td>AppLayout</td></tr>
-  <tr><td>Скрытие груминга если раздел не настроен</td><td>🔴 Не сделано</td><td>Блокирует запуск</td></tr>
-  <tr><td>Telegram initData валидация</td><td>🔴 Не проверено</td><td>Безопасность</td></tr>
+  <tr><td>Скрытие груминга если раздел не настроен</td><td>✅ Готово</td><td>PRD-01</td></tr>
+  <tr><td>Telegram initData валидация</td><td>✅ Готово</td><td>SEC-07, prod</td></tr>
+  <tr><td>Статьи без категорий (животное → статьи)</td><td>✅ Готово</td><td>PRD-02, миграция 009</td></tr>
+  <tr><td>Кнопка «Наверх» в длинных статьях</td><td>✅ Готово</td><td>Mini App FAB</td></tr>
   <tr><td>RBAC + tenant scoping на бэкенде</td><td>✅ Готово</td><td>2026-05-30</td></tr>
   <tr><td>CORS whitelist + rate limit login</td><td>✅ Готово</td><td>2026-05-30</td></tr>
-  <tr><td>CI quality gate (test/build)</td><td>🟡 Не сделано</td><td>Infra</td></tr>
+  <tr><td>CI quality gate (test/build)</td><td>✅ Готово</td><td>ci.yml на PR</td></tr>
   <tr><td>Запись на приём (pending/confirm flow)</td><td>🔴 Не сделано</td><td>Ключевая фича</td></tr>
   <tr><td>Аналитика посещений</td><td>🟡 Не начато</td><td>После записи</td></tr>
 </table>

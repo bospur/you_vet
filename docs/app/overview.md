@@ -14,9 +14,8 @@ src/
 │   └── index.ts                — все fetch-функции + TypeScript-интерфейсы
 │       fetchClinicInfo()       — GET /clinic-info
 │       fetchAnimals()
-│       fetchCategories()
-│       fetchArticles()
-│       fetchArticle()
+│       fetchArticles(animalSlug)
+│       fetchArticle(slug)
 │       fetchDoctors()
 │       fetchSchedule()
 │       fetchGroomingBreeds()
@@ -25,9 +24,8 @@ src/
 ├── screens/
 │   ├── HomeScreen.tsx          — главная: баннер, лого, название, телефон, сетка разделов
 │   ├── AnimalsScreen.tsx       — список животных
-│   ├── CategoriesScreen.tsx    — категории выбранного животного
-│   ├── ArticlesScreen.tsx      — список статей категории
-│   ├── ArticleScreen.tsx       — полная статья (HTML рендер)
+│   ├── ArticlesScreen.tsx      — список статей выбранного животного
+│   ├── ArticleScreen.tsx       — полная статья (HTML) + FAB «Наверх»
 │   ├── DoctorsScreen.tsx       — список врачей
 │   ├── DoctorScreen.tsx        — карточка врача
 │   ├── ScheduleScreen.tsx      — расписание на период (горизонтальный карусель дат)
@@ -45,6 +43,7 @@ src/
 │   │   └── NavList.tsx         — вертикальный список навигации (используется во вложенных экранах)
 │   ├── DoctorAvatar/
 │   ├── Preloader/
+│   ├── ScrollToTopFab/         — кнопка «Наверх» (видна, когда якорь ушёл с экрана)
 │   └── ErrorBoundary.tsx
 │
 └── hooks/
