@@ -80,7 +80,7 @@ func TestTelegramInitData_Middleware(t *testing.T) {
 	initData := signInitData(botToken, map[string]string{"auth_date": authDate})
 
 	called := false
-	handler := TelegramInitData(botToken)(func(w http.ResponseWriter, r *http.Request) {
+	handler := TelegramInitData(botToken, nil)(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 		w.WriteHeader(http.StatusOK)
 	})

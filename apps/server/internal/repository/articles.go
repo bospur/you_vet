@@ -290,3 +290,30 @@ func (r *ArticleRepository) GetFeaturedPublished(clinicSlug string, limit int) (
 	}
 	return articles, nil
 }
+
+// GetRecentPublished возвращает последние опубликованные статьи (fallback для главной).
+func (r *ArticleRepository) GetRecentPublished(clinicSlug string, limit int) ([]FeaturedArticle, error) {
+	rows, err := r.db.Query(`
+		SELECT a.id, a.title, a.slug, an.name
+		FROM articles a
+		JOIN animals an ON an.id = a.animal_id
+		JOIN clinics cl ON cl.id = a.clinic_id
+		WHERE cl.slug = $1 AND a.status = 'published'
+		ORDER BY a.updated_at DESC
+		LIMIT $2
+	`, clinicSlug, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var articles []FeaturedArticle
+	for rows.Next() {
+		var a FeaturedArticle
+		if err := rows.Scan(&a.ID, &a.Title, &a.Slug, &a.AnimalName); err != nil {
+			return nil, err
+		}
+		articles = append(articles, a)
+	}
+	return articles, nil
+}

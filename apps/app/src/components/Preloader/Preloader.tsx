@@ -1,10 +1,14 @@
-import { CatPreloader } from '@you-vet/cat';
 import styles from './Preloader.module.css';
 
-export function Preloader() {
+interface PreloaderProps {
+  text?: string;
+}
+
+export function Preloader({ text = 'Загружаем...' }: PreloaderProps) {
   return (
     <div className={styles.container}>
-      <CatPreloader text="Загружаем..." />
+      <div className={styles.spinner} aria-hidden />
+      {text && <span className={styles.text}>{text}</span>}
     </div>
   );
 }

@@ -13,7 +13,6 @@
     "@tanstack/react-query": "^5.95.2",
     "@telegram-apps/sdk-react": "^3.3.9",
     "@telegram-apps/telegram-ui": "^2.1.13",
-    "@you-vet/cat": "*",
     "@you-vet/types": "*",
     "axios": "^1.13.6",
     "react": "^18.3.1",

@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { fetchFeaturedArticles } from '../../api';
+import { hapticLight } from '../../utils/haptic';
 import styles from './FeaturedArticles.module.css';
+
+const SKELETON_COUNT = 3;
 
 export function FeaturedArticles() {
   const navigate = useNavigate();
@@ -10,7 +13,23 @@ export function FeaturedArticles() {
     queryFn: fetchFeaturedArticles,
   });
 
-  if (isLoading || articles.length === 0) {
+  if (isLoading) {
+    return (
+      <section className={styles.section}>
+        <h2 className={styles.heading}>Рекомендуем</h2>
+        <div className={styles.list}>
+          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <div key={i} className={styles.itemSkeleton} aria-hidden>
+              <span className={styles.skeletonTitle} />
+              <span className={styles.skeletonSubtitle} />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (articles.length === 0) {
     return null;
   }
 
@@ -23,7 +42,10 @@ export function FeaturedArticles() {
             key={article.id}
             type="button"
             className={styles.item}
-            onClick={() => navigate(`/articles/${article.slug}`)}
+            onClick={() => {
+              hapticLight();
+              navigate(`/articles/${article.slug}`);
+            }}
           >
             <span className={styles.itemText}>
               <span className={styles.title}>{article.title}</span>

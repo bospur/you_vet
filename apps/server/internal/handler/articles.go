@@ -74,6 +74,14 @@ func (h *ArticleHandler) GetFeaturedArticles(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if len(articles) == 0 {
+		articles, err = h.repo.GetRecentPublished(clinicSlug, repository.MaxFeaturedArticles)
+		if err != nil {
+			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	if articles == nil {
 		articles = []repository.FeaturedArticle{}
 	}

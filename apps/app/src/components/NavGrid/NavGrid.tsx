@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { hapticLight } from '../../utils/haptic';
 import styles from './NavGrid.module.css';
 
 export interface NavGridItem {
@@ -38,7 +39,10 @@ export function NavGrid({ items }: NavGridProps) {
             key={item.key}
             type="button"
             className={`${styles.card} ${CARD_ANIM[item.key] ?? ''}`}
-            onClick={item.onClick}
+            onClick={() => {
+              hapticLight();
+              item.onClick?.();
+            }}
           >
             {item.icon && <span className={styles.icon}>{item.icon}</span>}
             <span className={styles.labelWrap}>

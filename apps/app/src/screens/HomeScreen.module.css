@@ -5,6 +5,10 @@
   padding-bottom: 24px;
 }
 
+.wrapperWithSticky {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
 .navWrap {
   padding: 0 var(--vet-page-padding);
   max-width: calc(var(--vet-content-max) + 2 * var(--vet-page-padding));
