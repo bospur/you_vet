@@ -86,7 +86,7 @@ VPS **не собирает** образ локально и **не делает
 1. `npm ci` → `npm run build`
 2. `scp dist/` → `/var/www/vp-bot-app/`
 
-> ⚠️ Известный gap: `packages/cat/**` не в paths — изменения только в `@you-vet/cat` не триггерят redeploy app. См. [context/ISSUES.md](./context/ISSUES.md) INF-02.
+> `deploy-app.yml` также следит за `packages/cat/**` — изменения в `@you-vet/cat` триггерят redeploy Mini App.
 
 ### Docs — `deploy-docs.yml`
 

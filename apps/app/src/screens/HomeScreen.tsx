@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { ClinicInfo } from '../api';
 import { NavGrid } from '../components/NavGrid/NavGrid';
 import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
+import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
 import styles from './HomeScreen.module.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -11,6 +12,7 @@ const BANNER_DISMISSED_KEY = 'banner_dismissed_v1';
 export default function HomeScreen() {
   const navigate = useNavigate();
   const info = useOutletContext<ClinicInfo | null>();
+  const { available: groomingAvailable, isLoading: groomingLoading } = useGroomingAvailable();
   const [bannerClosed, setBannerClosed] = useState(
     () => sessionStorage.getItem(BANNER_DISMISSED_KEY) === '1',
   );
@@ -24,7 +26,9 @@ export default function HomeScreen() {
     { key: 'animals', icon: <IconFirstAid />, label: 'Первая помощь', onClick: () => navigate('/animals') },
     { key: 'doctors', icon: <IconDoctors />, label: 'Наши врачи', onClick: () => navigate('/doctors') },
     { key: 'schedule', icon: <IconSchedule />, label: 'Расписание', onClick: () => navigate('/schedule') },
-    { key: 'grooming', icon: <IconGrooming />, label: 'Груминг', onClick: () => navigate('/grooming') },
+    ...(!groomingLoading && groomingAvailable
+      ? [{ key: 'grooming', icon: <IconGrooming />, label: 'Груминг', onClick: () => navigate('/grooming') }]
+      : []),
   ];
 
   const bannerUrl = info?.banner_url ? `${BASE_URL}${info.banner_url}` : null;

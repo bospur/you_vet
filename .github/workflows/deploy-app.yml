@@ -7,6 +7,7 @@ on:
     paths:
       - 'apps/app/**'
       - 'packages/types/**'
+      - 'packages/cat/**'
       - '.github/workflows/deploy-app.yml'
 
 jobs:

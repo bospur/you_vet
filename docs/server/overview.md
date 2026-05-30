@@ -76,7 +76,7 @@ PostgreSQL
 | Контекст | Клиника |
 |---|---|
 | Публичный API | `clinicSlug` в URL `/api/clinics/{slug}/...` |
-| Admin API | `clinic_id` из JWT (create); update/delete — частично без scoping |
+| Admin API | `clinic_id` из JWT; RBAC + scoping в update/delete |
 | Telegram бот | `CLINIC_SLUG` из env |
 
 **Production:** один VPS = одна клиника. Схема multi-tenant ready. См. [roles.md](../roles.md), [audit.md](../audit.md).
@@ -94,6 +94,9 @@ PostgreSQL
 | `UPLOADS_DIR` | нет | Путь к папке загрузок (default: `./uploads`) |
 | `ADMIN_LOGIN` | первый запуск | Логин первого admin |
 | `ADMIN_PASSWORD` | первый запуск | Пароль первого admin |
+| `TELEGRAM_INITDATA_SKIP` | нет | `1` — отключить проверку initData (локальная разработка) |
+| `TELEGRAM_INITDATA_MAX_AGE` | нет | Макс. возраст initData в секундах (default: 86400) |
+| `CORS_ORIGINS` | нет | Whitelist origins через запятую |
 
 ## Авторизация
 
@@ -101,6 +104,12 @@ JWT middleware проверяет **валидность токена**, не р
 Матрица: [roles.md](../roles.md).
 
 JWT: `Authorization: Bearer <token>`, 24ч, claims `user_id`, `clinic_id`, `role`. Пароли — bcrypt.
+
+### Mini App (публичный API)
+
+Эндпоинты `/api/clinics/{slug}/...` требуют заголовок `X-Telegram-Init-Data` с подписанными данными Telegram Web App.
+Проверка: HMAC-SHA256 по [документации Telegram](https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app).
+`/uploads/` — без initData (прямая загрузка картинок).
 
 ## Первый запуск
 

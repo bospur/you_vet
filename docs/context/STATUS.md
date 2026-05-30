@@ -20,7 +20,7 @@
 | Статьи (TipTap, draft/published) | ✅ | ✅ | ✅ |
 | Животные / категории | ✅ | ✅ | ✅ |
 | Врачи + расписание | ✅ | ✅ | ✅ |
-| Груминг | ✅ | ✅ | ✅ |
+| Груминг | ✅ | ✅ скрыт если пусто (PRD-01) | ✅ |
 | О клинике (лого, баннер) | ✅ | ✅ | ✅ |
 | Безопасность admin API | ✅ Hardening 2026-05-30 | RequireRole, clinic_id, CORS, rate limit |
 | Запись на приём | ❌ | ❌ | ❌ |
@@ -30,16 +30,17 @@
 
 **Фаза 3 — Готовность к запуску** (в работе):
 
-- Скрытие груминга если раздел пустой
-- Telegram initData валидация
-- **Новое:** синхронизация документации (2026-05-30, в процессе)
-- **Новое:** hardening безопасности admin API (запланировано, см. ISSUES.md)
+- [x] Скрытие груминга если раздел пустой (PRD-01, `work-audit-clear`)
+- [x] Telegram initData валидация (SEC-07, ждёт деплоя)
+- [x] Security hardening admin API (prod после PR #17)
+- [x] CI quality gate на PR (INF-01, `ci.yml`)
+- [x] PRD-01 скрытие пустого груминга (ждёт деплоя app)
 
 ## Тесты и CI
 
 | Область | Статус |
 |---|---|
-| Go unit tests | 1 файл (`middleware/auth_test.go`) |
+| Go unit tests | 2 файла (`auth_test.go`, `role_test.go`) |
 | Frontend tests | Нет |
 | CI на PR (lint/test/build) | Нет |
 | CI deploy | ✅ Path-based на push в `dev` |
