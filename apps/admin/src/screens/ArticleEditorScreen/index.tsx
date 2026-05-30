@@ -18,8 +18,10 @@ import { RichTextEditor } from '../../shared/ui/RichTextEditor';
 import { getAnimals } from '../../data/source/animals';
 import {
   getArticle,
+  getArticles,
   createArticle, updateArticle, updateArticleStatus, updateArticleFeatured,
 } from '../../data/source/articles';
+import { MAX_FEATURED_ARTICLES } from '../../modules/articles/features/ArticlesTable';
 import { useNotification } from '../../shared/ui/Notification/NotificationContext';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { useAuth } from '../../shared/config/AuthContext';
@@ -64,6 +66,15 @@ export function ArticleEditorScreen() {
     queryKey: ['animals'],
     queryFn: getAnimals,
   });
+
+  const { data: allArticles = [] } = useQuery({
+    queryKey: ['articles'],
+    queryFn: getArticles,
+    enabled: isAdmin && isEdit,
+  });
+
+  const featuredCount = allArticles.filter((a) => a.featured).length;
+  const featuredLimitReached = featuredCount >= MAX_FEATURED_ARTICLES;
 
   useEffect(() => {
     if (article) {
@@ -222,16 +233,23 @@ export function ArticleEditorScreen() {
             />
 
             {isAdmin && isEdit && article?.status === 'published' && (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={article.featured}
-                    onChange={(e) => featuredMutation.mutate(e.target.checked)}
-                    disabled={featuredMutation.isPending}
-                  />
-                }
-                label="Показывать на главной (не более 3)"
-              />
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={article.featured}
+                      onChange={(e) => featuredMutation.mutate(e.target.checked)}
+                      disabled={featuredMutation.isPending || (featuredLimitReached && !article.featured)}
+                    />
+                  }
+                  label={`Показывать на главной (${featuredCount} / ${MAX_FEATURED_ARTICLES})`}
+                />
+                {featuredLimitReached && !article.featured && (
+                  <FormHelperText>
+                    На главной уже {MAX_FEATURED_ARTICLES} статьи. Снимите одну из рекомендованных, чтобы добавить эту.
+                  </FormHelperText>
+                )}
+              </Box>
             )}
 
             <Box>
