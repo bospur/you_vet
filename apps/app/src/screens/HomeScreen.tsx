@@ -4,17 +4,23 @@ import type { ClinicInfo } from '../api';
 import { HomeHero } from '../components/HomeHero/HomeHero';
 import { FeaturedArticles } from '../components/FeaturedArticles/FeaturedArticles';
 import { NavGrid } from '../components/NavGrid/NavGrid';
+import { StickyCallBar } from '../components/StickyCallBar/StickyCallBar';
+import { TodayAtClinic } from '../components/TodayAtClinic/TodayAtClinic';
 import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
 import styles from './HomeScreen.module.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 const BANNER_DISMISSED_KEY = 'banner_dismissed_v1';
+const ABOUT_EXPANDED_KEY = 'about_expanded_v1';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
   const info = useOutletContext<ClinicInfo | null>();
   const { available: groomingAvailable, isLoading: groomingLoading } = useGroomingAvailable();
+  const [aboutExpanded, setAboutExpanded] = useState(
+    () => sessionStorage.getItem(ABOUT_EXPANDED_KEY) === '1',
+  );
   const [bannerClosed, setBannerClosed] = useState(
     () => sessionStorage.getItem(BANNER_DISMISSED_KEY) === '1',
   );
@@ -23,6 +29,18 @@ export default function HomeScreen() {
     sessionStorage.setItem(BANNER_DISMISSED_KEY, '1');
     setBannerClosed(true);
   };
+
+  const toggleAbout = () => {
+    setAboutExpanded((open) => {
+      const next = !open;
+      sessionStorage.setItem(ABOUT_EXPANDED_KEY, next ? '1' : '0');
+      return next;
+    });
+  };
+
+  const phone = info?.phone?.replace(/\s/g, '');
+  const phoneDisplay = info?.phone?.trim();
+  const showStickyCall = Boolean(phone && !aboutExpanded);
 
   const navItems = [
     {
@@ -64,12 +82,13 @@ export default function HomeScreen() {
   const showBanner = bannerEnabled && !bannerClosed;
 
   return (
-    <div className={styles.wrapper}>
-      <HomeHero info={info} />
+    <div className={`${styles.wrapper} ${showStickyCall ? styles.wrapperWithSticky : ''}`}>
+      <HomeHero info={info} expanded={aboutExpanded} onToggleExpanded={toggleAbout} />
 
       <div className={styles.navWrap}>
         <h2 className={styles.sectionHeading}>Полезное</h2>
         <NavGrid items={navItems} />
+        <TodayAtClinic />
       </div>
 
       <div className={styles.featuredWrap}>
@@ -89,6 +108,10 @@ export default function HomeScreen() {
             <div className={styles.bannerPlaceholder} aria-hidden />
           )}
         </div>
+      )}
+
+      {showStickyCall && phone && phoneDisplay && (
+        <StickyCallBar phone={phone} phoneDisplay={phoneDisplay} />
       )}
     </div>
   );

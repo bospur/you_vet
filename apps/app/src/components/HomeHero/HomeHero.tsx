@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import type { ClinicInfo } from '../../api';
 import catImg from '../../assets/home/cat.png';
 import styles from './HomeHero.module.css';
 
 const DEFAULT_SLOGAN = 'Мы работаем для вас и ваших питомцев!';
-const ABOUT_EXPANDED_KEY = 'about_expanded_v1';
 
 function normalizeWebsiteUrl(url: string): string {
   const trimmed = url.trim();
@@ -14,12 +12,11 @@ function normalizeWebsiteUrl(url: string): string {
 
 interface HomeHeroProps {
   info: ClinicInfo | null;
+  expanded: boolean;
+  onToggleExpanded: () => void;
 }
 
-export function HomeHero({ info }: HomeHeroProps) {
-  const [expanded, setExpanded] = useState(
-    () => sessionStorage.getItem(ABOUT_EXPANDED_KEY) === '1',
-  );
+export function HomeHero({ info, expanded, onToggleExpanded }: HomeHeroProps) {
   const slogan = info?.description?.trim() || DEFAULT_SLOGAN;
   const address = info?.address?.trim();
   const email = info?.email?.trim();
@@ -27,20 +24,12 @@ export function HomeHero({ info }: HomeHeroProps) {
   const phone = info?.phone?.replace(/\s/g, '');
   const hasContacts = Boolean(address || email || website || phone);
 
-  const toggleExpanded = () => {
-    setExpanded((open) => {
-      const next = !open;
-      sessionStorage.setItem(ABOUT_EXPANDED_KEY, next ? '1' : '0');
-      return next;
-    });
-  };
-
   return (
     <section className={styles.hero}>
       <button
         type="button"
         className={styles.toggle}
-        onClick={toggleExpanded}
+        onClick={onToggleExpanded}
         aria-expanded={expanded}
         aria-controls="home-about-panel"
       >

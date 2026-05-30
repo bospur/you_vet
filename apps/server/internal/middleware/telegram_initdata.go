@@ -6,7 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"go-server/internal/repository"
 )
 
 var errInvalidInitData = errors.New("invalid init data")
@@ -157,8 +161,52 @@ func initDataFromRequest(r *http.Request) string {
 	return ""
 }
 
+type initDataTelegramUser struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	Username  string `json:"username"`
+}
+
+// ParseInitDataUser извлекает пользователя Telegram из строки initData.
+func ParseInitDataUser(initData string) (repository.TelegramUserVisit, bool) {
+	values, err := parseInitData(initData)
+	if err != nil {
+		return repository.TelegramUserVisit{}, false
+	}
+	raw := values.Get("user")
+	if raw == "" {
+		return repository.TelegramUserVisit{}, false
+	}
+	var u initDataTelegramUser
+	if err := json.Unmarshal([]byte(raw), &u); err != nil || u.ID == 0 {
+		return repository.TelegramUserVisit{}, false
+	}
+	return repository.TelegramUserVisit{
+		TelegramUserID: u.ID,
+		FirstName:      u.FirstName,
+		Username:       u.Username,
+	}, true
+}
+
+func trackTelegramVisit(r *http.Request, initData string, repo *repository.TelegramUserRepository) {
+	if repo == nil {
+		return
+	}
+	clinicSlug := r.PathValue("clinicSlug")
+	if clinicSlug == "" {
+		return
+	}
+	visit, ok := ParseInitDataUser(initData)
+	if !ok {
+		return
+	}
+	if err := repo.UpsertVisit(clinicSlug, visit); err != nil {
+		log.Printf("telegram_users upsert: %v", err)
+	}
+}
+
 // TelegramInitData защищает публичные Mini App эндпоинты.
-func TelegramInitData(botToken string) func(http.HandlerFunc) http.HandlerFunc {
+func TelegramInitData(botToken string, telegramRepo *repository.TelegramUserRepository) func(http.HandlerFunc) http.HandlerFunc {
 	maxAge := initDataMaxAge()
 
 	return func(next http.HandlerFunc) http.HandlerFunc {
@@ -174,6 +222,7 @@ func TelegramInitData(botToken string) func(http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
+			trackTelegramVisit(r, initData, telegramRepo)
 			next(w, r)
 		}
 	}

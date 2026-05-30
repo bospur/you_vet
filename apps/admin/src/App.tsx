@@ -13,7 +13,9 @@ function NonGroomerRoute() {
 
 function DefaultRedirect() {
   const { user } = useAuth();
-  return <Navigate to={user?.role === 'groomer' ? '/grooming' : '/animals'} replace />;
+  if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
+  if (user?.role === 'admin') return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/animals" replace />;
 }
 
 const LoginScreen = lazy(() => import('./screens/LoginScreen').then((m) => ({ default: m.LoginScreen })));
@@ -26,6 +28,7 @@ const DoctorEditorScreen = lazy(() => import('./screens/DoctorEditorScreen').the
 const ScheduleScreen = lazy(() => import('./screens/ScheduleScreen').then((m) => ({ default: m.ScheduleScreen })));
 const GroomingScreen = lazy(() => import('./screens/GroomingScreen').then((m) => ({ default: m.GroomingScreen })));
 const ClinicInfoScreen = lazy(() => import('./screens/ClinicInfoScreen').then((m) => ({ default: m.ClinicInfoScreen })));
+const DashboardScreen = lazy(() => import('./screens/DashboardScreen').then((m) => ({ default: m.DashboardScreen })));
 
 const Loader = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -41,6 +44,7 @@ const router = createBrowserRouter([
       {
         element: <NonGroomerRoute />,
         children: [
+          { path: '/dashboard', element: <Suspense fallback={<Loader />}><DashboardScreen /></Suspense> },
           { path: '/clinic-info', element: <Suspense fallback={<Loader />}><ClinicInfoScreen /></Suspense> },
           { path: '/animals', element: <Suspense fallback={<Loader />}><AnimalsScreen /></Suspense> },
           { path: '/articles', element: <Suspense fallback={<Loader />}><ArticlesScreen /></Suspense> },

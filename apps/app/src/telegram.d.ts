@@ -6,10 +6,15 @@ interface TelegramBackButton {
   offClick(fn: () => void): void;
 }
 
+interface TelegramHapticFeedback {
+  impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
+}
+
 interface TelegramWebApp {
   initData: string;
   colorScheme: 'light' | 'dark';
   BackButton: TelegramBackButton;
+  HapticFeedback: TelegramHapticFeedback;
   ready(): void;
   expand(): void;
   close(): void;

@@ -62,6 +62,7 @@ func main() {
 	doctorRepo := repository.NewDoctorRepository(database)
 	groomingRepo := repository.NewGroomingRepository(database)
 	clinicInfoRepo := repository.NewClinicInfoRepository(database)
+	telegramUserRepo := repository.NewTelegramUserRepository(database)
 
 	// Создаём первого admin пользователя если таблица users пустая
 	if adminLogin != "" && adminPass != "" {
@@ -88,9 +89,10 @@ func main() {
 	doctorHandler := handler.NewDoctorHandler(doctorRepo, uploadsDir)
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
+	statsHandler := handler.NewStatsHandler(telegramUserRepo)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
-	miniApp := middleware.TelegramInitData(botToken)
+	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
 	http.HandleFunc("/api/clinics/{clinicSlug}/animals", miniApp(animalHandler.GetAnimals))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/articles/featured", miniApp(articleHandler.GetFeaturedArticles))
 	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{animalSlug}/articles", miniApp(articleHandler.GetArticles))
@@ -123,6 +125,9 @@ func main() {
 	http.HandleFunc("POST /api/admin/animals", contentAuth(adminHandler.CreateAnimal))
 	http.HandleFunc("PUT /api/admin/animals/{id}", contentAuth(adminHandler.UpdateAnimal))
 	http.HandleFunc("DELETE /api/admin/animals/{id}", contentAuth(adminHandler.DeleteAnimal))
+
+	// Stats (только admin)
+	http.HandleFunc("GET /api/admin/stats/summary", adminAuth(statsHandler.GetSummary))
 
 	// Users (только admin)
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))

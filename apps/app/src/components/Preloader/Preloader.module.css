@@ -9,168 +9,31 @@
   background: var(--tgui--secondary_bg_color, #f0f0f0);
 }
 
-/* Сцена — котик идёт по дорожке */
-.scene {
-  position: relative;
-  width: 120px;
-  height: 80px;
-}
-
-/* Тело котика */
-.cat {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: walk 0.5s steps(1) infinite, bounce 0.5s ease-in-out infinite;
-}
-
-/* Bouncing up/down при ходьбе */
-@keyframes bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%       { transform: translateX(-50%) translateY(-4px); }
-}
-
-/* Уши */
-.ears {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 4px;
-  margin-bottom: -2px;
-}
-
-.ear {
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 12px solid var(--tgui--text_color, #333);
-}
-
-/* Голова */
-.head {
-  width: 38px;
-  height: 34px;
-  background: var(--tgui--text_color, #333);
-  border-radius: 50% 50% 45% 45%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Глаза */
-.eyes {
-  display: flex;
-  gap: 8px;
-  margin-top: -4px;
-}
-
-.eye {
-  width: 6px;
-  height: 6px;
-  background: var(--tgui--secondary_bg_color, #f0f0f0);
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(51, 139, 78, 0.2);
+  border-top-color: var(--vet-green-label, #338b4e);
   border-radius: 50%;
-  animation: blink 3s ease-in-out infinite;
+  animation: spin 0.75s linear infinite;
 }
 
-@keyframes blink {
-  0%, 90%, 100% { transform: scaleY(1); }
-  95%            { transform: scaleY(0.1); }
-}
-
-/* Нос */
-.nose {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 4px;
-  background: #ff7eb3;
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-}
-
-/* Тело */
-.body {
-  width: 34px;
-  height: 28px;
-  background: var(--tgui--text_color, #333);
-  border-radius: 40% 40% 50% 50%;
-  margin: 0 auto;
-  margin-top: -2px;
-}
-
-/* Хвост */
-.tail {
-  position: absolute;
-  right: -14px;
-  bottom: 28px;
-  width: 18px;
-  height: 6px;
-  background: var(--tgui--text_color, #333);
-  border-radius: 0 4px 4px 0;
-  transform-origin: left center;
-  animation: tailWag 0.8s ease-in-out infinite alternate;
-}
-
-@keyframes tailWag {
-  from { transform: rotate(-20deg); }
-  to   { transform: rotate(20deg); }
-}
-
-/* Лапки */
-.legs {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: -2px;
-}
-
-.leg {
-  width: 7px;
-  height: 12px;
-  background: var(--tgui--text_color, #333);
-  border-radius: 0 0 4px 4px;
-}
-
-.leg:nth-child(1) { animation: legL 0.5s ease-in-out infinite; }
-.leg:nth-child(2) { animation: legR 0.5s ease-in-out infinite; }
-.leg:nth-child(3) { animation: legR 0.5s ease-in-out infinite; }
-.leg:nth-child(4) { animation: legL 0.5s ease-in-out infinite; }
-
-@keyframes legL {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-5px); }
-}
-@keyframes legR {
-  0%, 100% { transform: translateY(-5px); }
-  50%       { transform: translateY(0); }
-}
-
-/* Следы лапок */
-.paws {
-  display: flex;
-  gap: 12px;
-  opacity: 0.4;
-}
-
-.paw {
-  font-size: 14px;
-  animation: fadeIn 1s ease-in-out infinite;
-}
-
-.paw:nth-child(1) { animation-delay: 0s; }
-.paw:nth-child(2) { animation-delay: 0.33s; }
-.paw:nth-child(3) { animation-delay: 0.66s; }
-
-@keyframes fadeIn {
-  0%, 100% { opacity: 0.1; }
-  50%       { opacity: 0.6; }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .text {
   font-size: 13px;
   color: var(--tgui--hint_color, #999);
   letter-spacing: 0.3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-top-color: var(--vet-green-label, #338b4e);
+    opacity: 0.85;
+  }
 }
