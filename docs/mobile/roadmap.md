@@ -72,6 +72,14 @@ npm run build && npx cap sync
 - [ ] Заявка на приём (pending flow) — общий backend с roadmap PRD-03
 - [ ] Push: `@capacitor/push-notifications` + FCM/APNs
 
+### Фаза M2.5 — Карточка клиента (после MVP бота + метрик)
+
+> Зависит от PRD-09. Сначала — бот и Mini App; mobile — когда есть трафик и понятна идентификация клиента.
+
+- [ ] Экран «Моя карта»: штрихкод + имя/номер карты (данные из БД клиники через backend-коннектор)
+- [ ] Общий API с ботом: `GET /api/.../client-card` (по телефону / JWT / Telegram chat_id)
+- [ ] Offline: кэш последней карты (опционально, M4)
+
 Документация: [Push Notifications](https://capacitorjs.com/docs/apis/push-notifications)
 
 ### Фаза M3 — Store release (2–4 нед параллельно)
@@ -113,6 +121,7 @@ Mini App и бот **не блокируются** — параллельные 
 |---|---|
 | PRD-03 | Запись на приём — общая модель заявок для Mini App и mobile |
 | PRD-04 | Аналитика — mobile client_id в events |
+| PRD-09 | Карточка клиента — общий backend-коннектор к БД клиники; mobile после MVP бота |
 | SEC-04 | Только admin; mobile JWT — отдельная схема |
 
 ---
