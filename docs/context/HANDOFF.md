@@ -2,35 +2,51 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30 (продолжение)
+## Сессия — новая (старт)
 
-**Цель:** roadmap, кнопки «назад» в HTML, security hardening
+**Ветка:** `work-tech` (чистое дерево, синхрон с `origin/work-tech`)
+
+**Не в `dev`:** 2 коммита (`0570d67` аудит + `986aa35` security hardening). Prod API **ещё без** RBAC/CORS/rate-limit — после merge в `dev` задеплоится `deploy-server.yml`.
+
+**Приоритеты на эту сессию:**
+
+1. PR в `dev` с `work-tech` (если готово к релизу) → автодеплой server
+2. PRD-01 — скрывать груминг в Mini App, если раздел пустой
+3. INF-01 — CI quality gate на PR (test/lint/build)
+4. SEC-07 — валидация Telegram `initData`
+
+**Быстрый старт для AI:**
+
+```bash
+cd apps/server && go test ./...
+git log dev..HEAD --oneline   # что уйдёт в dev при merge
+```
+
+---
+
+## Сессия 2026-05-30 — security hardening (завершена)
+
+**Цель:** roadmap, кнопки «назад» в HTML, security hardening admin API
 
 ### Сделано
 
-- [x] Security hardening на бэкенде:
-  - `middleware/role.go` — RequireRole
-  - `middleware/ratelimit.go` — login 10/15min
-  - `middleware/cors.go` — whitelist origins
-  - clinic_id во всех update/delete repositories
-  - main.go: contentAuth / groomingAuth / adminAuth
-- [x] Тесты: role_test.go (3 кейса), go test ./... проходит
-- [x] HTML: кнопка «← Все документы» на всех sub-страницах
-- [x] Roadmap: security ✅, CI quality gate в backlog фазы 3
-- [x] docs/roles.md, audit.md, ISSUES.md обновлены
+- [x] `middleware/role.go` — RequireRole; `role_test.go` (3 кейса)
+- [x] `middleware/ratelimit.go` — login 10 req / 15 min
+- [x] `middleware/cors.go` — whitelist origins (`CORS_ORIGINS` env)
+- [x] `clinic_id` в update/delete repositories (animals, articles, doctors, grooming, users)
+- [x] `main.go`: contentAuth / groomingAuth / adminAuth
+- [x] HTML: «← Все документы» на sub-страницах; roadmap/audit/roles обновлены
+- [x] Коммит `986aa35` на `work-tech`
 
-### Не сделано / следующая сессия
+### Не сделано (перенесено выше)
 
-- [ ] PRD-01: скрывать груминг в Mini App если пустой
-- [ ] INF-01: CI quality gate на PR
-- [ ] INF-02: packages/cat в deploy-app paths
-- [ ] SEC-07: Telegram initData валидация
-- [ ] Деплой server на prod (push apps/server → CI)
+- [ ] Merge `work-tech` → `dev` + проверка prod API
+- [ ] PRD-01, INF-01, INF-02, SEC-07
 
 ### Заметки
 
-- После merge в dev — server задеплоится автоматически через GHCR
-- CORS: по умолчанию admin/app prod + localhost. Override: `CORS_ORIGINS` env
+- CORS по умолчанию: admin/app prod + localhost
+- JWT по-прежнему в localStorage (SEC-04) — отдельная задача
 
 ---
 

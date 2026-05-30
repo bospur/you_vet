@@ -1,6 +1,6 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-05-30
+> Последнее обновление: 2026-05-30 (новая сессия)
 
 ## Что это
 
@@ -33,7 +33,7 @@ packages/cat/    @you-vet/cat (CatLogo, CatPreloader)
 
 **Фактически:** один VPS = одна клиника (`CLINIC_SLUG`, `VITE_CLINIC_SLUG` в secrets).
 
-**В схеме БД:** мультитенантность (`clinics`, `clinic_id` на таблицах). Код частично готов, но tenant-scoping в update/delete неполный — см. [ISSUES.md](./ISSUES.md).
+**В схеме БД:** мультитенантность (`clinics`, `clinic_id` на таблицах). Update/delete с `clinic_id` и RBAC на admin API — с 2026-05-30 в ветке `work-tech` (см. [roles.md](../roles.md), [ISSUES.md](./ISSUES.md)).
 
 ## CI/CD (актуальные workflows в `.github/workflows/`)
 
@@ -50,6 +50,7 @@ packages/cat/    @you-vet/cat (CatLogo, CatPreloader)
 
 - Основная ветка: `dev` (деплой по push)
 - Не пушить напрямую в `dev` — только через PR
+- **Сейчас:** feature-ветка `work-tech` (security hardening + docs), не смержена в `dev`
 
 ## Ключевые документы
 
