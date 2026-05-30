@@ -1,11 +1,8 @@
 import axiosInstance from './axiosInstance';
-import { CLINIC_SLUG } from '../../shared/config/env';
 import type { Animal, AnimalFormValues } from '../../modules/animals/domain/types';
 
 export async function getAnimals(): Promise<Animal[]> {
-  const { data } = await axiosInstance.get<Animal[]>(
-    `/api/clinics/${CLINIC_SLUG}/animals`,
-  );
+  const { data } = await axiosInstance.get<Animal[]>('/api/admin/animals');
   return data ?? [];
 }
 
