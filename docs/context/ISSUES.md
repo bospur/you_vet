@@ -25,6 +25,7 @@
 | INF-03 | ⚪ | Дублирующие workflows в `apps/*/.github/` | open |
 | INF-04 | ⚪ | `turbo: "latest"` не закреплён | open |
 | UI-01 | ⚪ | Dreamstime PNG в SVG-ассетах меню | **fixed** — inline SVG в `NavGrid/icons.tsx` |
+| UI-02 | ⚪ | Выравнивание заголовков NavGrid при разной длине подписи | open — костыль: короткие подписи в одну строку |
 
 ## Документация
 

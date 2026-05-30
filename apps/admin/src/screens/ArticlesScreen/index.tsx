@@ -56,7 +56,13 @@ export function ArticlesScreen() {
 
   return (
     <Layout title="Статьи">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        gap: 1,
+        mb: 3,
+      }}>
         <Box>
           <Typography variant="h5" fontWeight={600}>Статьи</Typography>
           {role === 'admin' && (

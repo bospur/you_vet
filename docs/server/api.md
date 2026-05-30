@@ -84,10 +84,12 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 | GET | `/api/admin/articles/{id}` | Одна статья | все |
 | PUT | `/api/admin/articles/{id}` | Обновить (черновик) | все |
 | PATCH | `/api/admin/articles/{id}/status` | Сменить статус | только admin |
-| PATCH | `/api/admin/articles/{id}/featured` | Показ на главной (max 3) | только admin |
+| PATCH | `/api/admin/articles/{id}/featured` | Показ на главной (max 3, только published) | только admin |
 | DELETE | `/api/admin/articles/{id}` | Удалить | все (опубликованные — только admin) |
 
 **POST/PUT body:** `{ "title", "content", "animal_id" }` — slug генерируется на сервере из заголовка.
+
+**GET list / GET by id** — поле `featured: boolean` (для admin UI).
 
 Статусы: `draft` → `published`. Опубликованные статьи видны в публичном API и боте.
 
