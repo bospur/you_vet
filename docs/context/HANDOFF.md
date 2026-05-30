@@ -21,6 +21,7 @@
 ### Следующая сессия
 
 - [ ] PRD-03: запись на приём (фаза 4)
+- [ ] Mobile app: M0 backend `/api/mobile/v1` (см. `docs/mobile/`)
 - [ ] SEC-04: JWT → httpOnly cookie (опционально)
 - [ ] SEC-06: валидация загрузки по MIME
 - [ ] Оптимизация `assets/menu/arcticles.svg` (~324 KB, embedded PNG) → чистый PNG
