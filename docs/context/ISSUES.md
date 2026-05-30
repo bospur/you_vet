@@ -24,6 +24,7 @@
 | INF-02 | 🟡 | `deploy-app.yml` не следит за `packages/cat/**` | **fixed** |
 | INF-03 | ⚪ | Дублирующие workflows в `apps/*/.github/` | open |
 | INF-04 | ⚪ | `turbo: "latest"` не закреплён | open |
+| UI-01 | ⚪ | `assets/menu/arcticles.svg` ~324 KB (embedded PNG в SVG) | open — заменить на PNG |
 
 ## Документация
 

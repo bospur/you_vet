@@ -33,6 +33,14 @@
   color: var(--vet-green-label);
 }
 
+.icon img {
+  max-width: 72px;
+  max-height: 72px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 .label {
   font-size: 14px;
   font-weight: 800;
