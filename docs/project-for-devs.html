@@ -121,6 +121,7 @@
     <a href="https://admin.snzbeachvolleyball25.ru">Admin Panel (prod)</a>
     <a href="https://api.snzbeachvolleyball25.ru">API (prod)</a>
     <a href="https://app.snzbeachvolleyball25.ru">Mini App (prod)</a>
+    <a href="mobile.html">Mobile App (research)</a>
     <span style="color:#888; font-size:12px;">Обновлено: 2026-05-30</span>
   </div>
 </div>
@@ -128,9 +129,10 @@
 
 <h2>Что за продукт</h2>
 
-<p>Клиника подключается к сервису и получает два инструмента:</p>
+<p>Клиника подключается к сервису и получает инструменты для клиентов и персонала:</p>
 <ul>
-  <li><strong>Telegram Mini App</strong> — для клиентов. Владельцы питомцев видят информацию о клинике (лого, баннер, телефон, адрес), читают статьи по первой помощи, смотрят врачей и расписание, записываются на груминг.</li>
+  <li><strong>Telegram Mini App</strong> — для клиентов в Telegram. Владельцы питомцев видят информацию о клинике (лого, баннер, телефон, адрес), читают статьи по первой помощи, смотрят врачей и расписание, записываются на груминг.</li>
+  <li><strong>Мобильное приложение</strong> (в проектировании) — отдельный iOS/Android клиент на <a href="mobile.html">Capacitor</a>, общий Go API, не связан с Telegram.</li>
   <li><strong>Веб-панель (admin)</strong> — для персонала клиники. Редактор ведёт контент, администратор управляет врачами, пользователями и информацией о клинике, грумер — своими записями.</li>
 </ul>
 <p><strong>Мультитенантность в схеме БД:</strong> <code>clinic_id</code> во всех таблицах — schema-ready. <strong>Production сейчас:</strong> один VPS = одна клиника (<code>CLINIC_SLUG</code>, <code>VITE_CLINIC_SLUG</code>). Tenant-scoping в update/delete на бэкенде неполный — см. <a href="audit.html">audit</a>.</p>
@@ -143,7 +145,8 @@ you_vet/<br>
 ├── apps/<br>
 │   ├── server/    <span class="comment">← Go бэкенд + Telegram бот</span><br>
 │   ├── admin/     <span class="comment">← Веб-панель (React + MUI)</span><br>
-│   └── app/       <span class="comment">← Telegram Mini App (React + TG UI)</span><br>
+│   ├── app/       <span class="comment">← Telegram Mini App (React + TG UI)</span><br>
+│   └── mobile/    <span class="comment">← Mobile App (Capacitor) — planned</span><br>
 ├── packages/<br>
 │   ├── types/     <span class="comment">← @you-vet/types — общие TypeScript типы</span><br>
 │   └── cat/       <span class="comment">← @you-vet/cat — CatLogo, CatPreloader</span><br>
@@ -193,6 +196,18 @@ you_vet/<br>
   <tr><td>UI-компоненты</td><td>@telegram-apps/telegram-ui v2 (нативный TG-стиль)</td></tr>
   <tr><td>Серверное состояние</td><td>TanStack Query v5</td></tr>
   <tr><td>Роутинг</td><td>React Router v6</td></tr>
+</table>
+
+<h3>Mobile App <span class="badge badge-planned" style="background:#e3f2fd;color:#1565c0;">Planned</span> <span class="badge badge-react">React</span> <span class="badge badge-ts">Capacitor</span></h3>
+
+<p>Отдельный iOS/Android клиент, <strong>не связан с Telegram</strong>. Общий Go API. Подробнее → <a href="mobile.html">mobile.html</a> (аналитика, roadmap, ссылки).</p>
+
+<table>
+  <tr><th>Компонент</th><th>Решение</th></tr>
+  <tr><td>Runtime</td><td><a href="https://capacitorjs.com">Capacitor</a> (Web Native)</td></tr>
+  <tr><td>UI</td><td>Свой React UI (не telegram-ui)</td></tr>
+  <tr><td>API</td><td><code>/api/mobile/v1/...</code> + JWT (OTP через бота)</td></tr>
+  <tr><td>Репозиторий</td><td>Монорепо <code>apps/mobile/</code></td></tr>
 </table>
 
 <h3>Инфраструктура</h3>

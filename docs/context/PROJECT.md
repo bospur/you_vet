@@ -55,5 +55,6 @@ packages/cat/    @you-vet/cat (CatLogo, CatPreloader)
 
 - [audit.md](../audit.md) — технический аудит
 - [architecture.md](../architecture.md) — схема системы
+- [mobile/overview.md](../mobile/overview.md) — мобильное приложение (Capacitor, research)
 - [server/api.md](../server/api.md) — API reference
 - [roles.md](../roles.md) — роли (с фактическим состоянием RBAC на бэкенде)

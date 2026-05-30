@@ -28,6 +28,15 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [roadmap.html](./roadmap.html) | Roadmap проекта |
 | [design-brief.html](./design-brief.html) | Дизайнеры |
 | [audit.html](./audit.html) | Технический аудит |
+| [mobile.html](./mobile.html) | Мобильное приложение (Capacitor, research, roadmap) |
+
+### Мобильное приложение (`apps/mobile` — planned)
+
+| Документ | Описание |
+|---|---|
+| [mobile/overview.md](./mobile/overview.md) | Обзор, решения |
+| [mobile/research.md](./mobile/research.md) | Аналитика и варианты |
+| [mobile/roadmap.md](./mobile/roadmap.md) | Roadmap, монорепо |
 
 ### Бэкенд (`apps/server`)
 

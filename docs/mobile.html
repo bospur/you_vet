@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouVet — Мобильное приложение</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #ffffff;
+      max-width: 900px;
+      margin: 48px auto;
+      padding: 0 40px 80px;
+      line-height: 1.7;
+    }
+    .doc-back { margin-bottom: 8px; }
+    .doc-back a { color: #555; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ddd; }
+    .doc-back a:hover { color: #1a1a1a; border-color: #888; }
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 32px; }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .header .subtitle { font-size: 16px; color: #555; margin-top: 6px; }
+    .header .meta { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+    .header .meta a { color: #1a1a1a; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ccc; }
+    .nav-toc {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 36px;
+    }
+    .nav-toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 0 0 10px; border: none; padding: 0; }
+    .nav-toc ul { list-style: none; padding: 0; margin: 0; }
+    .nav-toc li { margin-bottom: 6px; }
+    .nav-toc a { color: #0066cc; text-decoration: none; font-weight: 500; }
+    .nav-toc a:hover { text-decoration: underline; }
+    h2 { font-size: 19px; font-weight: 700; margin: 44px 0 16px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; scroll-margin-top: 24px; }
+    h3 { font-size: 15px; font-weight: 700; margin: 24px 0 8px; }
+    h4 { font-size: 13px; font-weight: 700; margin: 16px 0 6px; color: #444; }
+    p { margin-bottom: 12px; }
+    a { color: #0066cc; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+    th { background: #f5f5f5; text-align: left; padding: 8px 12px; font-weight: 600; border: 1px solid #ddd; }
+    td { padding: 7px 12px; border: 1px solid #ddd; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+    code {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 12.5px;
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #c7254e;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px 20px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+    ul, ol { padding-left: 22px; margin-bottom: 12px; }
+    li { margin-bottom: 5px; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-right: 4px;
+    }
+    .badge-chosen { background: #e8f5e9; color: #2e7d32; }
+    .badge-planned { background: #fff3e0; color: #e65100; }
+    .tip { background: #f0f7ff; border-left: 3px solid #0066cc; padding: 12px 16px; border-radius: 0 4px 4px 0; margin: 12px 0 20px; font-size: 13px; }
+    .warn { background: #fff8e1; border-left: 3px solid #f59e0b; padding: 12px 16px; border-radius: 0 4px 4px 0; margin: 12px 0 20px; font-size: 13px; }
+    .tree { font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; line-height: 1.8; background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px 20px; margin: 12px 0 20px; }
+    .tree .comment { color: #888; }
+    .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 20px; }
+    .link-card {
+      display: block;
+      padding: 10px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #1a1a1a;
+      font-size: 13px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .link-card:hover { border-color: #0066cc; box-shadow: 0 2px 8px rgba(0,102,204,0.1); }
+    .link-card strong { display: block; color: #0066cc; margin-bottom: 2px; }
+    .link-card span { color: #777; font-size: 12px; }
+    .phase-item { padding: 10px 14px; border: 1px solid #e8e8e8; border-radius: 6px; margin-bottom: 8px; background: #fafafa; }
+    .phase-item h4 { margin: 0 0 6px; text-transform: none; letter-spacing: 0; color: #1a1a1a; }
+    .phase-item ul { margin: 0; font-size: 13px; color: #444; }
+    @media (max-width: 640px) {
+      body { margin: 24px auto; padding: 0 16px 60px; }
+      .link-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<p class="doc-back"><a href="index.html">← Все документы</a> · <a href="project-for-devs.html">Project Overview</a> · <a href="roadmap.html">Roadmap</a></p>
+
+<div class="header">
+  <h1>Мобильное приложение</h1>
+  <div class="subtitle">Отдельный iOS/Android клиент на Capacitor · общий Go API · не связан с Telegram Mini App</div>
+  <div class="meta">
+    <span class="badge badge-planned">Исследование</span>
+    <span style="color:#888;font-size:12px;">Обновлено: 2026-05-30</span>
+    <a href="https://capacitorjs.com" target="_blank" rel="noopener">Capacitor ↗</a>
+  </div>
+</div>
+
+<nav class="nav-toc">
+  <h2>Разделы</h2>
+  <ul>
+    <li><a href="#overview">Обзор и решения</a></li>
+    <li><a href="#research">Аналитика и изучение возможностей</a></li>
+    <li><a href="#auth">Авторизация (телефон + код в TG)</a></li>
+    <li><a href="#stores">Сторы и дистрибуция</a></li>
+    <li><a href="#links">Ссылки для изучения</a></li>
+    <li><a href="#roadmap">Roadmap приложения</a></li>
+    <li><a href="#monorepo">Монорепо vs отдельная репа</a></li>
+  </ul>
+</nav>
+
+<!-- ── OVERVIEW ── -->
+<h2 id="overview">Обзор и решения</h2>
+
+<p>Telegram Mini App и бот остаются <strong>отдельным каналом</strong>. Mobile app — для пользователей без Telegram, при блокировке TG, и для push + иконки на экране.</p>
+
+<div class="tree">
+Go API + PostgreSQL<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── Mini App (<code>apps/app</code>)&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← initData, @telegram-apps/*</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── Telegram Bot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← bot API, OTP, уведомления</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── Admin (<code>apps/admin</code>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← JWT staff</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── Mobile (<code>apps/mobile</code>)&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← NEW Capacitor, mobile JWT</span>
+</div>
+
+<table>
+  <tr><th>Решение</th><th>Выбор</th></tr>
+  <tr><td>Фреймворк клиента</td><td><span class="badge badge-chosen">Capacitor</span> React + Vite + native shell</td></tr>
+  <tr><td>API prefix</td><td><code>/api/mobile/v1/clinics/{slug}/...</code></td></tr>
+  <tr><td>Auth пользователя</td><td>Телефон → OTP в Telegram → JWT</td></tr>
+  <tr><td>Репозиторий</td><td>Монорепо <code>apps/mobile/</code></td></tr>
+</table>
+
+<div class="tip">
+  <strong>Backend уже почти готов:</strong> все нужные данные отдаются публичными GET. Нужен новый route group без <code>TelegramInitData</code> и слой mobile auth.
+</div>
+
+<!-- ── RESEARCH ── -->
+<h2 id="research">Аналитика и изучение возможностей</h2>
+
+<h3>Сравнение подходов</h3>
+
+<table>
+  <tr><th>Подход</th><th>Срок MVP</th><th>Переиспользование</th><th>Комментарий</th></tr>
+  <tr><td><strong>Capacitor</strong></td><td>4–8 нед</td><td>~70% логики, types</td><td>✅ выбран — один код iOS+Android</td></tr>
+  <tr><td>React Native</td><td>8–12 нед</td><td>types, API</td><td>UI с нуля, другой DX</td></tr>
+  <tr><td>PWA</td><td>1–2 нед</td><td>~95% Mini App</td><td>слабый push iOS, не «app» в store</td></tr>
+  <tr><td>Kotlin + Swift</td><td>4–6+ мес</td><td>только API</td><td>две кодовые базы</td></tr>
+</table>
+
+<h3>Почему Capacitor</h3>
+<ul>
+  <li>Встраивается в существующий монорепо (npm workspaces, Turborepo)</li>
+  <li>React + Vite — тот же стек, что <code>apps/app</code> и <code>apps/admin</code></li>
+  <li>Native plugins: push, geolocation, deep links, camera</li>
+  <li>Ionic UI <strong>не обязателен</strong> — свой дизайн под клинику</li>
+  <li>Активная документация и community (<a href="https://capacitorjs.com" target="_blank" rel="noopener">capacitorjs.com</a>)</li>
+</ul>
+
+<h3>Что переиспользуем из текущего проекта</h3>
+<ul>
+  <li><code>@you-vet/types</code> — DTO врачей, статей, clinic-info</li>
+  <li>Паттерны экранов и React Query из <code>apps/app</code></li>
+  <li>Design tokens (<code>tokens.css</code>)</li>
+  <li>Go handlers/repositories — без дублирования бизнес-логики</li>
+</ul>
+
+<h3>Что не переносим</h3>
+<ul>
+  <li><code>@telegram-apps/sdk-react</code>, <code>telegram-ui</code></li>
+  <li><code>TelegramOnlyScreen</code>, initData interceptor</li>
+  <li>BackButton Telegram — нативная навигация / свой header</li>
+</ul>
+
+<!-- ── AUTH ── -->
+<h2 id="auth">Авторизация: телефон + код в Telegram</h2>
+
+<p>Два независимых слоя:</p>
+<table>
+  <tr><th>Слой</th><th>Задача</th><th>Решение</th></tr>
+  <tr><td>Защита API</td><td>anti-scraping</td><td>rate limit, optional app key</td></tr>
+  <tr><td>Пользователь</td><td>запись, «мои заявки», push</td><td>JWT после OTP</td></tr>
+</table>
+
+<p>Контент (статьи, врачи, расписание) на первом этапе — <strong>без логина</strong>.</p>
+
+<h3>Flow</h3>
+<pre>Mobile App                    Backend                      Bot
+   │ POST /auth/request         │                              │
+   │ { phone }                  │ lookup chat_id by phone      │
+   ├───────────────────────────►├─────────────────────────────►│ SendMessage(code)
+   │ POST /auth/verify          │                              │
+   │ { phone, code }            │ → JWT access + refresh       │
+   ├───────────────────────────►│                              │</pre>
+
+<h3>Onboarding (обязательно)</h3>
+<p>Bot API <strong>не отправляет</strong> сообщения по номеру телефона, пока пользователь не нажал <code>/start</code>:</p>
+<ol>
+  <li>Открыть <code>@VPract_bot</code> → <code>/start</code></li>
+  <li>«Поделиться контактом» → backend: <code>phone ↔ telegram_chat_id</code></li>
+  <li>Mobile app: ввод телефона → код в TG</li>
+</ol>
+
+<div class="warn">
+  <strong>Блокировка Telegram:</strong> OTP через бота не работает без TG. Для сценария «app на случай блокировки» нужен <strong>SMS fallback</strong> (фаза M4). На старте — только TG OTP, если аудитория уже в боте.
+</div>
+
+<!-- ── STORES ── -->
+<h2 id="stores">Сторы и дистрибуция</h2>
+
+<table>
+  <tr><th>Канал</th><th>Платформа</th><th>Роль</th></tr>
+  <tr><td><strong>RuStore</strong></td><td>Android</td><td>Приоритет для РФ</td></tr>
+  <tr><td>Google Play</td><td>Android</td><td>Широкий охват</td></tr>
+  <tr><td>App Store</td><td>iOS</td><td>Единственный массовый путь на iOS</td></tr>
+  <tr><td>APK с сайта</td><td>Android</td><td>Только beta (~30–50% установят)</td></tr>
+</table>
+
+<p>APK «скачать напрямую» — не замена store для массовой аудитории. iOS sideload для клиентов практически недоступен.</p>
+
+<!-- ── LINKS ── -->
+<h2 id="links">Ссылки для изучения</h2>
+
+<h3>Capacitor <span class="badge badge-chosen">выбран</span></h3>
+<div class="link-grid">
+  <a class="link-card" href="https://capacitorjs.com" target="_blank" rel="noopener">
+    <strong>Capacitor — главная</strong>
+    <span>Обзор, философия Web Native</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/getting-started" target="_blank" rel="noopener">
+    <strong>Getting Started</strong>
+    <span>Установка, init, первый build</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/ios" target="_blank" rel="noopener">
+    <strong>iOS</strong>
+    <span>Xcode, simulator, App Store</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/android" target="_blank" rel="noopener">
+    <strong>Android</strong>
+    <span>Android Studio, Gradle</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/plugins" target="_blank" rel="noopener">
+    <strong>Plugins</strong>
+    <span>Camera, Geolocation, Filesystem…</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/apis/push-notifications" target="_blank" rel="noopener">
+    <strong>Push Notifications</strong>
+    <span>FCM + APNs</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/guides/deep-links" target="_blank" rel="noopener">
+    <strong>Deep Links</strong>
+    <span>Открытие app из бота / сайта</span>
+  </a>
+  <a class="link-card" href="https://capacitorjs.com/docs/guides/ci-cd" target="_blank" rel="noopener">
+    <strong>CI/CD</strong>
+    <span>Сборка в GitHub Actions</span>
+  </a>
+</div>
+
+<h3>Telegram (auth, bot)</h3>
+<div class="link-grid">
+  <a class="link-card" href="https://core.telegram.org/bots/api" target="_blank" rel="noopener">
+    <strong>Bot API</strong>
+    <span>SendMessage, keyboards, contact</span>
+  </a>
+  <a class="link-card" href="https://core.telegram.org/bots/api#keyboardbutton" target="_blank" rel="noopener">
+    <strong>request_contact</strong>
+    <span>Привязка телефона к chat_id</span>
+  </a>
+  <a class="link-card" href="https://core.telegram.org/gateway" target="_blank" rel="noopener">
+    <strong>Telegram Gateway</strong>
+    <span>OTP как альтернатива SMS (платно)</span>
+  </a>
+</div>
+
+<h3>Сторы</h3>
+<div class="link-grid">
+  <a class="link-card" href="https://www.rustore.ru/help/developers" target="_blank" rel="noopener">
+    <strong>RuStore для разработчиков</strong>
+    <span>Публикация Android в РФ</span>
+  </a>
+  <a class="link-card" href="https://play.google.com/console" target="_blank" rel="noopener">
+    <strong>Google Play Console</strong>
+    <span>Android store</span>
+  </a>
+  <a class="link-card" href="https://developer.apple.com" target="_blank" rel="noopener">
+    <strong>Apple Developer</strong>
+    <span>iOS, TestFlight, App Store</span>
+  </a>
+  <a class="link-card" href="https://developer.apple.com/app-store/review/guidelines/" target="_blank" rel="noopener">
+    <strong>App Store Guidelines</strong>
+    <span>Требования review (4.2 web wrapper)</span>
+  </a>
+</div>
+
+<h3>Альтернативы (справочно)</h3>
+<div class="link-grid">
+  <a class="link-card" href="https://reactnative.dev/docs/getting-started" target="_blank" rel="noopener">
+    <strong>React Native</strong>
+    <span>Альтернатива Capacitor</span>
+  </a>
+  <a class="link-card" href="https://docs.expo.dev" target="_blank" rel="noopener">
+    <strong>Expo</strong>
+    <span>RN toolchain</span>
+  </a>
+  <a class="link-card" href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps" target="_blank" rel="noopener">
+    <strong>PWA (MDN)</strong>
+    <span>Web fallback без store</span>
+  </a>
+</div>
+
+<!-- ── ROADMAP ── -->
+<h2 id="roadmap">Roadmap приложения</h2>
+
+<p>Оценка для 1 разработчика. Mini App и бот не блокируются.</p>
+
+<div class="phase-item">
+  <h4>M0 — Backend mobile API <span class="badge badge-planned">1–2 нед</span></h4>
+  <ul>
+    <li>Миграции: <code>mobile_users</code>, <code>auth_codes</code></li>
+    <li><code>GET /api/mobile/v1/clinics/{slug}/...</code> — те же handlers</li>
+    <li><code>POST auth/request</code>, <code>verify</code>, <code>refresh</code></li>
+    <li>Bot: handler contact → phone ↔ chat_id</li>
+    <li>Rate limit на mobile routes</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h4>M1 — Capacitor shell, read-only <span class="badge badge-planned">3–4 нед</span></h4>
+  <ul>
+    <li><code>apps/mobile</code>: Vite + React + Capacitor</li>
+    <li>Экраны: главная, статьи, врачи, расписание, груминг</li>
+    <li>Свой UI, <code>@you-vet/types</code>, empty/error states</li>
+    <li>Internal: Android debug APK, iOS TestFlight</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h4>M2 — Auth + запись + push <span class="badge badge-planned">2–3 нед</span></h4>
+  <ul>
+    <li>Login: телефон → код в TG</li>
+    <li>Deeplink onboarding в бота</li>
+    <li>PRD-03: заявки на приём (общий backend)</li>
+    <li><code>@capacitor/push-notifications</code></li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h4>M3 — Store release <span class="badge badge-planned">2–4 нед</span></h4>
+  <ul>
+    <li>Privacy policy, иконка, скриншоты</li>
+    <li>RuStore → Google Play → App Store</li>
+    <li>CI: <code>mobile-build.yml</code></li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h4>M4 — Polish</h4>
+  <ul>
+    <li>SMS OTP fallback</li>
+    <li>«Мои заявки», offline cache статей</li>
+    <li>App attestation</li>
+  </ul>
+</div>
+
+<table>
+  <tr><th>Scope</th><th>Срок</th></tr>
+  <tr><td>M0 + M1 (read-only app)</td><td>~1.5–2 мес</td></tr>
+  <tr><td>M2 (auth + запись + push)</td><td>+1–1.5 мес</td></tr>
+  <tr><td>M3 (stores)</td><td>+2–4 нед</td></tr>
+</table>
+
+<!-- ── MONOREPO ── -->
+<h2 id="monorepo">Монорепо vs отдельная репа</h2>
+
+<div class="tip">
+  <strong>Рекомендация: монорепо</strong> — <code>apps/mobile/</code> в текущем <code>you_vet</code>.
+</div>
+
+<table>
+  <tr><th>Критерий</th><th>Монорепо ✅</th><th>Отдельная репа</th></tr>
+  <tr><td><code>@you-vet/types</code></td><td>workspace, одна версия</td><td>publish / submodule</td></tr>
+  <tr><td>API + mobile в одном PR</td><td>да</td><td>координация вручную</td></tr>
+  <tr><td>CI</td><td>расширить <code>ci.yml</code></td><td>второй pipeline</td></tr>
+  <tr><td>Размер репы</td><td>+ios/android folders</td><td>чище, дороже sync</td></tr>
+</table>
+
+<p>Отдельная репа — если другая команда, другой release cycle или white-label форки.</p>
+
+<div class="tree">
+you_vet/<br>
+├── apps/<br>
+│   ├── server/<br>
+│   ├── admin/<br>
+│   ├── app/       <span class="comment">← Mini App (Telegram)</span><br>
+│   └── mobile/    <span class="comment">← NEW Capacitor</span><br>
+└── packages/types/
+</div>
+
+<p style="margin-top:32px;color:#888;font-size:12px;">Markdown-источники: <code>docs/mobile/overview.md</code>, <code>research.md</code>, <code>roadmap.md</code></p>
+
+</body>
+</html>
