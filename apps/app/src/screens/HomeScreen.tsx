@@ -36,12 +36,14 @@ export default function HomeScreen() {
       key: 'doctors',
       icon: <IconDoctors />,
       label: 'Наши врачи',
+      subtitle: 'специалисты клиники',
       onClick: () => navigate('/doctors'),
     },
     {
       key: 'schedule',
       icon: <IconSchedule />,
       label: 'Расписание',
+      subtitle: 'часы приёма',
       onClick: () => navigate('/schedule'),
     },
     ...(groomingLoading
@@ -51,6 +53,7 @@ export default function HomeScreen() {
             key: 'grooming',
             icon: <IconGrooming />,
             label: 'Груминг',
+            subtitle: 'стрижка и уход',
             onClick: () => navigate('/grooming'),
           }]
         : []),

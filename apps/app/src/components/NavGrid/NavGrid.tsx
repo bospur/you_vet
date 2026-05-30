@@ -21,7 +21,10 @@ export function NavGrid({ items }: NavGridProps) {
         item.skeleton ? (
           <div key={item.key} className={`${styles.card} ${styles.cardSkeleton}`} aria-hidden>
             <span className={styles.skeletonIcon} />
-            <span className={styles.skeletonLabel} />
+            <span className={styles.labelWrap}>
+              <span className={styles.skeletonLabel} />
+              <span className={styles.skeletonSubtitle} />
+            </span>
           </div>
         ) : (
           <button key={item.key} type="button" className={styles.card} onClick={item.onClick}>
