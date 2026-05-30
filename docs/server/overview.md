@@ -76,8 +76,10 @@ PostgreSQL
 | Контекст | Клиника |
 |---|---|
 | Публичный API | `clinicSlug` в URL `/api/clinics/{slug}/...` |
-| Admin API | `clinic_id` из JWT claims |
+| Admin API | `clinic_id` из JWT (create); update/delete — частично без scoping |
 | Telegram бот | `CLINIC_SLUG` из env |
+
+**Production:** один VPS = одна клиника. Схема multi-tenant ready. См. [roles.md](../roles.md), [audit.md](../audit.md).
 
 ## Переменные окружения
 
@@ -95,9 +97,10 @@ PostgreSQL
 
 ## Авторизация
 
-JWT токен передаётся в заголовке `Authorization: Bearer <token>`.
-Токен действует 24 часа, содержит `user_id`, `clinic_id`, `role`.
-Пароли хранятся в bcrypt.
+JWT middleware проверяет **валидность токена**, не роль. Role checks — выборочно в handlers.
+Матрица: [roles.md](../roles.md).
+
+JWT: `Authorization: Bearer <token>`, 24ч, claims `user_id`, `clinic_id`, `role`. Пароли — bcrypt.
 
 ## Первый запуск
 

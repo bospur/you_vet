@@ -20,7 +20,8 @@ apps/
 └── app/      — Telegram Mini App для клиентов (React + TG UI)
 
 packages/
-└── types/    — @you-vet/types — общие TypeScript типы (admin + app)
+├── types/    — @you-vet/types — общие TypeScript типы (admin + app)
+└── cat/      — @you-vet/cat — CatLogo, CatPreloader (Mini App)
 ```
 
 ## Стек
@@ -50,15 +51,20 @@ npm run dev   # запускает admin и app параллельно
 
 ## Документация
 
+**Портал для команды:** https://docs.snzbeachvolleyball25.ru (HTML: roadmap, dev overview, design brief, audit)
+
 | Документ | Описание |
 |---|---|
+| [docs/README.md](docs/README.md) | Индекс всей документации |
 | [docs/architecture.md](docs/architecture.md) | Системная архитектура и схема взаимодействия |
-| [docs/api.md](docs/api.md) | Полный справочник API |
+| [docs/server/api.md](docs/server/api.md) | Полный справочник API |
 | [docs/development.md](docs/development.md) | Локальная разработка и git workflow |
 | [docs/deployment.md](docs/deployment.md) | Деплой и инфраструктура |
 | [docs/roles.md](docs/roles.md) | Ролевая модель и права доступа |
 | [docs/data-model.md](docs/data-model.md) | Схема базы данных |
 | [docs/monorepo.md](docs/monorepo.md) | Устройство монорепо |
+| [docs/audit.md](docs/audit.md) | Технический аудит (2026-05-30) |
+| [docs/context/](docs/context/) | Контекст для AI-сессий (handoff между чатами) |
 
 ## Git workflow
 

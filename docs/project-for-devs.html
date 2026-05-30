@@ -116,7 +116,7 @@
     <a href="https://admin.snzbeachvolleyball25.ru">Admin Panel (prod)</a>
     <a href="https://api.snzbeachvolleyball25.ru">API (prod)</a>
     <a href="https://app.snzbeachvolleyball25.ru">Mini App (prod)</a>
-    <span style="color:#888; font-size:12px;">Обновлено: 2026-04-04</span>
+    <span style="color:#888; font-size:12px;">Обновлено: 2026-05-30</span>
   </div>
 </div>
 
@@ -128,7 +128,7 @@
   <li><strong>Telegram Mini App</strong> — для клиентов. Владельцы питомцев видят информацию о клинике (лого, баннер, телефон, адрес), читают статьи по первой помощи, смотрят врачей и расписание, записываются на груминг.</li>
   <li><strong>Веб-панель (admin)</strong> — для персонала клиники. Редактор ведёт контент, администратор управляет врачами, пользователями и информацией о клинике, грумер — своими записями.</li>
 </ul>
-<p>Мультитенантность: одна инсталляция сервера обслуживает несколько клиник через <code>clinic_id</code> во всех таблицах. Добавить клинику = новая строка в <code>clinics</code>, никакого рефакторинга не требуется.</p>
+<p><strong>Мультитенантность в схеме БД:</strong> <code>clinic_id</code> во всех таблицах — schema-ready. <strong>Production сейчас:</strong> один VPS = одна клиника (<code>CLINIC_SLUG</code>, <code>VITE_CLINIC_SLUG</code>). Tenant-scoping в update/delete на бэкенде неполный — см. <a href="audit.html">audit</a>.</p>
 
 
 <h2>Структура монорепо</h2>
@@ -140,7 +140,8 @@ you_vet/<br>
 │   ├── admin/     <span class="comment">← Веб-панель (React + MUI)</span><br>
 │   └── app/       <span class="comment">← Telegram Mini App (React + TG UI)</span><br>
 ├── packages/<br>
-│   └── types/     <span class="comment">← @you-vet/types — общие TypeScript типы</span><br>
+│   ├── types/     <span class="comment">← @you-vet/types — общие TypeScript типы</span><br>
+│   └── cat/       <span class="comment">← @you-vet/cat — CatLogo, CatPreloader</span><br>
 ├── docker-compose.yml  <span class="comment">← локальный запуск (db + server)</span><br>
 ├── turbo.json<br>
 └── package.json   <span class="comment">← npm workspaces</span>
@@ -186,7 +187,7 @@ you_vet/<br>
   <tr><td>Telegram SDK</td><td>@telegram-apps/sdk-react v3</td></tr>
   <tr><td>UI-компоненты</td><td>@telegram-apps/telegram-ui v2 (нативный TG-стиль)</td></tr>
   <tr><td>Серверное состояние</td><td>TanStack Query v5</td></tr>
-  <tr><td>Роутинг</td><td>React Router v7</td></tr>
+  <tr><td>Роутинг</td><td>React Router v6</td></tr>
 </table>
 
 <h3>Инфраструктура</h3>
@@ -294,8 +295,8 @@ apps/server/<br>
   </div>
 </div>
 
-<div class="tip">
-  Роль хранится в JWT claim и проверяется на <strong>бэкенде</strong>. Фронтенд только скрывает UI-элементы для удобства — это не единственная защита.
+<div class="warn">
+  <strong>RBAC на бэкенде — частичный.</strong> JWT middleware проверяет только валидность токена. Role checks есть выборочно (статьи, users, settings). Groomer блокируется в UI, но не на всех API endpoints. План hardening — в <a href="audit.html">audit</a>.
 </div>
 
 
@@ -359,6 +360,7 @@ npm run dev   # turbo запустит admin и app параллельно</code
 <table>
   <tr><th>Переменная</th><th>Описание</th></tr>
   <tr><td><code>VITE_API_URL</code></td><td>URL бэкенда (напр. <code>http://localhost:8080</code>)</td></tr>
+  <tr><td><code>VITE_CLINIC_SLUG</code></td><td>Slug клиники (напр. <code>default</code>)</td></tr>
 </table>
 
 <h4>apps/app/.env.local</h4>
@@ -408,8 +410,13 @@ feature/*, fix/*, chore/*  ← рабочие ветки</code></pre>
   <tr><th>Workflow</th><th>Триггер (paths)</th><th>Что делает</th></tr>
   <tr><td><code>deploy-server.yml</code></td><td><code>apps/server/**</code></td><td>Сборка Docker образа → push в GHCR → SSH на VPS → <code>docker compose pull && up -d</code></td></tr>
   <tr><td><code>deploy-admin.yml</code></td><td><code>apps/admin/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
-  <tr><td><code>deploy-app.yml</code></td><td><code>apps/app/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
+  <tr><td><code>deploy-app.yml</code></td><td><code>apps/app/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → build → scp <code>dist/</code> на VPS</td></tr>
+  <tr><td><code>deploy-docs.yml</code></td><td><code>docs/**</code></td><td>scp <code>docs/*.html</code> → docs.snzbeachvolleyball25.ru</td></tr>
 </table>
+
+<div class="warn">
+  <strong>Gap:</strong> <code>deploy-app.yml</code> не следит за <code>packages/cat/**</code> — изменения только в CatLogo не триггерят redeploy Mini App.
+</div>
 
 <div class="tip">
   <strong>Server деплой использует GHCR</strong> (GitHub Container Registry). Образ собирается в CI и пушится как <code>ghcr.io/bospur/you_vet-server:latest</code>. VPS только тянет готовый образ — никакого git на сервере не нужно. Аутентификация через <code>GITHUB_TOKEN</code> (автоматический, не истекает).
@@ -488,6 +495,8 @@ const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
   <tr><td>Персистентный хедер во всём приложении</td><td>✅ Готово</td><td>AppLayout</td></tr>
   <tr><td>Скрытие груминга если раздел не настроен</td><td>🔴 Не сделано</td><td>Блокирует запуск</td></tr>
   <tr><td>Telegram initData валидация</td><td>🔴 Не проверено</td><td>Безопасность</td></tr>
+  <tr><td>RBAC + tenant scoping на бэкенде</td><td>🟡 В работе</td><td>audit 2026-05-30</td></tr>
+  <tr><td>CI quality gate (test/build)</td><td>🟡 Не сделано</td><td>Infra</td></tr>
   <tr><td>Запись на приём (pending/confirm flow)</td><td>🔴 Не сделано</td><td>Ключевая фича</td></tr>
   <tr><td>Аналитика посещений</td><td>🟡 Не начато</td><td>После записи</td></tr>
 </table>
@@ -497,7 +506,8 @@ const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
 <table>
   <tr><th>Файл</th><th>Описание</th></tr>
   <tr><td><code>docs/architecture.md</code></td><td>Системная архитектура, схема взаимодействия</td></tr>
-  <tr><td><code>docs/api.md</code></td><td>Полный справочник API (все эндпоинты)</td></tr>
+  <tr><td><code>docs/server/api.md</code></td><td>Полный справочник API (все эндпоинты)</td></tr>
+  <tr><td><code>docs/audit.md</code></td><td>Технический аудит + <code>docs/context/</code> для AI handoff</td></tr>
   <tr><td><code>docs/data-model.md</code></td><td>Схема БД, конвенции полей</td></tr>
   <tr><td><code>docs/roles.md</code></td><td>Ролевая матрица прав</td></tr>
   <tr><td><code>docs/deployment.md</code></td><td>Деплой, VPS, Nginx, SSL</td></tr>
