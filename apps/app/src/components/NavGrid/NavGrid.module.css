@@ -1,7 +1,7 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 25px 25px;
+  gap: 12px;
 }
 
 .card {
@@ -13,7 +13,7 @@
   padding: 16px 8px 14px;
   background: var(--vet-green-surface);
   border-radius: 0;
-  border: none;
+  border: 1px solid rgba(51, 139, 78, 0.28);
   cursor: pointer;
   aspect-ratio: 1;
   min-height: 139px;
