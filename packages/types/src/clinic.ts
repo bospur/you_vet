@@ -9,6 +9,7 @@ export interface ClinicInfo {
   website: string;
   logo_url: string;
   banner_url: string;
+  banner_enabled: boolean;
   updated_at: string;
 }
 
@@ -19,4 +20,5 @@ export interface ClinicInfoInput {
   address: string;
   email: string;
   website: string;
+  banner_enabled: boolean;
 }
