@@ -41,13 +41,14 @@
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
 | PRD-03 | ⚪ | Запись на приём | planned — **Фаза 5** |
-| PRD-04 | ⚪ | Аналитика | planned — **Фаза 6** |
+| PRD-04 | ⚪ | Аналитика | planned — **Фаза 6**; **M0 subset** (telegram_users + дашборд) — см. [HANDOFF.md](./HANDOFF.md) |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
 | PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
 
 ## Следующие шаги
 
-1. PRD-03 — запись на приём (Фаза 5, pending/confirm flow)
-2. SEC-04 — JWT из localStorage в httpOnly cookie
-3. SEC-06 — валидация загрузки файлов по MIME
+1. **M0 аналитика** — миграция `012_telegram_users`, upsert из initData, `GET /api/admin/stats/summary`, экран «Обзор» в admin
+2. PRD-03 — запись на приём (Фаза 5, pending/confirm flow)
+3. SEC-04 — JWT из localStorage в httpOnly cookie
+4. SEC-06 — валидация загрузки файлов по MIME
