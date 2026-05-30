@@ -16,6 +16,18 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [deployment.md](./deployment.md) | Инфраструктура, деплой, env-переменные |
 | [development.md](./development.md) | Локальная разработка |
 | [monorepo.md](./monorepo.md) | Устройство монорепо, Turborepo |
+| [audit.md](./audit.md) | Технический аудит проекта |
+| [context/](./context/) | Контекст для AI-сессий (handoff) |
+
+### HTML-портал (деploy → docs.snzbeachvolleyball25.ru)
+
+| Страница | Аудитория |
+|---|---|
+| [index.html](./index.html) | Навигация по документам |
+| [project-for-devs.html](./project-for-devs.html) | Разработчики |
+| [roadmap.html](./roadmap.html) | Roadmap проекта |
+| [design-brief.html](./design-brief.html) | Дизайнеры |
+| [audit.html](./audit.html) | Технический аудит |
 
 ### Бэкенд (`apps/server`)
 

@@ -170,7 +170,7 @@
   <div class="subtitle">Состояние прое��та · что сделано · что планируется</div>
   <div class="meta">
     <a href="index.html">← Все документы</a>
-    <span style="color:#888; font-size:12px;">Обновлено: апрель 2026</span>
+    <span style="color:#888; font-size:12px;">Обновлено: май 2026</span>
   </div>
 </div>
 
@@ -182,7 +182,7 @@
 </p>
 
 <p>
-  Архитектура изначально рассчитана на несколько клиник (<code>clinic_id</code> во всех таблицах) — подключение новой клиники не требует изменений в коде.
+  Архитектура БД рассчитана на несколько клиник (<code>clinic_id</code> во всех таблицах). <strong>Production сейчас:</strong> один VPS = одна клиника. Полный multi-tenant SaaS — фаза 6.
 </p>
 
 <div class="stats">
@@ -338,6 +338,22 @@
   </div>
 
   <div class="items">
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Синхронизация документации с кодом</div>
+        <div class="item-desc">Исправлены ссылки, CI/CD, RBAC, deploy model. audit.md + docs/context/ для AI handoff · 2026-05-30</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item active">
+      <div class="item-icon">🟡</div>
+      <div class="item-body">
+        <div class="item-title">Hardening admin API (RBAC + tenant scoping)</div>
+        <div class="item-desc">RequireRole middleware, clinic_id в update/delete — см. <a href="audit.html">audit</a></div>
+      </div>
+      <span class="item-tag tag-blocker">Security</span>
+    </div>
     <div class="item active">
       <div class="item-icon">🔴</div>
       <div class="item-body">
@@ -441,7 +457,7 @@
   </div>
 
   <div class="note">
-    Архитектура уже готова к этому — мультитенантность реализована с первого дня. Фаза не требует рефакторинга кода, только продуктовых и бизнесовых решений.
+    Схема БД multi-tenant ready. Требуются: tenant-scoping в mutations, onboarding flow, billing. См. audit.html.
   </div>
 
   <div class="items">

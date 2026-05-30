@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouVet — Технический аудит</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 860px;
+      margin: 48px auto;
+      padding: 0 40px 80px;
+      line-height: 1.7;
+    }
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 40px; }
+    .header h1 { font-size: 28px; font-weight: 700; }
+    .header .subtitle { font-size: 15px; color: #555; margin-top: 6px; }
+    .header .meta { margin-top: 14px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .header .meta a { color: #1a1a1a; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ccc; }
+    h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+    p { margin-bottom: 12px; color: #333; }
+    a { color: #0066cc; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+    th { background: #f5f5f5; text-align: left; padding: 8px 12px; font-weight: 600; border: 1px solid #ddd; }
+    td { padding: 7px 12px; border: 1px solid #ddd; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+    ul { padding-left: 22px; margin-bottom: 12px; }
+    li { margin-bottom: 5px; }
+    .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 24px; }
+    .score-item { border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px; text-align: center; }
+    .score-val { font-size: 20px; font-weight: 700; color: #4caf50; }
+    .score-val.warn { color: #f59e0b; }
+    .score-val.bad { color: #e53935; }
+    .score-label { font-size: 11px; color: #888; margin-top: 2px; }
+    .box { padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 16px 0; font-size: 13px; }
+    .box-ok { background: #f0f7ff; border-left: 3px solid #4caf50; }
+    .box-warn { background: #fff8e1; border-left: 3px solid #f59e0b; }
+    .box-bad { background: #ffebee; border-left: 3px solid #e53935; }
+    code { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; }
+    @media (max-width: 640px) {
+      body { margin: 24px auto; padding: 0 16px 60px; }
+      .score { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Технический аудит YouVet</h1>
+  <div class="subtitle">MVP в продакшене · оценка архитектуры, безопасности, техдолга</div>
+  <div class="meta">
+    <a href="index.html">← Все документы</a>
+    <span style="color:#888;font-size:12px;">2026-05-30 · Cursor</span>
+  </div>
+</div>
+
+<div class="box box-ok">
+  <strong>Вердикт:</strong> зрелый MVP с хорошей архитектурой и документацией. Главные риски — частичный RBAC на бэкенде и отсутствие автотестов в CI. Prod проверен: бот работает, VPS доступен.
+</div>
+
+<h2>Оценки</h2>
+<div class="score">
+  <div class="score-item"><div class="score-val">★★★★</div><div class="score-label">Архитектура</div></div>
+  <div class="score-item"><div class="score-val">★★★★</div><div class="score-label">Фронтенд</div></div>
+  <div class="score-item"><div class="score-val">★★★★</div><div class="score-label">Документация</div></div>
+  <div class="score-item"><div class="score-val warn">★★★</div><div class="score-label">Бэкенд</div></div>
+  <div class="score-item"><div class="score-val warn">★★★</div><div class="score-label">CI/CD deploy</div></div>
+  <div class="score-item"><div class="score-val bad">★★</div><div class="score-label">Безопасность</div></div>
+  <div class="score-item"><div class="score-val bad">★</div><div class="score-label">Тесты</div></div>
+</div>
+
+<h2>Сильные стороны</h2>
+<ul>
+  <li>Чистые слои Go: HTTP → middleware → handler → repository → PostgreSQL</li>
+  <li>Модульный admin (FSD-подобная структура), Telegram-native Mini App</li>
+  <li>Path-based CI/CD, server через GHCR, docs portal на VPS</li>
+  <li>Shared packages <code>@you-vet/types</code>, <code>@you-vet/cat</code></li>
+</ul>
+
+<h2>Критические находки</h2>
+<table>
+  <tr><th>#</th><th>Проблема</th><th>Риск</th></tr>
+  <tr><td>1</td><td>RBAC на бэкенде неполный — groomer может вызывать content API</td><td>🔴</td></tr>
+  <tr><td>2</td><td>Update/delete без <code>clinic_id</code> в WHERE (IDOR при multi-clinic)</td><td>🔴</td></tr>
+  <tr><td>3</td><td>CORS <code>*</code> на admin API</td><td>🟠</td></tr>
+  <tr><td>4</td><td>JWT в localStorage</td><td>🟠</td></tr>
+  <tr><td>5</td><td>Нет rate limit на login</td><td>🟠</td></tr>
+  <tr><td>6</td><td>1 Go test file, нет CI quality gate</td><td>🟡</td></tr>
+</table>
+
+<h2>Модель деплоя</h2>
+<div class="box box-warn">
+  <strong>Схема БД:</strong> multi-tenant ready (<code>clinic_id</code>).<br>
+  <strong>Production:</strong> один VPS = одна клиника (<code>CLINIC_SLUG</code>). Tenant-scoping в mutations неполный.
+</div>
+
+<h2>Исправлено в документации (2026-05-30)</h2>
+<ul>
+  <li>Ссылка API: <code>docs/server/api.md</code> (было <code>docs/api.md</code>)</li>
+  <li>CI server: GHCR pull, не git pull на VPS</li>
+  <li>Честное описание RBAC в <code>roles.md</code></li>
+  <li>Добавлен <code>packages/cat</code>, docs portal, deploy-docs workflow</li>
+  <li>Контекст для AI: <code>docs/context/</code> в репозитории</li>
+</ul>
+
+<h2>Приоритетный план</h2>
+<table>
+  <tr><th>P</th><th>Задача</th></tr>
+  <tr><td>P0</td><td><code>RequireRole</code> middleware + clinic-scoped update/delete</td></tr>
+  <tr><td>P0</td><td>CORS whitelist, rate limit на login</td></tr>
+  <tr><td>P1</td><td>CI: <code>go test</code> + <code>npm run build</code> на PR</td></tr>
+  <tr><td>P1</td><td><code>packages/cat/**</code> в deploy-app paths</td></tr>
+  <tr><td>P2</td><td>Удалить legacy workflows в <code>apps/*/.github/</code></td></tr>
+</table>
+
+<h2>Контекст для AI-сессий</h2>
+<p>В репозитории: <code>docs/context/</code></p>
+<ul>
+  <li><code>HANDOFF.md</code> — заметки последней сессии (читать первым)</li>
+  <li><code>STATUS.md</code> — текущее состояние prod</li>
+  <li><code>ISSUES.md</code> — трекер проблем с ID</li>
+  <li><code>PROJECT.md</code> — краткий контекст проекта</li>
+</ul>
+
+<p style="color:#888;font-size:12px;text-align:center;margin-top:48px;">
+  Полная версия: <code>docs/audit.md</code> · github.com/bospur/you_vet
+</p>
+
+</body>
+</html>

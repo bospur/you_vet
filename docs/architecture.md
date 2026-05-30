@@ -24,6 +24,7 @@ Nginx (Ubuntu VPS, системный)
    │
    ├── admin.snzbeachvolleyball25.ru → /var/www/vp-bot-admin (статика)
    ├── app.snzbeachvolleyball25.ru   → /var/www/vp-bot-app   (статика)
+   ├── docs.snzbeachvolleyball25.ru  → /var/www/you-vet-docs (HTML)
    └── api.snzbeachvolleyball25.ru   → Go app :8080
                                            │
                                            ├── Go HTTP сервер (Docker)
@@ -74,6 +75,36 @@ src/
 
 `@you-vet/types` — используется в `apps/admin` и `apps/app`.
 
+### packages/cat — UI-компоненты
+
+`@you-vet/cat` — CatLogo, CatPreloader (используется в Mini App).
+
+## Модель деплоя vs схема данных
+
+| Уровень | Состояние |
+|---|---|
+| PostgreSQL schema | Multi-tenant ready (`clinics`, `clinic_id`) |
+| Production runtime | **Single-clinic per VPS** (`CLINIC_SLUG`, `VITE_CLINIC_SLUG`) |
+| Admin mutations | Create scoped by JWT `clinic_id`; update/delete — частично без scoping |
+
+Подробнее: [roles.md](./roles.md), [audit.md](./audit.md).
+
+## CI/CD
+
+```
+git push origin dev
+       │
+       ▼
+GitHub Actions (path-based триггеры)
+       │
+       ├── apps/server/**  → build image → GHCR → SSH → docker compose pull/up
+       ├── apps/admin/**   → npm build → scp → /var/www/vp-bot-admin/
+       ├── apps/app/**     → npm build → scp → /var/www/vp-bot-app/
+       └── docs/**         → scp *.html → /var/www/you-vet-docs/
+```
+
+Workflows: `.github/workflows/deploy-{server,admin,app,docs}.yml`
+
 ## Схема данных
 
 ```
@@ -93,19 +124,7 @@ clinics
   └── grooming_appointments (записи на конкретную дату)
 ```
 
-Публичный API: клиника по `clinicSlug` в URL
-Admin API: клиника из JWT (`clinic_id`)
+Публичный API: клиника по `clinicSlug` в URL  
+Admin API: клиника из JWT (`clinic_id`)  
 Telegram бот: клиника из `CLINIC_SLUG` env
 
-## CI/CD
-
-```
-git push origin dev
-       │
-       ▼
-GitHub Actions (path-based триггеры)
-       │
-       ├── apps/server/** → SSH → VPS → git pull → docker compose up --build -d
-       ├── apps/admin/**  → npm build → scp dist/ → /var/www/vp-bot-admin/
-       └── apps/app/**    → npm build → scp dist/ → /var/www/vp-bot-app/
-```

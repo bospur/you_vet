@@ -41,7 +41,8 @@ go run main.go
 cd apps/admin
 npm install
 cp .env.example .env.local
-# VITE_API_URL=http://localhost:8080  (или прод URL для работы с прод-данными)
+# VITE_API_URL=http://localhost:8080
+# VITE_CLINIC_SLUG=default
 npm run dev   # localhost:5173
 ```
 
