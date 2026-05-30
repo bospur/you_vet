@@ -118,6 +118,7 @@ func main() {
 	}
 
 	// Animals
+	http.HandleFunc("GET /api/admin/animals", contentAuth(adminHandler.GetAdminAnimals))
 	http.HandleFunc("POST /api/admin/animals", contentAuth(adminHandler.CreateAnimal))
 	http.HandleFunc("PUT /api/admin/animals/{id}", contentAuth(adminHandler.UpdateAnimal))
 	http.HandleFunc("DELETE /api/admin/animals/{id}", contentAuth(adminHandler.DeleteAnimal))

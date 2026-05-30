@@ -67,6 +67,7 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 
 | Метод | URL | Описание |
 |---|---|---|
+| GET | `/api/admin/animals` | Список (JWT, не initData) |
 | POST | `/api/admin/animals` | Создать |
 | PUT | `/api/admin/animals/{id}` | Обновить |
 | DELETE | `/api/admin/animals/{id}` | Удалить |

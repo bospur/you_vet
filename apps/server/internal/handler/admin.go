@@ -85,6 +85,22 @@ func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 // ── Animals CRUD ─────────────────────────────────────────────────────────────
 
+// GetAdminAnimals обрабатывает GET /api/admin/animals
+func (h *AdminHandler) GetAdminAnimals(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+
+	animals, err := h.animalRepo.GetAllByClinicID(claims.ClinicID)
+	if err != nil {
+		log.Printf("ошибка получения животных: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if animals == nil {
+		animals = []repository.Animal{}
+	}
+	writeJSON(w, http.StatusOK, animals)
+}
+
 // CreateAnimal обрабатывает POST /api/admin/animals
 func (h *AdminHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r)
