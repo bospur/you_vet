@@ -107,8 +107,8 @@ JWT: `Authorization: Bearer <token>`, 24ч, claims `user_id`, `clinic_id`, `role
 
 ### Mini App (публичный API)
 
-Эндпоинты `/api/clinics/{slug}/...` требуют заголовок `X-Telegram-Init-Data` с подписанными данными Telegram Web App.
-Проверка: HMAC-SHA256 по [документации Telegram](https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app).
+Эндпоинты `/api/clinics/{slug}/...` требуют `X-Telegram-Init-Data` или `Authorization: tma <initData>`.
+Проверка: HMAC (`hash`) или Ed25519 (`signature`, iOS/новые клиенты).
 `/uploads/` — без initData (прямая загрузка картинок).
 
 ## Первый запуск

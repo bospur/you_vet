@@ -102,8 +102,9 @@ npm run dev   # localhost:5174
 
 > Для тестирования в Telegram нужен HTTPS — используйте ngrok или аналог.
 
-API-запросы отправляют `X-Telegram-Init-Data` из `Telegram.WebApp.initData` (см. `api/client.ts`).
-На бэкенде без этого заголовка публичные эндпоинты вернут 401. Для локальной отладки API без Telegram: `TELEGRAM_INITDATA_SKIP=1` на server.
+API-запросы отправляют initData в `X-Telegram-Init-Data` и `Authorization: tma …` (`utils/telegramInitData.ts`, `api/client.ts`).
+В `index.html` подключён `telegram-web-app.js`. Без initData публичные эндпоинты вернут 401.
+Локально: `TELEGRAM_INITDATA_SKIP=1` на server.
 
 ## Деплой
 
