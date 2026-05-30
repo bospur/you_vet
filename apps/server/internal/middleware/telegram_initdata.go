@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"crypto/ed25519"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"net/http"
@@ -18,8 +20,10 @@ var errInvalidInitData = errors.New("invalid init data")
 
 const telegramInitDataHeader = "X-Telegram-Init-Data"
 
-// ValidateTelegramInitData проверяет подпись initData Mini App (Telegram Web Apps).
-// https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+// Production Ed25519 key from https://core.telegram.org/bots/webapps
+var telegramProdPublicKey, _ = hex.DecodeString("e7bf03a2fa4602af4580703d88dda5bb59f32ed8b02a56c187fe7d34caed242d")
+
+// ValidateTelegramInitData проверяет initData Mini App: HMAC (hash) или Ed25519 (signature).
 func ValidateTelegramInitData(initData, botToken string, maxAge time.Duration) bool {
 	if initData == "" || botToken == "" {
 		return false
@@ -30,28 +34,65 @@ func ValidateTelegramInitData(initData, botToken string, maxAge time.Duration) b
 		return false
 	}
 
-	receivedHash := values.Get("hash")
-	if receivedHash == "" {
+	if !validateAuthDate(values, maxAge) {
 		return false
 	}
 
-	if maxAge > 0 {
-		authDateStr := values.Get("auth_date")
-		authDate, err := strconv.ParseInt(authDateStr, 10, 64)
-		if err != nil {
-			return false
-		}
-		authTime := time.Unix(authDate, 0)
-		if time.Since(authTime) > maxAge || authTime.After(time.Now().Add(2*time.Minute)) {
-			return false
+	hash := values.Get("hash")
+	if hash != "" {
+		dataCheckString := buildInitDataCheckString(values)
+		secretKey := hmacSHA256([]byte("WebAppData"), botToken)
+		calculated := hex.EncodeToString(hmacSHA256(secretKey, dataCheckString))
+		if strings.EqualFold(calculated, hash) {
+			return true
 		}
 	}
 
-	dataCheckString := buildInitDataCheckString(values)
-	secretKey := hmacSHA256([]byte("WebAppData"), botToken)
-	calculated := hex.EncodeToString(hmacSHA256(secretKey, dataCheckString))
+	// Telegram iOS / новые клиенты: поле signature (Ed25519), hash может отсутствовать или не совпадать.
+	return validateInitDataSignature(values, botToken)
+}
 
-	return hmac.Equal([]byte(calculated), []byte(receivedHash))
+func validateAuthDate(values url.Values, maxAge time.Duration) bool {
+	if maxAge <= 0 {
+		return true
+	}
+	authDateStr := values.Get("auth_date")
+	authDate, err := strconv.ParseInt(authDateStr, 10, 64)
+	if err != nil {
+		return false
+	}
+	authTime := time.Unix(authDate, 0)
+	return time.Since(authTime) <= maxAge && !authTime.After(time.Now().Add(2*time.Minute))
+}
+
+func validateInitDataSignature(values url.Values, botToken string) bool {
+	sigB64 := values.Get("signature")
+	if sigB64 == "" {
+		return false
+	}
+	signature, err := base64.RawURLEncoding.DecodeString(sigB64)
+	if err != nil {
+		return false
+	}
+
+	botID, err := botIDFromToken(botToken)
+	if err != nil {
+		return false
+	}
+
+	pairs := initDataPairs(values)
+	sort.Strings(pairs)
+	payload := strconv.FormatInt(botID, 10) + ":WebAppData\n" + strings.Join(pairs, "\n")
+
+	return ed25519.Verify(telegramProdPublicKey, []byte(payload), signature)
+}
+
+func botIDFromToken(token string) (int64, error) {
+	idStr, _, ok := strings.Cut(token, ":")
+	if !ok {
+		return 0, errInvalidInitData
+	}
+	return strconv.ParseInt(idStr, 10, 64)
 }
 
 func parseInitData(initData string) (url.Values, error) {
@@ -62,10 +103,10 @@ func parseInitData(initData string) (url.Values, error) {
 	return values, nil
 }
 
-func buildInitDataCheckString(values url.Values) string {
+func initDataPairs(values url.Values) []string {
 	keys := make([]string, 0, len(values))
 	for k := range values {
-		if k == "hash" {
+		if k == "hash" || k == "signature" {
 			continue
 		}
 		keys = append(keys, k)
@@ -74,10 +115,13 @@ func buildInitDataCheckString(values url.Values) string {
 
 	pairs := make([]string, 0, len(keys))
 	for _, k := range keys {
-		// Telegram передаёт по одному значению на ключ
-		pairs = append(pairs, k+"="+values[k][0])
+		pairs = append(pairs, k+"="+values.Get(k))
 	}
-	return strings.Join(pairs, "\n")
+	return pairs
+}
+
+func buildInitDataCheckString(values url.Values) string {
+	return strings.Join(initDataPairs(values), "\n")
 }
 
 func hmacSHA256(key []byte, message string) []byte {
@@ -102,6 +146,17 @@ func initDataValidationEnabled() bool {
 	return os.Getenv("TELEGRAM_INITDATA_SKIP") != "1"
 }
 
+func initDataFromRequest(r *http.Request) string {
+	if v := r.Header.Get(telegramInitDataHeader); v != "" {
+		return v
+	}
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "tma ") {
+		return strings.TrimPrefix(auth, "tma ")
+	}
+	return ""
+}
+
 // TelegramInitData защищает публичные Mini App эндпоинты.
 func TelegramInitData(botToken string) func(http.HandlerFunc) http.HandlerFunc {
 	maxAge := initDataMaxAge()
@@ -113,7 +168,7 @@ func TelegramInitData(botToken string) func(http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			initData := r.Header.Get(telegramInitDataHeader)
+			initData := initDataFromRequest(r)
 			if !ValidateTelegramInitData(initData, botToken, maxAge) {
 				http.Error(w, "invalid telegram init data", http.StatusUnauthorized)
 				return
