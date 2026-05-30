@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { ClinicInfo } from '../api';
 import { HomeHero } from '../components/HomeHero/HomeHero';
 import { NavGrid } from '../components/NavGrid/NavGrid';
-import { IconFirstAid, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
+import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
 import styles from './HomeScreen.module.css';
 
@@ -32,6 +32,7 @@ export default function HomeScreen() {
     },
     {
       key: 'doctors',
+      icon: <IconDoctors />,
       label: 'Наши врачи',
       onClick: () => navigate('/doctors'),
     },
