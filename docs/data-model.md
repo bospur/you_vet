@@ -14,6 +14,7 @@ PostgreSQL. Все таблицы содержат `clinic_id` для мульт
 | `006_create_doctors` | `doctors`, `doctor_schedules`, `doctor_schedule_exceptions`, `clinic_settings` |
 | `007_create_grooming` | `grooming_breeds`, `grooming_weekly_template`, `grooming_appointments` |
 | `008_create_clinic_info` | `clinic_info` — информация о клинике для главного экрана приложения |
+| `009_articles_animal_id` | `articles.animal_id`, удаление `categories` и `article_categories` |
 
 ## Схема
 

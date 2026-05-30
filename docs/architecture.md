@@ -112,9 +112,7 @@ clinics
   └── users (admin/editor/groomer)
   └── clinic_info (название, описание, телефон, адрес, email, сайт, logo_url, banner_url)
   └── animals
-       └── categories
-            └── article_categories (M2M)
-                     └── articles (content — HTML от TipTap, status: draft/published)
+       └── articles (animal_id, content — HTML от TipTap, status: draft/published, slug auto)
   └── doctors (status: draft/published)
        └── doctor_schedules (еженедельные слоты)
        └── doctor_schedule_exceptions (исключения на дату)

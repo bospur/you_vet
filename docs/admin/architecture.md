@@ -12,7 +12,6 @@ src/
 ├── data/source/                     — axios вызовы к API
 │   ├── axiosInstance.ts             — axios с Bearer interceptor
 │   ├── animals.ts
-│   ├── categories.ts
 │   ├── articles.ts
 │   ├── clinic_info.ts               — getClinicInfo, updateClinicInfo, uploadLogo/Banner
 │   ├── doctors.ts                   — врачи, расписание, исключения, настройки
@@ -23,9 +22,6 @@ src/
 │   ├── animals/
 │   │   ├── domain/types.ts
 │   │   └── features/AnimalsTable/ + AnimalFormDialog/
-│   ├── categories/
-│   │   ├── domain/types.ts
-│   │   └── features/CategoriesTable/ + CategoryFormDialog/
 │   ├── articles/
 │   │   ├── domain/types.ts
 │   │   └── features/ArticlesTable/
@@ -43,7 +39,6 @@ src/
 │   ├── ClinicInfoScreen/            — О клинике: название, контакты, лого, баннер
 │   ├── LoginScreen/
 │   ├── AnimalsScreen/
-│   ├── CategoriesScreen/
 │   ├── ArticlesScreen/
 │   ├── ArticleEditorScreen/         — WYSIWYG редактор (TipTap)
 │   ├── DoctorsScreen/
@@ -70,7 +65,6 @@ src/
 | `/login` | LoginScreen | Публичный |
 | `/clinic-info` | ClinicInfoScreen | admin, editor |
 | `/animals` | AnimalsScreen | admin, editor |
-| `/categories` | CategoriesScreen | admin, editor |
 | `/articles` | ArticlesScreen | admin, editor |
 | `/articles/new` | ArticleEditorScreen | admin, editor |
 | `/articles/:id/edit` | ArticleEditorScreen | admin, editor |

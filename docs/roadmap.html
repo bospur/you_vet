@@ -174,7 +174,7 @@
   <h1>YouVet — Roadmap</h1>
   <div class="subtitle">Состояние проекта · что сделано · что планируется</div>
   <div class="meta">
-    <span style="color:#888; font-size:12px;">Обновлено: май 2026</span>
+    <span style="color:#888; font-size:12px;">Обновлено: 30 мая 2026</span>
   </div>
 </div>
 
@@ -195,7 +195,7 @@
     <div class="stat-label">приложения в монорепо</div>
   </div>
   <div class="stat">
-    <div class="stat-num">8</div>
+    <div class="stat-num">9</div>
     <div class="stat-label">миграций БД</div>
   </div>
   <div class="stat">
@@ -332,9 +332,9 @@
 <!-- ФАЗА 3 -->
 <div class="phase">
   <div class="phase-header">
-    <div class="phase-dot dot-active"></div>
+    <div class="phase-dot dot-done"></div>
     <div class="phase-title">Фаза 3 — Готовность к запуску</div>
-    <span class="phase-badge badge-active">В работе</span>
+    <span class="phase-badge badge-done">Завершено</span>
   </div>
 
   <div class="note warn">
@@ -358,35 +358,43 @@
       </div>
       <span class="item-tag tag-blocker">Security</span>
     </div>
-    <div class="item active">
-      <div class="item-icon">🔴</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">Скрытие груминга если раздел не настроен</div>
-        <div class="item-desc">Плитка «Груминг» всегда видна в меню. Нужно скрывать если breeds и schedule пустые</div>
+        <div class="item-desc">PRD-01: плитка «Груминг» скрывается, если breeds и schedule пустые · prod</div>
       </div>
       <span class="item-tag tag-blocker">Блокер</span>
     </div>
-    <div class="item active">
-      <div class="item-icon">🔴</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">Telegram initData валидация</div>
-        <div class="item-desc">Проверить и при необходимости добавить валидацию подписи initData на бэкенде</div>
+        <div class="item-desc">SEC-07: HMAC + Ed25519 на публичных <code>/api/clinics/...</code>, Mini App шлёт заголовок · prod</div>
       </div>
-      <span class="item-tag tag-blocker">Блокер</span>
+      <span class="item-tag tag-blocker">Security</span>
     </div>
-    <div class="item planned">
-      <div class="item-icon">📋</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">CI quality gate</div>
-        <div class="item-desc">go test + npm build на PR. Сейчас CI только деплоит</div>
+        <div class="item-desc">INF-01: <code>ci.yml</code> — go test + lint + build admin/app на PR и push в dev</div>
       </div>
       <span class="item-tag tag-infra">Infra</span>
     </div>
-    <div class="item active">
-      <div class="item-icon">🟡</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
-        <div class="item-title">Пересмотр архитектуры статей</div>
-        <div class="item-desc">Возможно убрать категории и отдавать все статьи по виду животного — решить до масштабирования контента</div>
+        <div class="item-title">Архитектура статей без категорий</div>
+        <div class="item-desc">PRD-02: животное → статьи, slug на сервере, миграция 009, admin GET <code>/api/admin/animals</code></div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Кнопка «Наверх» в длинных статьях</div>
+        <div class="item-desc">Mini App: FAB справа снизу, когда кнопка «Назад» ушла из экрана при прокрутке</div>
       </div>
       <span class="item-tag tag-ux">UX</span>
     </div>
