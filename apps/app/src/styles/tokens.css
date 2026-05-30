@@ -1,10 +1,18 @@
-/* Бренд и поверхности — переопределяются для data-tg-theme="dark" */
+/* Светлая тема — фирменный зелёный */
 :root {
   --vet-green-title: #288f33;
   --vet-green-slogan: #268342;
   --vet-green-label: #338b4e;
   --vet-green-address: rgba(32, 85, 58, 0.76);
   --vet-green-surface: rgba(24, 176, 37, 0.07);
+
+  --vet-text-primary: var(--vet-green-label);
+  --vet-text-secondary: var(--vet-green-address);
+  --vet-text-body: var(--tg-theme-text-color, #000000);
+  --vet-text-hint: var(--tg-theme-hint-color, #8e8e93);
+  --vet-icon-color: var(--vet-green-label);
+  --vet-surface-card: var(--vet-green-surface);
+  --vet-surface-chip: rgba(51, 139, 78, 0.1);
 
   --vet-accent: #2e7d32;
   --vet-accent-soft: rgba(76, 175, 80, 0.08);
@@ -27,26 +35,35 @@
   --vet-content-max: 303px;
 }
 
+/* Тёмная тема — текст и карточки из Telegram, без зелёного меню */
 :root[data-tg-theme='dark'] {
-  --vet-green-title: #7dd393;
-  --vet-green-slogan: #9de0ad;
-  --vet-green-label: #7bc995;
-  --vet-green-address: rgba(190, 230, 200, 0.78);
-  --vet-green-surface: rgba(76, 175, 80, 0.16);
+  --vet-text-primary: var(--tg-theme-text-color, #ffffff);
+  --vet-text-secondary: var(--tg-theme-hint-color, #aaaaaa);
+  --vet-text-body: var(--tg-theme-text-color, #ffffff);
+  --vet-text-hint: var(--tg-theme-hint-color, #aaaaaa);
+  --vet-icon-color: var(--tg-theme-text-color, #ffffff);
+  --vet-surface-card: var(--tg-theme-secondary-bg-color, #2c2c2e);
+  --vet-surface-chip: var(--tg-theme-secondary-bg-color, #2c2c2e);
+
+  --vet-green-title: var(--vet-text-primary);
+  --vet-green-slogan: var(--vet-text-primary);
+  --vet-green-label: var(--vet-text-primary);
+  --vet-green-address: var(--vet-text-secondary);
+  --vet-green-surface: var(--vet-surface-card);
 
   --vet-accent: #81c784;
-  --vet-accent-soft: rgba(76, 175, 80, 0.14);
-  --vet-accent-soft-md: rgba(76, 175, 80, 0.2);
-  --vet-accent-soft-chip: rgba(76, 175, 80, 0.18);
-  --vet-accent-soft-subtle: rgba(76, 175, 80, 0.1);
-  --vet-accent-border-light: rgba(129, 199, 132, 0.35);
-  --vet-accent-border: rgba(129, 199, 132, 0.5);
-  --vet-accent-border-faint: rgba(129, 199, 132, 0.4);
-  --vet-accent-border-strong: rgba(129, 199, 132, 0.65);
-  --vet-brand-soft: rgba(76, 175, 80, 0.18);
-  --vet-skeleton: rgba(76, 175, 80, 0.22);
-  --vet-phone-bg: rgba(76, 175, 80, 0.22);
-  --vet-spinner-track: rgba(76, 175, 80, 0.35);
+  --vet-accent-soft: var(--tg-theme-secondary-bg-color, #2c2c2e);
+  --vet-accent-soft-md: rgba(255, 255, 255, 0.1);
+  --vet-accent-soft-chip: var(--tg-theme-secondary-bg-color, #2c2c2e);
+  --vet-accent-soft-subtle: rgba(255, 255, 255, 0.06);
+  --vet-accent-border-light: rgba(255, 255, 255, 0.2);
+  --vet-accent-border: rgba(255, 255, 255, 0.35);
+  --vet-accent-border-faint: rgba(255, 255, 255, 0.25);
+  --vet-accent-border-strong: rgba(255, 255, 255, 0.45);
+  --vet-brand-soft: var(--vet-surface-chip);
+  --vet-skeleton: rgba(255, 255, 255, 0.12);
+  --vet-phone-bg: rgba(255, 255, 255, 0.12);
+  --vet-spinner-track: rgba(255, 255, 255, 0.25);
   --vet-muted-bg: rgba(255, 255, 255, 0.06);
   --vet-overlay: rgba(0, 0, 0, 0.55);
   --vet-overlay-active: rgba(0, 0, 0, 0.72);

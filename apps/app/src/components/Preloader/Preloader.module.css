@@ -13,7 +13,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid var(--vet-spinner-track);
-  border-top-color: var(--vet-green-label, #338b4e);
+  border-top-color: var(--vet-icon-color, #338b4e);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
 }
@@ -33,7 +33,7 @@
 @media (prefers-reduced-motion: reduce) {
   .spinner {
     animation: none;
-    border-top-color: var(--vet-green-label, #338b4e);
+    border-top-color: var(--vet-icon-color, #338b4e);
     opacity: 0.85;
   }
 }

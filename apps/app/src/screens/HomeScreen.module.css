@@ -50,7 +50,7 @@
 }
 
 .bannerPlaceholder {
-  background: var(--vet-green-surface);
+  background: var(--vet-surface-card);
 }
 
 .bannerClose {
