@@ -92,8 +92,7 @@ func main() {
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken)
 	http.HandleFunc("/api/clinics/{clinicSlug}/animals", miniApp(animalHandler.GetAnimals))
-	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{slug}/categories", miniApp(animalHandler.GetCategories))
-	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{animalSlug}/categories/{categorySlug}/articles", miniApp(articleHandler.GetArticles))
+	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{animalSlug}/articles", miniApp(articleHandler.GetArticles))
 	http.HandleFunc("/api/clinics/{clinicSlug}/articles/{slug}", miniApp(articleHandler.GetArticle))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/doctors", miniApp(doctorHandler.GetPublicDoctors))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/schedule", miniApp(doctorHandler.GetPublicSchedule))
@@ -123,11 +122,6 @@ func main() {
 	http.HandleFunc("PUT /api/admin/animals/{id}", contentAuth(adminHandler.UpdateAnimal))
 	http.HandleFunc("DELETE /api/admin/animals/{id}", contentAuth(adminHandler.DeleteAnimal))
 
-	// Categories
-	http.HandleFunc("POST /api/admin/categories", contentAuth(adminHandler.CreateCategory))
-	http.HandleFunc("PUT /api/admin/categories/{id}", contentAuth(adminHandler.UpdateCategory))
-	http.HandleFunc("DELETE /api/admin/categories/{id}", contentAuth(adminHandler.DeleteCategory))
-
 	// Users (только admin)
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))
 	http.HandleFunc("POST /api/admin/users", adminAuth(adminHandler.CreateAdminUser))
@@ -136,14 +130,10 @@ func main() {
 	// Articles
 	http.HandleFunc("GET /api/admin/articles", contentAuth(adminHandler.GetAdminArticles))
 	http.HandleFunc("GET /api/admin/articles/{id}", contentAuth(adminHandler.GetAdminArticle))
-	http.HandleFunc("GET /api/admin/articles/{id}/categories", contentAuth(adminHandler.GetArticleCategories))
 	http.HandleFunc("POST /api/admin/articles", contentAuth(adminHandler.CreateArticle))
 	http.HandleFunc("PUT /api/admin/articles/{id}", contentAuth(adminHandler.UpdateArticle))
 	http.HandleFunc("PATCH /api/admin/articles/{id}/status", adminAuth(adminHandler.UpdateArticleStatus))
 	http.HandleFunc("DELETE /api/admin/articles/{id}", contentAuth(adminHandler.DeleteArticle))
-	http.HandleFunc("POST /api/admin/articles/{id}/categories/{categoryId}", contentAuth(adminHandler.AssignArticleToCategory))
-	http.HandleFunc("DELETE /api/admin/articles/{id}/categories/{categoryId}", contentAuth(adminHandler.RemoveArticleFromCategory))
-
 	// Doctors
 	http.HandleFunc("GET /api/admin/doctors", contentAuth(doctorHandler.GetDoctors))
 	http.HandleFunc("GET /api/admin/doctors/{id}", contentAuth(doctorHandler.GetDoctor))

@@ -163,7 +163,7 @@ func (b *Bot) handleHelp(c tele.Context) error {
 	text := "ℹ️ *Как пользоваться ботом*\n\n" +
 		"1. Нажмите *🐾 Выбрать животное*\n" +
 		"2. Выберите вид животного\n" +
-		"3. Выберите ситуацию\n" +
+		"3. Выберите статью\n" +
 		"4. Прочитайте инструкцию по первой помощи\n\n" +
 		"⚠️ Бот не заменяет визит к ветеринару. При серьёзных симптомах обратитесь в клинику."
 
@@ -184,14 +184,7 @@ func (b *Bot) handleCallback(c tele.Context) error {
 
 	switch cbType {
 	case "animal":
-		return b.showCategories(c, cbValue)
-	case "category":
-		// Формат cbValue: "animalSlug|categorySlug"
-		parts := strings.SplitN(cbValue, "|", 2)
-		if len(parts) != 2 {
-			return c.Respond()
-		}
-		return b.showArticles(c, parts[0], parts[1])
+		return b.showArticles(c, cbValue)
 	case "article":
 		return b.showArticle(c, cbValue)
 	case "ap":
@@ -251,43 +244,9 @@ func (b *Bot) showAnimalsInline(c tele.Context) error {
 	return c.Edit("Выберите вид животного:", menu)
 }
 
-// showCategories показывает категории животного
-func (b *Bot) showCategories(c tele.Context, animalSlug string) error {
-	categories, err := b.animalRepo.GetCategoriesByAnimalSlug(b.clinicSlug, animalSlug)
-	if err != nil {
-		log.Printf("ошибка получения категорий: %v", err)
-		return c.Edit("Произошла ошибка. Попробуйте позже.")
-	}
-
-	if len(categories) == 0 {
-		return c.Edit("Категории пока не добавлены.")
-	}
-
-	var rows []tele.Row
-	for _, cat := range categories {
-		icon := cat.Icon
-		if icon == "" {
-			icon = "📋"
-		}
-		btn := tele.Btn{
-			Text: fmt.Sprintf("%s %s", icon, cat.Name),
-			Data: fmt.Sprintf("category:%s|%s", animalSlug, cat.Slug),
-		}
-		rows = append(rows, tele.Row{btn})
-	}
-
-	backBtn := tele.Btn{Text: "⬅️ Назад", Data: "back:start"}
-	rows = append(rows, tele.Row{backBtn})
-
-	menu := &tele.ReplyMarkup{}
-	menu.Inline(rows...)
-
-	return c.Edit("Выберите ситуацию:", menu)
-}
-
-// showArticles показывает список статей категории
-func (b *Bot) showArticles(c tele.Context, animalSlug, categorySlug string) error {
-	articles, err := b.articleRepo.GetByCategory(b.clinicSlug, animalSlug, categorySlug)
+// showArticles показывает список статей животного
+func (b *Bot) showArticles(c tele.Context, animalSlug string) error {
+	articles, err := b.articleRepo.GetPublishedByAnimal(b.clinicSlug, animalSlug)
 	if err != nil {
 		log.Printf("ошибка получения статей: %v", err)
 		return c.Edit("Произошла ошибка. Попробуйте позже.")

@@ -49,14 +49,8 @@ clinic_info                     — одна запись на клинику (U
 animals
   id, clinic_id, name, slug, icon, sort_order
 
-categories
-  id, clinic_id, animal_id, name, slug, icon
-
 articles
-  id, clinic_id, title, slug, content (HTML), status (draft/published)
-
-article_categories  (M2M)
-  article_id, category_id
+  id, clinic_id, animal_id, title, slug (unique per clinic), content (HTML), status (draft/published)
 ```
 
 ### Врачи и расписание

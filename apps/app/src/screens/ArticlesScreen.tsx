@@ -9,15 +9,12 @@ import { Preloader } from '../components/Preloader/Preloader';
 export default function ArticlesScreen() {
   const navigate = useNavigate();
   const notify = useNotification();
-  const { animalSlug, categorySlug } = useParams<{
-    animalSlug: string;
-    categorySlug: string;
-  }>();
+  const { animalSlug } = useParams<{ animalSlug: string }>();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['articles', animalSlug, categorySlug],
-    queryFn: () => fetchArticles(animalSlug!, categorySlug!),
-    enabled: !!animalSlug && !!categorySlug,
+    queryKey: ['articles', animalSlug],
+    queryFn: () => fetchArticles(animalSlug!),
+    enabled: !!animalSlug,
   });
 
   useEffect(() => {

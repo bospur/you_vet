@@ -11,21 +11,18 @@
 - [x] **PRD-01** — скрытие груминга в Mini App если breeds + schedule пусты
 - [x] **INF-01** — `.github/workflows/ci.yml` (go test, lint, build admin+app на PR → dev)
 - [x] **INF-02** — `packages/cat/**` в paths `deploy-app.yml`
-- [x] **SEC-07** — валидация Telegram initData на публичных `/api/clinics/...`
-  - `middleware/telegram_initdata.go` + тесты
-  - Mini App шлёт заголовок `X-Telegram-Init-Data`
-  - Локально: `TELEGRAM_INITDATA_SKIP=1` в `.env` server
+- [x] **SEC-07** — initData на API (HMAC + Ed25519 для iOS), prod проверен ✅
+- [x] PR → `dev`, деплой app + server
 
 ### Следующая сессия
 
-- [ ] PR → `dev`, деплой app + server (initData обязателен на prod)
 - [ ] SEC-04: JWT → httpOnly cookie (опционально)
-- [ ] PRD-02: архитектура статей
+- [x] PRD-02: статьи — животное → статьи, slug auto, категории удалены
 
 ### Заметки
 
-- После деплоя server без `TELEGRAM_INITDATA_SKIP` Mini App **должен** отправлять initData (уже в `api/client.ts`)
-- `/uploads/` без initData — картинки грузятся напрямую
+- Prod Mini App работает с валидацией initData (без `TELEGRAM_INITDATA_SKIP`)
+- Локально без Telegram: `TELEGRAM_INITDATA_SKIP=1` в server `.env`
 
 ---
 

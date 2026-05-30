@@ -7,13 +7,6 @@ export interface Animal {
   icon: string;
 }
 
-export interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  icon: string;
-}
-
 export interface ArticleListItem {
   id: number;
   title: string;
@@ -50,13 +43,8 @@ export interface ScheduleEntry {
 export const fetchAnimals = () =>
   apiClient.get<Animal[]>('/animals').then((r) => r.data);
 
-export const fetchCategories = (animalSlug: string) =>
-  apiClient.get<Category[]>(`/animals/${animalSlug}/categories`).then((r) => r.data);
-
-export const fetchArticles = (animalSlug: string, categorySlug: string) =>
-  apiClient
-    .get<ArticleListItem[]>(`/animals/${animalSlug}/categories/${categorySlug}/articles`)
-    .then((r) => r.data);
+export const fetchArticles = (animalSlug: string) =>
+  apiClient.get<ArticleListItem[]>(`/animals/${animalSlug}/articles`).then((r) => r.data);
 
 export const fetchArticle = (articleSlug: string) =>
   apiClient.get<Article>(`/articles/${articleSlug}`).then((r) => r.data);

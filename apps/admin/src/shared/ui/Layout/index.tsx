@@ -16,7 +16,6 @@ import {
   useTheme,
 } from '@mui/material';
 import PetsIcon from '@mui/icons-material/Pets';
-import CategoryIcon from '@mui/icons-material/Category';
 import ArticleIcon from '@mui/icons-material/Article';
 import PeopleIcon from '@mui/icons-material/People';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
@@ -32,7 +31,6 @@ import { styles, appBarSx, mainSx } from './styles';
 const NAV_ITEMS = [
   { label: 'О клинике', to: '/clinic-info', icon: <InfoIcon />, roles: ['admin', 'editor'] },
   { label: 'Животные', to: '/animals', icon: <PetsIcon />, roles: ['admin', 'editor'] },
-  { label: 'Категории', to: '/categories', icon: <CategoryIcon />, roles: ['admin', 'editor'] },
   { label: 'Статьи', to: '/articles', icon: <ArticleIcon />, roles: ['admin', 'editor'] },
   { label: 'Врачи', to: '/doctors', icon: <MedicalServicesIcon />, roles: ['admin', 'editor'] },
   { label: 'Расписание', to: '/schedule', icon: <CalendarMonthIcon />, roles: ['admin', 'editor'] },

@@ -25,7 +25,7 @@ export default function AnimalsScreen() {
         key: animal.id,
         title: animal.name,
         icon: animal.icon || undefined,
-        onClick: () => navigate(`/animals/${animal.slug}/categories`),
+        onClick: () => navigate(`/animals/${animal.slug}/articles`),
       }))}
     />
   );

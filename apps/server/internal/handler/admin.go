@@ -152,76 +152,22 @@ func (h *AdminHandler) DeleteAnimal(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ── Categories CRUD ───────────────────────────────────────────────────────────
-
-// CreateCategory обрабатывает POST /api/admin/categories
-func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-
-	var input repository.CategoryInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
-		return
-	}
-
-	category, err := h.animalRepo.CreateCategory(claims.ClinicID, input)
-	if err != nil {
-		log.Printf("ошибка создания категории: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-
-	writeJSON(w, http.StatusCreated, category)
-}
-
-// UpdateCategory обрабатывает PUT /api/admin/categories/{id}
-func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "неверный запрос", http.StatusBadRequest)
-		return
-	}
-
-	var input repository.CategoryInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
-		return
-	}
-
-	category, err := h.animalRepo.UpdateCategory(claims.ClinicID, id, input)
-	if err != nil {
-		log.Printf("ошибка обновления категории: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	if category == nil {
-		http.Error(w, "не найдено", http.StatusNotFound)
-		return
-	}
-
-	writeJSON(w, http.StatusOK, category)
-}
-
-// DeleteCategory обрабатывает DELETE /api/admin/categories/{id}
-func (h *AdminHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "неверный запрос", http.StatusBadRequest)
-		return
-	}
-
-	if err := h.animalRepo.DeleteCategory(claims.ClinicID, id); err != nil {
-		log.Printf("ошибка удаления категории: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
 // ── Articles CRUD ─────────────────────────────────────────────────────────────
+
+func (h *AdminHandler) validateArticleInput(clinicID int, input repository.ArticleInput) string {
+	if input.Title == "" {
+		return "заголовок обязателен"
+	}
+	if input.AnimalID <= 0 {
+		return "выберите животное"
+	}
+	ok, err := h.articleRepo.AnimalBelongsToClinic(clinicID, input.AnimalID)
+	if err != nil || !ok {
+		return "животное не найдено"
+	}
+	return ""
+}
+
 
 // GetAdminArticles обрабатывает GET /api/admin/articles
 func (h *AdminHandler) GetAdminArticles(w http.ResponseWriter, r *http.Request) {
@@ -262,27 +208,6 @@ func (h *AdminHandler) GetAdminArticle(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, article)
 }
 
-// GetArticleCategories обрабатывает GET /api/admin/articles/{id}/categories
-func (h *AdminHandler) GetArticleCategories(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "неверный запрос", http.StatusBadRequest)
-		return
-	}
-
-	categories, err := h.articleRepo.GetCategories(claims.ClinicID, id)
-	if err != nil {
-		log.Printf("ошибка получения категорий статьи: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	if categories == nil {
-		categories = []repository.Category{}
-	}
-	writeJSON(w, http.StatusOK, categories)
-}
-
 // CreateArticle обрабатывает POST /api/admin/articles
 func (h *AdminHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r)
@@ -290,6 +215,10 @@ func (h *AdminHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
 	var input repository.ArticleInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	if msg := h.validateArticleInput(claims.ClinicID, input); msg != "" {
+		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
@@ -328,6 +257,10 @@ func (h *AdminHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	var input repository.ArticleInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	if msg := h.validateArticleInput(claims.ClinicID, input); msg != "" {
+		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
@@ -497,44 +430,6 @@ func (h *AdminHandler) DeleteAdminUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.userRepo.Delete(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления пользователя: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// AssignArticleToCategory обрабатывает POST /api/admin/articles/{id}/categories/{categoryId}
-func (h *AdminHandler) AssignArticleToCategory(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-	articleID := r.PathValue("id")
-	categoryID := r.PathValue("categoryId")
-	if articleID == "" || categoryID == "" {
-		http.Error(w, "неверный запрос", http.StatusBadRequest)
-		return
-	}
-
-	if err := h.articleRepo.AssignToCategory(claims.ClinicID, articleID, categoryID); err != nil {
-		log.Printf("ошибка привязки статьи к категории: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// RemoveArticleFromCategory обрабатывает DELETE /api/admin/articles/{id}/categories/{categoryId}
-func (h *AdminHandler) RemoveArticleFromCategory(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-	articleID := r.PathValue("id")
-	categoryID := r.PathValue("categoryId")
-	if articleID == "" || categoryID == "" {
-		http.Error(w, "неверный запрос", http.StatusBadRequest)
-		return
-	}
-
-	if err := h.articleRepo.RemoveFromCategory(claims.ClinicID, articleID, categoryID); err != nil {
-		log.Printf("ошибка отвязки статьи от категории: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}

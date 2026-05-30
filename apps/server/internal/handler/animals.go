@@ -36,25 +36,3 @@ func (h *AnimalHandler) GetAnimals(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, animals)
 }
-
-// GetCategories обрабатывает GET /api/clinics/{clinicSlug}/animals/{slug}/categories
-func (h *AnimalHandler) GetCategories(w http.ResponseWriter, r *http.Request) {
-	clinicSlug := r.PathValue("clinicSlug")
-	slug := r.PathValue("slug")
-	if clinicSlug == "" || slug == "" {
-		http.Error(w, "неверный запрос", http.StatusBadRequest)
-		return
-	}
-
-	categories, err := h.repo.GetCategoriesByAnimalSlug(clinicSlug, slug)
-	if err != nil {
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-
-	if categories == nil {
-		categories = []repository.Category{}
-	}
-
-	writeJSON(w, http.StatusOK, categories)
-}
