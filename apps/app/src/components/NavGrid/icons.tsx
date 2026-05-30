@@ -24,6 +24,21 @@ export function IconFirstAid() {
   );
 }
 
+export function IconDoctors() {
+  return (
+    <svg {...iconProps}>
+      <path d="M16 15c-3-5 1-10 7-7" {...stroke} />
+      <path d="M30 13c3-5-1-10-7-7" {...stroke} />
+      <path
+        d="M22 20c0 5-7 9-5 17 2 6 10 8 14 4 4 10 2 12-2 4-8 2-10-2"
+        {...stroke}
+      />
+      <circle cx="50" cy="51" r="8.5" {...stroke} />
+      <circle cx="50" cy="51" r="4" {...stroke} />
+    </svg>
+  );
+}
+
 export function IconSchedule() {
   return (
     <svg {...iconProps}>
