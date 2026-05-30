@@ -92,6 +92,7 @@ func main() {
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken)
 	http.HandleFunc("/api/clinics/{clinicSlug}/animals", miniApp(animalHandler.GetAnimals))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/articles/featured", miniApp(articleHandler.GetFeaturedArticles))
 	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{animalSlug}/articles", miniApp(articleHandler.GetArticles))
 	http.HandleFunc("/api/clinics/{clinicSlug}/articles/{slug}", miniApp(articleHandler.GetArticle))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/doctors", miniApp(doctorHandler.GetPublicDoctors))
@@ -134,6 +135,7 @@ func main() {
 	http.HandleFunc("POST /api/admin/articles", contentAuth(adminHandler.CreateArticle))
 	http.HandleFunc("PUT /api/admin/articles/{id}", contentAuth(adminHandler.UpdateArticle))
 	http.HandleFunc("PATCH /api/admin/articles/{id}/status", adminAuth(adminHandler.UpdateArticleStatus))
+	http.HandleFunc("PATCH /api/admin/articles/{id}/featured", adminAuth(adminHandler.UpdateArticleFeatured))
 	http.HandleFunc("DELETE /api/admin/articles/{id}", contentAuth(adminHandler.DeleteArticle))
 	// Doctors
 	http.HandleFunc("GET /api/admin/doctors", contentAuth(doctorHandler.GetDoctors))

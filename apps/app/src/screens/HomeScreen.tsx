@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { ClinicInfo } from '../api';
 import { HomeHero } from '../components/HomeHero/HomeHero';
+import { FeaturedArticles } from '../components/FeaturedArticles/FeaturedArticles';
 import { NavGrid } from '../components/NavGrid/NavGrid';
 import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
@@ -27,7 +28,8 @@ export default function HomeScreen() {
     {
       key: 'animals',
       icon: <IconFirstAid />,
-      label: 'Первая помощь',
+      label: 'Статьи',
+      subtitle: 'советы по видам животных',
       onClick: () => navigate('/animals'),
     },
     {
@@ -42,14 +44,16 @@ export default function HomeScreen() {
       label: 'Расписание',
       onClick: () => navigate('/schedule'),
     },
-    ...(!groomingLoading && groomingAvailable
-      ? [{
-          key: 'grooming',
-          icon: <IconGrooming />,
-          label: 'Груминг',
-          onClick: () => navigate('/grooming'),
-        }]
-      : []),
+    ...(groomingLoading
+      ? [{ key: 'grooming-skeleton', skeleton: true as const }]
+      : groomingAvailable
+        ? [{
+            key: 'grooming',
+            icon: <IconGrooming />,
+            label: 'Груминг',
+            onClick: () => navigate('/grooming'),
+          }]
+        : []),
   ];
 
   const bannerUrl = info?.banner_url ? `${BASE_URL}${info.banner_url}` : null;
@@ -59,6 +63,15 @@ export default function HomeScreen() {
   return (
     <div className={styles.wrapper}>
       <HomeHero info={info} />
+
+      <div className={styles.navWrap}>
+        <h2 className={styles.sectionHeading}>Полезное</h2>
+        <NavGrid items={navItems} />
+      </div>
+
+      <div className={styles.featuredWrap}>
+        <FeaturedArticles />
+      </div>
 
       {showBanner && (
         <div className={styles.bannerWrap}>
@@ -74,8 +87,6 @@ export default function HomeScreen() {
           )}
         </div>
       )}
-
-      <NavGrid items={navItems} />
     </div>
   );
 }

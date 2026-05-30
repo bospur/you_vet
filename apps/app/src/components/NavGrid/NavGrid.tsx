@@ -4,8 +4,10 @@ import styles from './NavGrid.module.css';
 export interface NavGridItem {
   key: string;
   icon?: ReactNode;
-  label: string;
-  onClick: () => void;
+  label?: string;
+  subtitle?: string;
+  onClick?: () => void;
+  skeleton?: boolean;
 }
 
 interface NavGridProps {
@@ -15,12 +17,22 @@ interface NavGridProps {
 export function NavGrid({ items }: NavGridProps) {
   return (
     <div className={styles.grid}>
-      {items.map((item) => (
-        <button key={item.key} className={styles.card} onClick={item.onClick}>
-          {item.icon && <span className={styles.icon}>{item.icon}</span>}
-          <span className={styles.label}>{item.label}</span>
-        </button>
-      ))}
+      {items.map((item) =>
+        item.skeleton ? (
+          <div key={item.key} className={`${styles.card} ${styles.cardSkeleton}`} aria-hidden>
+            <span className={styles.skeletonIcon} />
+            <span className={styles.skeletonLabel} />
+          </div>
+        ) : (
+          <button key={item.key} type="button" className={styles.card} onClick={item.onClick}>
+            {item.icon && <span className={styles.icon}>{item.icon}</span>}
+            <span className={styles.labelWrap}>
+              <span className={styles.label}>{item.label}</span>
+              {item.subtitle && <span className={styles.subtitle}>{item.subtitle}</span>}
+            </span>
+          </button>
+        ),
+      )}
     </div>
   );
 }

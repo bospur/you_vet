@@ -5,6 +5,30 @@
   padding-bottom: 24px;
 }
 
+.navWrap {
+  padding: 0 var(--vet-page-padding);
+  max-width: calc(var(--vet-content-max) + 2 * var(--vet-page-padding));
+  align-self: center;
+  width: 100%;
+}
+
+.sectionHeading {
+  margin: 0 0 10px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tgui--hint_color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.featuredWrap {
+  padding: 0 var(--vet-page-padding);
+  max-width: calc(var(--vet-content-max) + 2 * var(--vet-page-padding));
+  align-self: center;
+  width: 100%;
+}
+
 .bannerWrap {
   position: relative;
   margin: 0 var(--vet-page-padding);
@@ -16,8 +40,8 @@
 .banner,
 .bannerPlaceholder {
   width: 100%;
-  height: 170px;
-  border-radius: 0;
+  height: 120px;
+  border-radius: 14px;
   display: block;
 }
 
@@ -51,11 +75,4 @@
 
 .bannerClose:active {
   background: rgba(0, 0, 0, 0.65);
-}
-
-.wrapper > :last-child {
-  padding: 0 var(--vet-page-padding);
-  max-width: calc(var(--vet-content-max) + 2 * var(--vet-page-padding));
-  align-self: center;
-  width: 100%;
 }

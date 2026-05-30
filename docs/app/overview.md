@@ -38,7 +38,7 @@ src/
 │   ├── NavGrid/
 │   │   ├── NavGrid.tsx         — сетка 2×2 навигационных карточек
 │   │   ├── NavGrid.module.css
-│   │   └── icons.tsx           — иконки меню (img из assets/menu/)
+│   │   └── icons.tsx           — inline SVG-иконки меню
 │   ├── HomeHero/               — адрес, кот, слоган на главной
 │   ├── AppHeader/              — шапка с лого и названием клиники
 │   ├── NavList/

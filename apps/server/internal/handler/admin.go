@@ -335,6 +335,70 @@ func (h *AdminHandler) UpdateArticleStatus(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, article)
 }
 
+// UpdateArticleFeatured обрабатывает PATCH /api/admin/articles/{id}/featured
+func (h *AdminHandler) UpdateArticleFeatured(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	if claims.Role != "admin" {
+		http.Error(w, "доступ запрещён", http.StatusForbidden)
+		return
+	}
+
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "неверный запрос", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		Featured bool `json:"featured"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+
+	status, err := h.articleRepo.GetStatus(claims.ClinicID, id)
+	if err != nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+	if body.Featured && status != "published" {
+		http.Error(w, "на главную можно добавить только опубликованную статью", http.StatusBadRequest)
+		return
+	}
+
+	if body.Featured {
+		count, err := h.articleRepo.CountFeatured(claims.ClinicID, id)
+		if err != nil {
+			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+			return
+		}
+		if count >= repository.MaxFeaturedArticles {
+			http.Error(w, "на главной не более 3 статей", http.StatusBadRequest)
+			return
+		}
+	}
+
+	article, err := h.articleRepo.UpdateFeatured(claims.ClinicID, id, body.Featured)
+	if err != nil {
+		log.Printf("ошибка обновления featured: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if article == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+
+	existing, err := h.articleRepo.GetByID(claims.ClinicID, id)
+	if err != nil || existing == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, existing)
+}
+
 // DeleteArticle обрабатывает DELETE /api/admin/articles/{id}
 // Editor может удалять только черновики
 func (h *AdminHandler) DeleteArticle(w http.ResponseWriter, r *http.Request) {

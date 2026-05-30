@@ -34,6 +34,11 @@ export async function updateArticleStatus(id: number, status: 'draft' | 'publish
   return data;
 }
 
+export async function updateArticleFeatured(id: number, featured: boolean): Promise<Article> {
+  const { data } = await axiosInstance.patch<Article>(`/api/admin/articles/${id}/featured`, { featured });
+  return data;
+}
+
 export async function deleteArticle(id: number): Promise<void> {
   await axiosInstance.delete(`/api/admin/articles/${id}`);
 }

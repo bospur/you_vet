@@ -1,6 +1,6 @@
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 12px var(--vet-page-padding);
@@ -13,17 +13,14 @@
 .titleBtn {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 0;
   border: none;
   background: none;
   text-align: left;
   cursor: pointer;
-  font-size: clamp(28px, 8vw, 35px);
-  font-weight: 900;
-  line-height: 1.1;
-  color: var(--vet-green-title);
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
   transition: opacity 0.15s;
 }
 
@@ -31,13 +28,30 @@
   opacity: 0.65;
 }
 
+.logo {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.titleText {
+  font-size: clamp(22px, 6.5vw, 35px);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--vet-green-title);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
 .phoneBtn {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   color: var(--vet-green-title);
   text-decoration: none;
   transition: opacity 0.15s;
@@ -45,4 +59,8 @@
 
 .phoneBtn:active {
   opacity: 0.6;
+}
+
+.phoneIcon {
+  display: block;
 }

@@ -13,6 +13,13 @@ export interface ArticleListItem {
   slug: string;
 }
 
+export interface FeaturedArticle {
+  id: number;
+  title: string;
+  slug: string;
+  animal_name: string;
+}
+
 export interface Article {
   id: number;
   title: string;
@@ -48,6 +55,9 @@ export const fetchArticles = (animalSlug: string) =>
 
 export const fetchArticle = (articleSlug: string) =>
   apiClient.get<Article>(`/articles/${articleSlug}`).then((r) => r.data);
+
+export const fetchFeaturedArticles = () =>
+  apiClient.get<FeaturedArticle[]>('/articles/featured').then((r) => r.data ?? []);
 
 export const fetchDoctors = () =>
   apiClient.get<Doctor[]>('/doctors').then((r) => r.data);
