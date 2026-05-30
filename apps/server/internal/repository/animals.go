@@ -91,14 +91,14 @@ func (r *AnimalRepository) Create(clinicID int, input AnimalInput) (*Animal, err
 	return &a, nil
 }
 
-// Update обновляет животное по id
-func (r *AnimalRepository) Update(id string, input AnimalInput) (*Animal, error) {
+// Update обновляет животное по id в рамках клиники
+func (r *AnimalRepository) Update(clinicID int, id string, input AnimalInput) (*Animal, error) {
 	var a Animal
 	err := r.db.QueryRow(`
 		UPDATE animals SET name=$1, slug=$2, icon=$3, sort_order=$4, updated_at=NOW()
-		WHERE id=$5
+		WHERE id=$5 AND clinic_id=$6
 		RETURNING id, name, slug, COALESCE(icon, ''), sort_order
-	`, input.Name, input.Slug, input.Icon, input.SortOrder, id).
+	`, input.Name, input.Slug, input.Icon, input.SortOrder, id, clinicID).
 		Scan(&a.ID, &a.Name, &a.Slug, &a.Icon, &a.SortOrder)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -109,9 +109,9 @@ func (r *AnimalRepository) Update(id string, input AnimalInput) (*Animal, error)
 	return &a, nil
 }
 
-// Delete удаляет животное по id
-func (r *AnimalRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM animals WHERE id=$1`, id)
+// Delete удаляет животное по id в рамках клиники
+func (r *AnimalRepository) Delete(clinicID int, id string) error {
+	_, err := r.db.Exec(`DELETE FROM animals WHERE id=$1 AND clinic_id=$2`, id, clinicID)
 	return err
 }
 
@@ -157,14 +157,14 @@ func (r *AnimalRepository) CreateCategory(clinicID int, input CategoryInput) (*C
 	return &c, nil
 }
 
-// UpdateCategory обновляет категорию по id
-func (r *AnimalRepository) UpdateCategory(id string, input CategoryInput) (*Category, error) {
+// UpdateCategory обновляет категорию по id в рамках клиники
+func (r *AnimalRepository) UpdateCategory(clinicID int, id string, input CategoryInput) (*Category, error) {
 	var c Category
 	err := r.db.QueryRow(`
 		UPDATE categories SET name=$1, slug=$2, icon=$3, sort_order=$4, updated_at=NOW()
-		WHERE id=$5
+		WHERE id=$5 AND clinic_id=$6
 		RETURNING id, animal_id, name, slug, COALESCE(icon, ''), sort_order
-	`, input.Name, input.Slug, input.Icon, input.SortOrder, id).
+	`, input.Name, input.Slug, input.Icon, input.SortOrder, id, clinicID).
 		Scan(&c.ID, &c.AnimalID, &c.Name, &c.Slug, &c.Icon, &c.SortOrder)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -175,8 +175,8 @@ func (r *AnimalRepository) UpdateCategory(id string, input CategoryInput) (*Cate
 	return &c, nil
 }
 
-// DeleteCategory удаляет категорию по id
-func (r *AnimalRepository) DeleteCategory(id string) error {
-	_, err := r.db.Exec(`DELETE FROM categories WHERE id=$1`, id)
+// DeleteCategory удаляет категорию по id в рамках клиники
+func (r *AnimalRepository) DeleteCategory(clinicID int, id string) error {
+	_, err := r.db.Exec(`DELETE FROM categories WHERE id=$1 AND clinic_id=$2`, id, clinicID)
 	return err
 }

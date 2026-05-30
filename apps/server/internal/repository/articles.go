@@ -46,13 +46,13 @@ func (r *ArticleRepository) Create(clinicID int, input ArticleInput) (*Article, 
 }
 
 // Update обновляет содержимое статьи (только title, content, slug — не статус)
-func (r *ArticleRepository) Update(id string, input ArticleInput) (*Article, error) {
+func (r *ArticleRepository) Update(clinicID int, id string, input ArticleInput) (*Article, error) {
 	var a Article
 	err := r.db.QueryRow(`
 		UPDATE articles SET title=$1, content=$2, slug=$3, updated_at=NOW()
-		WHERE id=$4
+		WHERE id=$4 AND clinic_id=$5
 		RETURNING id, title, content, slug, status
-	`, input.Title, input.Content, input.Slug, id).
+	`, input.Title, input.Content, input.Slug, id, clinicID).
 		Scan(&a.ID, &a.Title, &a.Content, &a.Slug, &a.Status)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -64,13 +64,13 @@ func (r *ArticleRepository) Update(id string, input ArticleInput) (*Article, err
 }
 
 // UpdateStatus меняет статус статьи
-func (r *ArticleRepository) UpdateStatus(id, status string) (*Article, error) {
+func (r *ArticleRepository) UpdateStatus(clinicID int, id, status string) (*Article, error) {
 	var a Article
 	err := r.db.QueryRow(`
 		UPDATE articles SET status=$1, updated_at=NOW()
-		WHERE id=$2
+		WHERE id=$2 AND clinic_id=$3
 		RETURNING id, title, content, slug, status
-	`, status, id).
+	`, status, id, clinicID).
 		Scan(&a.ID, &a.Title, &a.Content, &a.Slug, &a.Status)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -82,36 +82,40 @@ func (r *ArticleRepository) UpdateStatus(id, status string) (*Article, error) {
 }
 
 // GetStatus возвращает текущий статус статьи
-func (r *ArticleRepository) GetStatus(id string) (string, error) {
+func (r *ArticleRepository) GetStatus(clinicID int, id string) (string, error) {
 	var status string
-	err := r.db.QueryRow(`SELECT status FROM articles WHERE id=$1`, id).Scan(&status)
+	err := r.db.QueryRow(`SELECT status FROM articles WHERE id=$1 AND clinic_id=$2`, id, clinicID).Scan(&status)
 	if err != nil {
 		return "", err
 	}
 	return status, nil
 }
 
-// Delete удаляет статью по id
-func (r *ArticleRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM articles WHERE id=$1`, id)
+// Delete удаляет статью по id в рамках клиники
+func (r *ArticleRepository) Delete(clinicID int, id string) error {
+	_, err := r.db.Exec(`DELETE FROM articles WHERE id=$1 AND clinic_id=$2`, id, clinicID)
 	return err
 }
 
-// AssignToCategory привязывает статью к категории
-func (r *ArticleRepository) AssignToCategory(articleID, categoryID string) error {
+// AssignToCategory привязывает статью к категории (обе сущности — одной клиники)
+func (r *ArticleRepository) AssignToCategory(clinicID int, articleID, categoryID string) error {
 	_, err := r.db.Exec(`
 		INSERT INTO article_categories (article_id, category_id)
-		VALUES ($1, $2)
+		SELECT $1, $2
+		WHERE EXISTS (SELECT 1 FROM articles WHERE id=$1 AND clinic_id=$3)
+		  AND EXISTS (SELECT 1 FROM categories WHERE id=$2 AND clinic_id=$3)
 		ON CONFLICT DO NOTHING
-	`, articleID, categoryID)
+	`, articleID, categoryID, clinicID)
 	return err
 }
 
 // RemoveFromCategory отвязывает статью от категории
-func (r *ArticleRepository) RemoveFromCategory(articleID, categoryID string) error {
+func (r *ArticleRepository) RemoveFromCategory(clinicID int, articleID, categoryID string) error {
 	_, err := r.db.Exec(`
-		DELETE FROM article_categories WHERE article_id=$1 AND category_id=$2
-	`, articleID, categoryID)
+		DELETE FROM article_categories ac
+		USING articles a
+		WHERE ac.article_id = a.id AND ac.article_id=$1 AND ac.category_id=$2 AND a.clinic_id=$3
+	`, articleID, categoryID, clinicID)
 	return err
 }
 
@@ -138,12 +142,12 @@ func (r *ArticleRepository) GetAll(clinicID int) ([]Article, error) {
 	return articles, nil
 }
 
-// GetByID возвращает статью по id
-func (r *ArticleRepository) GetByID(id string) (*Article, error) {
+// GetByID возвращает статью по id в рамках клиники
+func (r *ArticleRepository) GetByID(clinicID int, id string) (*Article, error) {
 	var a Article
 	err := r.db.QueryRow(`
-		SELECT id, title, content, slug, status FROM articles WHERE id=$1
-	`, id).Scan(&a.ID, &a.Title, &a.Content, &a.Slug, &a.Status)
+		SELECT id, title, content, slug, status FROM articles WHERE id=$1 AND clinic_id=$2
+	`, id, clinicID).Scan(&a.ID, &a.Title, &a.Content, &a.Slug, &a.Status)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -154,14 +158,15 @@ func (r *ArticleRepository) GetByID(id string) (*Article, error) {
 }
 
 // GetCategories возвращает категории, привязанные к статье
-func (r *ArticleRepository) GetCategories(articleID string) ([]Category, error) {
+func (r *ArticleRepository) GetCategories(clinicID int, articleID string) ([]Category, error) {
 	rows, err := r.db.Query(`
 		SELECT c.id, c.animal_id, c.name, c.slug, COALESCE(c.icon, ''), c.sort_order
 		FROM categories c
 		JOIN article_categories ac ON ac.category_id = c.id
-		WHERE ac.article_id = $1
+		JOIN articles a ON a.id = ac.article_id
+		WHERE ac.article_id = $1 AND a.clinic_id = $2
 		ORDER BY c.name
-	`, articleID)
+	`, articleID, clinicID)
 	if err != nil {
 		return nil, err
 	}

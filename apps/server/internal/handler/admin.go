@@ -107,6 +107,7 @@ func (h *AdminHandler) CreateAnimal(w http.ResponseWriter, r *http.Request) {
 
 // UpdateAnimal обрабатывает PUT /api/admin/animals/{id}
 func (h *AdminHandler) UpdateAnimal(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
@@ -119,7 +120,7 @@ func (h *AdminHandler) UpdateAnimal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	animal, err := h.animalRepo.Update(id, input)
+	animal, err := h.animalRepo.Update(claims.ClinicID, id, input)
 	if err != nil {
 		log.Printf("ошибка обновления животного: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -135,13 +136,14 @@ func (h *AdminHandler) UpdateAnimal(w http.ResponseWriter, r *http.Request) {
 
 // DeleteAnimal обрабатывает DELETE /api/admin/animals/{id}
 func (h *AdminHandler) DeleteAnimal(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.animalRepo.Delete(id); err != nil {
+	if err := h.animalRepo.Delete(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления животного: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -174,6 +176,7 @@ func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 
 // UpdateCategory обрабатывает PUT /api/admin/categories/{id}
 func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
@@ -186,7 +189,7 @@ func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category, err := h.animalRepo.UpdateCategory(id, input)
+	category, err := h.animalRepo.UpdateCategory(claims.ClinicID, id, input)
 	if err != nil {
 		log.Printf("ошибка обновления категории: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -202,13 +205,14 @@ func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 
 // DeleteCategory обрабатывает DELETE /api/admin/categories/{id}
 func (h *AdminHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.animalRepo.DeleteCategory(id); err != nil {
+	if err := h.animalRepo.DeleteCategory(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления категории: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -237,13 +241,14 @@ func (h *AdminHandler) GetAdminArticles(w http.ResponseWriter, r *http.Request) 
 
 // GetAdminArticle обрабатывает GET /api/admin/articles/{id}
 func (h *AdminHandler) GetAdminArticle(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
 		return
 	}
 
-	article, err := h.articleRepo.GetByID(id)
+	article, err := h.articleRepo.GetByID(claims.ClinicID, id)
 	if err != nil {
 		log.Printf("ошибка получения статьи: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -259,13 +264,14 @@ func (h *AdminHandler) GetAdminArticle(w http.ResponseWriter, r *http.Request) {
 
 // GetArticleCategories обрабатывает GET /api/admin/articles/{id}/categories
 func (h *AdminHandler) GetArticleCategories(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
 		return
 	}
 
-	categories, err := h.articleRepo.GetCategories(id)
+	categories, err := h.articleRepo.GetCategories(claims.ClinicID, id)
 	if err != nil {
 		log.Printf("ошибка получения категорий статьи: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -308,7 +314,7 @@ func (h *AdminHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 
 	claims := middleware.ClaimsFromContext(r)
 	if claims.Role == "editor" {
-		status, err := h.articleRepo.GetStatus(id)
+		status, err := h.articleRepo.GetStatus(claims.ClinicID, id)
 		if err != nil {
 			http.Error(w, "не найдено", http.StatusNotFound)
 			return
@@ -325,7 +331,7 @@ func (h *AdminHandler) UpdateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	article, err := h.articleRepo.Update(id, input)
+	article, err := h.articleRepo.Update(claims.ClinicID, id, input)
 	if err != nil {
 		log.Printf("ошибка обновления статьи: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -366,7 +372,7 @@ func (h *AdminHandler) UpdateArticleStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	article, err := h.articleRepo.UpdateStatus(id, body.Status)
+	article, err := h.articleRepo.UpdateStatus(claims.ClinicID, id, body.Status)
 	if err != nil {
 		log.Printf("ошибка обновления статуса статьи: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -391,7 +397,7 @@ func (h *AdminHandler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
 
 	claims := middleware.ClaimsFromContext(r)
 	if claims.Role == "editor" {
-		status, err := h.articleRepo.GetStatus(id)
+		status, err := h.articleRepo.GetStatus(claims.ClinicID, id)
 		if err != nil {
 			http.Error(w, "не найдено", http.StatusNotFound)
 			return
@@ -402,7 +408,7 @@ func (h *AdminHandler) DeleteArticle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.articleRepo.Delete(id); err != nil {
+	if err := h.articleRepo.Delete(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления статьи: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -489,7 +495,7 @@ func (h *AdminHandler) DeleteAdminUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.userRepo.Delete(id); err != nil {
+	if err := h.userRepo.Delete(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления пользователя: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -500,6 +506,7 @@ func (h *AdminHandler) DeleteAdminUser(w http.ResponseWriter, r *http.Request) {
 
 // AssignArticleToCategory обрабатывает POST /api/admin/articles/{id}/categories/{categoryId}
 func (h *AdminHandler) AssignArticleToCategory(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	articleID := r.PathValue("id")
 	categoryID := r.PathValue("categoryId")
 	if articleID == "" || categoryID == "" {
@@ -507,7 +514,7 @@ func (h *AdminHandler) AssignArticleToCategory(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if err := h.articleRepo.AssignToCategory(articleID, categoryID); err != nil {
+	if err := h.articleRepo.AssignToCategory(claims.ClinicID, articleID, categoryID); err != nil {
 		log.Printf("ошибка привязки статьи к категории: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -518,6 +525,7 @@ func (h *AdminHandler) AssignArticleToCategory(w http.ResponseWriter, r *http.Re
 
 // RemoveArticleFromCategory обрабатывает DELETE /api/admin/articles/{id}/categories/{categoryId}
 func (h *AdminHandler) RemoveArticleFromCategory(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	articleID := r.PathValue("id")
 	categoryID := r.PathValue("categoryId")
 	if articleID == "" || categoryID == "" {
@@ -525,7 +533,7 @@ func (h *AdminHandler) RemoveArticleFromCategory(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := h.articleRepo.RemoveFromCategory(articleID, categoryID); err != nil {
+	if err := h.articleRepo.RemoveFromCategory(claims.ClinicID, articleID, categoryID); err != nil {
 		log.Printf("ошибка отвязки статьи от категории: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return

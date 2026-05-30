@@ -107,6 +107,21 @@ func (r *DoctorRepository) GetPublished(clinicID int) ([]Doctor, error) {
 	return doctors, nil
 }
 
+func (r *DoctorRepository) GetByIDForClinic(clinicID int, id string) (*Doctor, error) {
+	var d Doctor
+	err := r.db.QueryRow(`
+		SELECT id, clinic_id, full_name, specialty, description, contacts, photo_url, status, sort_order
+		FROM doctors WHERE id = $1 AND clinic_id = $2
+	`, id, clinicID).Scan(&d.ID, &d.ClinicID, &d.FullName, &d.Specialty, &d.Description, &d.Contacts, &d.PhotoURL, &d.Status, &d.SortOrder)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &d, nil
+}
+
 func (r *DoctorRepository) GetByID(id string) (*Doctor, error) {
 	var d Doctor
 	err := r.db.QueryRow(`
@@ -136,13 +151,13 @@ func (r *DoctorRepository) Create(clinicID int, input DoctorInput) (*Doctor, err
 	return &d, nil
 }
 
-func (r *DoctorRepository) Update(id string, input DoctorInput) (*Doctor, error) {
+func (r *DoctorRepository) Update(clinicID int, id string, input DoctorInput) (*Doctor, error) {
 	var d Doctor
 	err := r.db.QueryRow(`
 		UPDATE doctors SET full_name=$1, specialty=$2, description=$3, contacts=$4, sort_order=$5, updated_at=NOW()
-		WHERE id=$6
+		WHERE id=$6 AND clinic_id=$7
 		RETURNING id, clinic_id, full_name, specialty, description, contacts, photo_url, status, sort_order
-	`, input.FullName, input.Specialty, input.Description, input.Contacts, input.SortOrder, id).
+	`, input.FullName, input.Specialty, input.Description, input.Contacts, input.SortOrder, id, clinicID).
 		Scan(&d.ID, &d.ClinicID, &d.FullName, &d.Specialty, &d.Description, &d.Contacts, &d.PhotoURL, &d.Status, &d.SortOrder)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -153,13 +168,13 @@ func (r *DoctorRepository) Update(id string, input DoctorInput) (*Doctor, error)
 	return &d, nil
 }
 
-func (r *DoctorRepository) UpdateStatus(id, status string) (*Doctor, error) {
+func (r *DoctorRepository) UpdateStatus(clinicID int, id, status string) (*Doctor, error) {
 	var d Doctor
 	err := r.db.QueryRow(`
 		UPDATE doctors SET status=$1, updated_at=NOW()
-		WHERE id=$2
+		WHERE id=$2 AND clinic_id=$3
 		RETURNING id, clinic_id, full_name, specialty, description, contacts, photo_url, status, sort_order
-	`, status, id).
+	`, status, id, clinicID).
 		Scan(&d.ID, &d.ClinicID, &d.FullName, &d.Specialty, &d.Description, &d.Contacts, &d.PhotoURL, &d.Status, &d.SortOrder)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -170,17 +185,48 @@ func (r *DoctorRepository) UpdateStatus(id, status string) (*Doctor, error) {
 	return &d, nil
 }
 
-func (r *DoctorRepository) UpdatePhoto(id, photoURL string) error {
-	_, err := r.db.Exec(`UPDATE doctors SET photo_url=$1, updated_at=NOW() WHERE id=$2`, photoURL, id)
-	return err
+func (r *DoctorRepository) UpdatePhoto(clinicID int, id, photoURL string) error {
+	res, err := r.db.Exec(`UPDATE doctors SET photo_url=$1, updated_at=NOW() WHERE id=$2 AND clinic_id=$3`, photoURL, id, clinicID)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
-func (r *DoctorRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM doctors WHERE id=$1`, id)
+func (r *DoctorRepository) Delete(clinicID int, id string) error {
+	_, err := r.db.Exec(`DELETE FROM doctors WHERE id=$1 AND clinic_id=$2`, id, clinicID)
 	return err
 }
 
 // ── Расписание ───────────────────────────────────────────────────────────────
+
+func (r *DoctorRepository) GetScheduleForClinic(clinicID int, doctorID string) ([]DoctorSchedule, error) {
+	rows, err := r.db.Query(`
+		SELECT ds.id, ds.doctor_id, ds.day_of_week, ds.time_from::text, ds.time_to::text
+		FROM doctor_schedules ds
+		JOIN doctors d ON d.id = ds.doctor_id
+		WHERE ds.doctor_id = $1 AND d.clinic_id = $2
+		ORDER BY ds.day_of_week, ds.time_from
+	`, doctorID, clinicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var slots []DoctorSchedule
+	for rows.Next() {
+		var s DoctorSchedule
+		if err := rows.Scan(&s.ID, &s.DoctorID, &s.DayOfWeek, &s.TimeFrom, &s.TimeTo); err != nil {
+			return nil, err
+		}
+		slots = append(slots, s)
+	}
+	return slots, nil
+}
 
 func (r *DoctorRepository) GetSchedule(doctorID string) ([]DoctorSchedule, error) {
 	rows, err := r.db.Query(`
@@ -204,6 +250,24 @@ func (r *DoctorRepository) GetSchedule(doctorID string) ([]DoctorSchedule, error
 	return slots, nil
 }
 
+func (r *DoctorRepository) AddScheduleSlotForClinic(clinicID int, doctorID string, dayOfWeek int, timeFrom, timeTo string) (*DoctorSchedule, error) {
+	var s DoctorSchedule
+	err := r.db.QueryRow(`
+		INSERT INTO doctor_schedules (doctor_id, day_of_week, time_from, time_to)
+		SELECT $1, $2, $3, $4
+		WHERE EXISTS (SELECT 1 FROM doctors WHERE id=$1 AND clinic_id=$5)
+		RETURNING id, doctor_id, day_of_week, time_from::text, time_to::text
+	`, doctorID, dayOfWeek, timeFrom, timeTo, clinicID).
+		Scan(&s.ID, &s.DoctorID, &s.DayOfWeek, &s.TimeFrom, &s.TimeTo)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
 func (r *DoctorRepository) AddScheduleSlot(doctorID string, dayOfWeek int, timeFrom, timeTo string) (*DoctorSchedule, error) {
 	var s DoctorSchedule
 	err := r.db.QueryRow(`
@@ -218,12 +282,40 @@ func (r *DoctorRepository) AddScheduleSlot(doctorID string, dayOfWeek int, timeF
 	return &s, nil
 }
 
-func (r *DoctorRepository) DeleteScheduleSlot(slotID string) error {
-	_, err := r.db.Exec(`DELETE FROM doctor_schedules WHERE id=$1`, slotID)
+func (r *DoctorRepository) DeleteScheduleSlot(clinicID int, slotID string) error {
+	_, err := r.db.Exec(`
+		DELETE FROM doctor_schedules ds
+		USING doctors d
+		WHERE ds.id = $1 AND ds.doctor_id = d.id AND d.clinic_id = $2
+	`, slotID, clinicID)
 	return err
 }
 
 // ── Исключения ───────────────────────────────────────────────────────────────
+
+func (r *DoctorRepository) GetExceptionsForClinic(clinicID int, doctorID string) ([]DoctorScheduleException, error) {
+	rows, err := r.db.Query(`
+		SELECT e.id, e.doctor_id, e.date::text, e.is_day_off, e.time_from::text, e.time_to::text
+		FROM doctor_schedule_exceptions e
+		JOIN doctors d ON d.id = e.doctor_id
+		WHERE e.doctor_id = $1 AND d.clinic_id = $2
+		ORDER BY e.date
+	`, doctorID, clinicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var exceptions []DoctorScheduleException
+	for rows.Next() {
+		var e DoctorScheduleException
+		if err := rows.Scan(&e.ID, &e.DoctorID, &e.Date, &e.IsDayOff, &e.TimeFrom, &e.TimeTo); err != nil {
+			return nil, err
+		}
+		exceptions = append(exceptions, e)
+	}
+	return exceptions, nil
+}
 
 func (r *DoctorRepository) GetExceptions(doctorID string) ([]DoctorScheduleException, error) {
 	rows, err := r.db.Query(`
@@ -247,6 +339,17 @@ func (r *DoctorRepository) GetExceptions(doctorID string) ([]DoctorScheduleExcep
 	return exceptions, nil
 }
 
+func (r *DoctorRepository) UpsertExceptionForClinic(clinicID int, doctorID, date string, isDayOff bool, timeFrom, timeTo *string) (*DoctorScheduleException, error) {
+	doctor, err := r.GetByIDForClinic(clinicID, doctorID)
+	if err != nil {
+		return nil, err
+	}
+	if doctor == nil {
+		return nil, nil
+	}
+	return r.UpsertException(doctorID, date, isDayOff, timeFrom, timeTo)
+}
+
 func (r *DoctorRepository) UpsertException(doctorID, date string, isDayOff bool, timeFrom, timeTo *string) (*DoctorScheduleException, error) {
 	var e DoctorScheduleException
 	err := r.db.QueryRow(`
@@ -263,8 +366,12 @@ func (r *DoctorRepository) UpsertException(doctorID, date string, isDayOff bool,
 	return &e, nil
 }
 
-func (r *DoctorRepository) DeleteException(exceptionID string) error {
-	_, err := r.db.Exec(`DELETE FROM doctor_schedule_exceptions WHERE id=$1`, exceptionID)
+func (r *DoctorRepository) DeleteException(clinicID int, exceptionID string) error {
+	_, err := r.db.Exec(`
+		DELETE FROM doctor_schedule_exceptions e
+		USING doctors d
+		WHERE e.id = $1 AND e.doctor_id = d.id AND d.clinic_id = $2
+	`, exceptionID, clinicID)
 	return err
 }
 

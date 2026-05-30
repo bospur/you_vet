@@ -67,6 +67,7 @@ func (h *GroomingHandler) CreateBreed(w http.ResponseWriter, r *http.Request) {
 
 // UpdateBreed обрабатывает PUT /api/admin/grooming/breeds/{id}
 func (h *GroomingHandler) UpdateBreed(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
 	var input repository.GroomingBreedInput
@@ -83,7 +84,7 @@ func (h *GroomingHandler) UpdateBreed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	breed, err := h.groomingRepo.UpdateBreed(id, input)
+	breed, err := h.groomingRepo.UpdateBreed(claims.ClinicID, id, input)
 	if err != nil {
 		log.Printf("ошибка обновления породы: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -98,9 +99,10 @@ func (h *GroomingHandler) UpdateBreed(w http.ResponseWriter, r *http.Request) {
 
 // DeleteBreed обрабатывает DELETE /api/admin/grooming/breeds/{id}
 func (h *GroomingHandler) DeleteBreed(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
-	if err := h.groomingRepo.DeleteBreed(id); err != nil {
+	if err := h.groomingRepo.DeleteBreed(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления породы: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
