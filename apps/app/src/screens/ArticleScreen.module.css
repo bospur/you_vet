@@ -6,9 +6,9 @@
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
-  color: #2e7d32;
-  background: rgba(76, 175, 80, 0.12);
-  border: 1px solid rgba(76, 175, 80, 0.35);
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
+  border: 1px solid var(--vet-accent-border);
   border-radius: 14px;
   padding: 12px 20px;
   text-align: center;

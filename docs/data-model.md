@@ -17,6 +17,7 @@ PostgreSQL. Все таблицы содержат `clinic_id` для мульт
 | `009_articles_animal_id` | `articles.animal_id`, удаление `categories` и `article_categories` |
 | `010_clinic_info_banner_enabled` | `clinic_info.banner_enabled` |
 | `011_articles_featured` | `articles.featured` — показ на главной Mini App (до 3) |
+| `012_telegram_users` | Учёт посетителей Mini App (Telegram user id, first_seen, last_seen) |
 
 ## Схема
 
@@ -28,6 +29,12 @@ clinics
 
 users
   id, clinic_id, login, password_hash, role (admin/editor/groomer)
+
+telegram_users                    — посетители Mini App (не путать с users)
+  id, clinic_id, telegram_user_id (bigint)
+  first_seen, last_seen
+  username, first_name (nullable)
+  UNIQUE (clinic_id, telegram_user_id)
 ```
 
 ### Информация о клинике

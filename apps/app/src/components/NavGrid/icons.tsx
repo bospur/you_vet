@@ -1,4 +1,16 @@
-import type { ReactNode } from 'react';
+import { createElement, type ComponentType, type ReactNode } from 'react';
+import { FaUserDoctor } from 'react-icons/fa6';
+
+type NavReactIconProps = {
+  size?: number;
+  color?: string;
+  'aria-hidden'?: boolean;
+};
+
+const UserDoctorIcon = FaUserDoctor as ComponentType<NavReactIconProps>;
+
+/** Размер иконок в сетке «Полезное» на главной (см. NavGrid.module.css .icon svg) */
+const NAV_ICON_SIZE = 64;
 
 interface NavIconProps {
   children: ReactNode;
@@ -32,20 +44,12 @@ export function IconFirstAid() {
   );
 }
 
-export function IconDoctors() {
-  return (
-    <NavIcon>
-      <g data-part="head">
-        <circle cx="32" cy="18" r="8" fill="currentColor" />
-      </g>
-      <path
-        d="M14 52c0-9.941 8.059-18 18-18s18 8.059 18 18"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </NavIcon>
-  );
+export function IconDoctors(): ReactNode {
+  return createElement(UserDoctorIcon, {
+    size: NAV_ICON_SIZE,
+    color: 'currentColor',
+    'aria-hidden': true,
+  }) as ReactNode;
 }
 
 export function IconSchedule() {

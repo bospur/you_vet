@@ -23,7 +23,7 @@
   font-size: 15px;
   color: var(--tgui--text_color);
   background: var(--tgui--bg_color);
-  border: 1.5px solid rgba(76, 175, 80, 0.5);
+  border: 1.5px solid var(--vet-accent-border-strong);
   border-radius: 12px;
   outline: none;
   margin-bottom: 2px;
@@ -34,8 +34,8 @@
 }
 
 .search:focus {
-  border-color: #2e7d32;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
+  border-color: var(--vet-accent);
+  box-shadow: 0 0 0 3px var(--vet-accent-soft-md);
 }
 
 .empty {
@@ -46,7 +46,7 @@
 }
 
 .card {
-  background: rgba(76, 175, 80, 0.08);
+  background: var(--vet-accent-soft);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -71,7 +71,7 @@
 .price {
   font-size: 16px;
   font-weight: 700;
-  color: #2e7d32;
+  color: var(--vet-accent);
   white-space: nowrap;
 }
 
@@ -104,10 +104,10 @@
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
-  color: #2e7d32;
-  background: rgba(76, 175, 80, 0.12);
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
   border: none;
-  border-top: 1px solid rgba(76, 175, 80, 0.25);
+  border-top: 1px solid var(--vet-accent-border-faint);
   padding: 14px 20px;
   padding-bottom: calc(14px + env(safe-area-inset-bottom));
   text-align: center;

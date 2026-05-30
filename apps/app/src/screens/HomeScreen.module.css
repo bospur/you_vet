@@ -5,10 +5,6 @@
   padding-bottom: 24px;
 }
 
-.wrapperWithSticky {
-  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-}
-
 .navWrap {
   padding: 0 var(--vet-page-padding);
   max-width: calc(var(--vet-content-max) + 2 * var(--vet-page-padding));
@@ -64,7 +60,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--vet-overlay);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -78,5 +74,5 @@
 }
 
 .bannerClose:active {
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--vet-overlay-active);
 }

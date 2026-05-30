@@ -17,7 +17,7 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 | GET | `/api/clinics/{slug}/clinic-info` | Информация о клинике (название, контакты, лого, баннер) |
 | GET | `/api/clinics/{slug}/animals` | Список животных |
 | GET | `/api/clinics/{slug}/animals/{animalSlug}/articles` | Статьи животного (список: id, title, slug) |
-| GET | `/api/clinics/{slug}/articles/featured` | Featured-статьи для главной (до 3: id, title, slug, animal_name) |
+| GET | `/api/clinics/{slug}/articles/featured` | Featured для главной (до 3); если пусто — последние 3 опубликованные |
 | GET | `/api/clinics/{slug}/articles/{slug}` | Одна статья |
 | GET | `/api/clinics/{slug}/doctors` | Опубликованные врачи |
 | GET | `/api/clinics/{slug}/schedule` | Расписание `{ entries[], settings }` |
@@ -148,6 +148,17 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 3. Вычисляет `end_time = start_time + duration` через PostgreSQL
 4. Проверяет что время в рамках рабочего окна → 400 если нет
 5. Проверяет пересечение с существующими записями → 409 если занято
+
+---
+
+### Статистика (M0)
+
+| Метод | URL | Описание | Роль |
+|---|---|---|---|
+| GET | `/api/admin/stats/summary` | Уникальные посетители Mini App: `today`, `last_7_days`, `last_30_days`, `total` (по `last_seen`) | только admin |
+| GET | `/api/admin/stats/users` | Список посетителей: `telegram_user_id`, `first_name`, `username`, `first_seen`, `last_seen` (до 500, по `last_seen` DESC) | только admin |
+
+Сбор данных: после валидации `X-Telegram-Init-Data` middleware делает upsert в `telegram_users`.
 
 ---
 

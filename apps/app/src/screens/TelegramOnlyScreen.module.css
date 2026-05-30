@@ -6,7 +6,7 @@
   justify-content: center;
   padding: 32px 24px;
   text-align: center;
-  background: #efeff3;
+  background: var(--tgui--secondary_bg_color, #efeff3);
   gap: 16px;
 }
 
@@ -18,13 +18,13 @@
 .title {
   font-size: 20px;
   font-weight: 600;
-  color: #000;
+  color: var(--tgui--text_color, #000);
   margin: 0;
 }
 
 .text {
   font-size: 15px;
-  color: #8e8e93;
+  color: var(--tgui--hint_color, #8e8e93);
   margin: 0;
   max-width: 280px;
   line-height: 1.5;

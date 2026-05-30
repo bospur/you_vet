@@ -21,7 +21,7 @@ apps/
 
 packages/
 ├── types/    — @you-vet/types — общие TypeScript типы (admin + app)
-└── cat/      — @you-vet/cat — CatLogo, CatPreloader (Mini App)
+└── cat/      — @you-vet/cat — legacy (не используется в Mini App)
 ```
 
 ## Стек

@@ -4,7 +4,6 @@ import type { ClinicInfo } from '../api';
 import { HomeHero } from '../components/HomeHero/HomeHero';
 import { FeaturedArticles } from '../components/FeaturedArticles/FeaturedArticles';
 import { NavGrid } from '../components/NavGrid/NavGrid';
-import { StickyCallBar } from '../components/StickyCallBar/StickyCallBar';
 import { TodayAtClinic } from '../components/TodayAtClinic/TodayAtClinic';
 import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
@@ -37,10 +36,6 @@ export default function HomeScreen() {
       return next;
     });
   };
-
-  const phone = info?.phone?.replace(/\s/g, '');
-  const phoneDisplay = info?.phone?.trim();
-  const showStickyCall = Boolean(phone && !aboutExpanded);
 
   const navItems = [
     {
@@ -82,7 +77,7 @@ export default function HomeScreen() {
   const showBanner = bannerEnabled && !bannerClosed;
 
   return (
-    <div className={`${styles.wrapper} ${showStickyCall ? styles.wrapperWithSticky : ''}`}>
+    <div className={styles.wrapper}>
       <HomeHero info={info} expanded={aboutExpanded} onToggleExpanded={toggleAbout} />
 
       <div className={styles.navWrap}>
@@ -108,10 +103,6 @@ export default function HomeScreen() {
             <div className={styles.bannerPlaceholder} aria-hidden />
           )}
         </div>
-      )}
-
-      {showStickyCall && phone && phoneDisplay && (
-        <StickyCallBar phone={phone} phoneDisplay={phoneDisplay} />
       )}
     </div>
   );

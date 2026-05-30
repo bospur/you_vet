@@ -21,11 +21,12 @@
 | ID | Pri | Проблема | Статус |
 |---|---|---|---|
 | INF-01 | 🟠 | Нет CI quality gate (test/lint/build) на PR | **fixed** — `ci.yml` |
-| INF-02 | 🟡 | `deploy-app.yml` не следит за `packages/cat/**` | **fixed** |
+| INF-02 | 🟡 | `deploy-app.yml` не следит за `packages/cat/**` | **fixed** (пакет больше не в Mini App) |
 | INF-03 | ⚪ | Дублирующие workflows в `apps/*/.github/` | open |
 | INF-04 | ⚪ | `turbo: "latest"` не закреплён | open |
 | UI-01 | ⚪ | Dreamstime PNG в SVG-ассетах меню | **fixed** — inline SVG в `NavGrid/icons.tsx` |
 | UI-02 | ⚪ | Выравнивание заголовков NavGrid при разной длине подписи | open — костыль: короткие подписи в одну строку |
+| UI-03 | ⚪ | CatPreloader в Mini App | **fixed 2026-05-30** — зелёный CSS spinner |
 
 ## Документация
 
@@ -41,14 +42,16 @@
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
 | PRD-03 | ⚪ | Запись на приём | planned — **Фаза 5** |
-| PRD-04 | ⚪ | Аналитика | planned — **Фаза 6**; **M0 subset** (telegram_users + дашборд) — см. [HANDOFF.md](./HANDOFF.md) |
+| PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
 | PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
+| PRD-08 | ⚪ | Polish главной (haptic, сегодня в клинике, sticky звонок, skeleton/fallback) | **fixed 2026-05-30** — ожидает деплой |
 
 ## Следующие шаги
 
-1. **M0 аналитика** — миграция `012_telegram_users`, upsert из initData, `GET /api/admin/stats/summary`, экран «Обзор» в admin
-2. PRD-03 — запись на приём (Фаза 5, pending/confirm flow)
-3. SEC-04 — JWT из localStorage в httpOnly cookie
-4. SEC-06 — валидация загрузки файлов по MIME
+1. **Merge `work-doc-up`** → деплой server (012) + app + admin + docs
+2. PRD-03 — запись на приём (Фаза 5)
+3. PRD-04 шаг 2 — `analytics_events`, топ разделов/статей
+4. SEC-04 — JWT из localStorage в httpOnly cookie
+5. SEC-06 — валидация загрузки файлов по MIME

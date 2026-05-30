@@ -15,7 +15,7 @@ you_vet/
 │   └── app/       — Telegram Mini App React
 ├── packages/
 │   ├── types/     — @you-vet/types (общие TS типы)
-│   └── cat/       — @you-vet/cat (CatLogo, CatPreloader)
+│   └── cat/       — @you-vet/cat (legacy)
 ├── turbo.json
 ├── package.json   — root workspaces
 └── .gitignore
@@ -37,7 +37,7 @@ import type { Doctor, GroomingBreed } from '@you-vet/types';
 
 ### `@you-vet/cat`
 
-`packages/cat` — CatLogo, CatPreloader (Mini App). При изменении — вручную redeploy app или добавить path в `deploy-app.yml` (см. ISSUES INF-02).
+`packages/cat` — legacy (не подключён к Mini App с 2026-05-30). Можно удалить позже.
 
 ## Статус миграции
 

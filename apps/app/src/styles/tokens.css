@@ -1,9 +1,53 @@
+/* Бренд и поверхности — переопределяются для data-tg-theme="dark" */
 :root {
   --vet-green-title: #288f33;
   --vet-green-slogan: #268342;
   --vet-green-label: #338b4e;
   --vet-green-address: rgba(32, 85, 58, 0.76);
   --vet-green-surface: rgba(24, 176, 37, 0.07);
+
+  --vet-accent: #2e7d32;
+  --vet-accent-soft: rgba(76, 175, 80, 0.08);
+  --vet-accent-soft-md: rgba(76, 175, 80, 0.12);
+  --vet-accent-soft-chip: rgba(76, 175, 80, 0.1);
+  --vet-accent-soft-subtle: rgba(76, 175, 80, 0.06);
+  --vet-accent-border-light: rgba(76, 175, 80, 0.2);
+  --vet-accent-border: rgba(76, 175, 80, 0.35);
+  --vet-accent-border-faint: rgba(76, 175, 80, 0.25);
+  --vet-accent-border-strong: rgba(76, 175, 80, 0.5);
+  --vet-brand-soft: rgba(51, 139, 78, 0.1);
+  --vet-skeleton: rgba(51, 139, 78, 0.12);
+  --vet-phone-bg: rgba(51, 139, 78, 0.12);
+  --vet-spinner-track: rgba(51, 139, 78, 0.2);
+  --vet-muted-bg: rgba(0, 0, 0, 0.03);
+  --vet-overlay: rgba(0, 0, 0, 0.45);
+  --vet-overlay-active: rgba(0, 0, 0, 0.65);
+
   --vet-page-padding: 16px;
   --vet-content-max: 303px;
+}
+
+:root[data-tg-theme='dark'] {
+  --vet-green-title: #7dd393;
+  --vet-green-slogan: #9de0ad;
+  --vet-green-label: #7bc995;
+  --vet-green-address: rgba(190, 230, 200, 0.78);
+  --vet-green-surface: rgba(76, 175, 80, 0.16);
+
+  --vet-accent: #81c784;
+  --vet-accent-soft: rgba(76, 175, 80, 0.14);
+  --vet-accent-soft-md: rgba(76, 175, 80, 0.2);
+  --vet-accent-soft-chip: rgba(76, 175, 80, 0.18);
+  --vet-accent-soft-subtle: rgba(76, 175, 80, 0.1);
+  --vet-accent-border-light: rgba(129, 199, 132, 0.35);
+  --vet-accent-border: rgba(129, 199, 132, 0.5);
+  --vet-accent-border-faint: rgba(129, 199, 132, 0.4);
+  --vet-accent-border-strong: rgba(129, 199, 132, 0.65);
+  --vet-brand-soft: rgba(76, 175, 80, 0.18);
+  --vet-skeleton: rgba(76, 175, 80, 0.22);
+  --vet-phone-bg: rgba(76, 175, 80, 0.22);
+  --vet-spinner-track: rgba(76, 175, 80, 0.35);
+  --vet-muted-bg: rgba(255, 255, 255, 0.06);
+  --vet-overlay: rgba(0, 0, 0, 0.55);
+  --vet-overlay-active: rgba(0, 0, 0, 0.72);
 }

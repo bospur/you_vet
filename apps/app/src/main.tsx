@@ -20,9 +20,15 @@ const queryClient = new QueryClient({
 });
 
 export function Root() {
-  const [appearance, setAppearance] = useState<'light' | 'dark'>(
-    () => window.Telegram?.WebApp?.colorScheme ?? 'light',
-  );
+  const [appearance, setAppearance] = useState<'light' | 'dark'>(() => {
+    const scheme = window.Telegram?.WebApp?.colorScheme ?? 'light';
+    document.documentElement.dataset.tgTheme = scheme;
+    return scheme;
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.tgTheme = appearance;
+  }, [appearance]);
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;

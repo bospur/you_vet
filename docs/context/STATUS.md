@@ -6,51 +6,35 @@
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | ✅ Работает | Проверено владельцем |
-| Mini App | ✅ Задеплоен | Фаза 4 + polish (меню, featured, анимации) |
-| Admin | ✅ Задеплоен | Featured UX (счётчик, таблица, моб. адаптив) |
-| API | ✅ Задеплоен | миграция 011 (`articles.featured`) |
-| Docs portal | ✅ Задеплоен | docs.snzbeachvolleyball25.ru |
-| VPS доступ | ✅ Есть | SSH alias `vps` |
+| Telegram-бот | ✅ Работает | |
+| Mini App | ✅ | Фаза 4 в prod; **polish + dark theme + M0-сбор** — после merge `work-doc-up` |
+| Admin | ✅ | **«Обзор» + таблица visitors** — после merge `work-doc-up` |
+| API | ✅ | миграция 012 в коде; применится при deploy server |
+| Docs portal | ✅ | Обновится с push `docs/**` |
+| VPS | ✅ | SSH `vps` |
 
 ## Функциональность (MVP)
 
 | Модуль | Admin | Mini App | API |
 |---|---|---|---|
-| Статьи (TipTap, draft/published, привязка к животному) | ✅ | ✅ | ✅ |
-| Featured-статьи на главной (до 3) | ✅ | ✅ | ✅ |
-| Животные | ✅ | ✅ | ✅ |
-| Врачи + расписание | ✅ | ✅ | ✅ |
-| Груминг | ✅ | ✅ скрыт если пусто (PRD-01) | ✅ |
-| О клинике (лого, баннер, вкл/выкл баннера) | ✅ | ✅ | ✅ |
-| Главная: коллапс «О нас», меню, рекомендации, tap-анимации | — | ✅ | — |
-| Безопасность admin API | ✅ | — | RequireRole, clinic_id, CORS, rate limit |
-| SEC-07 initData на публичном API | — | ✅ | ✅ (валидация есть, **сбор user.id — нет**) |
+| Контент (статьи, животные, врачи, груминг, о клинике) | ✅ | ✅ | ✅ |
+| Главная: polish, haptic, «Сегодня в клинике», dark theme | — | ✅* | — |
+| M0: учёт Telegram-пользователей | ✅* | — | ✅* |
+| «Обзор»: summary + таблица `telegram_users` | ✅* | — | ✅* |
 | Запись на приём | ❌ | ❌ | ❌ |
-| Аналитика / дашборд | ❌ | ❌ | ❌ (план M0 — см. HANDOFF) |
+| Аналитика событий (PRD-04 полная) | ❌ | ❌ | ❌ |
 
-## Фаза roadmap
+\* — в ветке `work-doc-up`, ожидает merge в `dev` и деплой
 
-**Фаза 4 — Информационный ресурс** — завершена и задеплоена (2026-05-30).
+## Фокус
 
-**Следующий фокус (согласовано):**
+1. Merge `work-doc-up` → `dev`, деплой server + admin + app
+2. Фаза 5 — запись на приём
 
-1. **M0 аналитика** — `telegram_users` + upsert из initData + мини-дашборд admin (упреждает PRD-04 / Фазу 6)
-2. **Фаза 5** — запись на приём (PRD-03)
-
-## Тесты и CI
+## CI
 
 | Область | Статус |
 |---|---|
-| Go unit tests | middleware (`auth`, `telegram_initdata`) |
-| Frontend tests | Нет |
-| CI на PR (lint/test/build) | ✅ `ci.yml` |
-| CI deploy | ✅ Path-based на push в `dev` |
-
-## Документация
-
-| Артефакт | Статус |
-|---|---|
-| Markdown в `docs/` | Синхронизируется с кодом |
-| HTML-портал | `roadmap.html` — фаза 4 + polish |
-| `docs/context/` | Handoff — план M0 аналитики, идеи главной |
+| Go tests | middleware |
+| CI PR | `ci.yml` |
+| Deploy | path-based на `dev` |

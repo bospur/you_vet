@@ -24,7 +24,7 @@ apps/server/     Go API + bot (не npm workspace)
 apps/admin/      React 19 + MUI v7
 apps/app/        React 18 + Telegram UI
 packages/types/  @you-vet/types
-packages/cat/    @you-vet/cat (CatLogo, CatPreloader)
+packages/cat/    @you-vet/cat (legacy; Mini App не использует с 2026-05-30)
 ```
 
 Оркестрация фронтов: Turborepo + npm workspaces (корень).

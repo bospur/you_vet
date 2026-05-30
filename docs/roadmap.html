@@ -174,7 +174,7 @@
   <h1>YouVet — Roadmap</h1>
   <div class="subtitle">Состояние проекта · что сделано · что планируется</div>
   <div class="meta">
-    <span style="color:#888; font-size:12px;">Обновлено: 30 мая 2026</span>
+    <span style="color:#888; font-size:12px;">Обновлено: 30 мая 2026 (M0 аналитика + polish главной)</span>
   </div>
 </div>
 
@@ -195,7 +195,7 @@
     <div class="stat-label">приложения в монорепо</div>
   </div>
   <div class="stat">
-    <div class="stat-num">11</div>
+    <div class="stat-num">12</div>
     <div class="stat-label">миграций БД</div>
   </div>
   <div class="stat">
@@ -470,6 +470,54 @@
       </div>
       <span class="item-tag tag-ux">UX</span>
     </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Polish главной (PRD-08)</div>
+        <div class="item-desc">Haptic на карточках; «Сегодня в клинике»; skeleton + fallback «Рекомендуем»; прелоадер — spinner; тёмная тема TG (<code>data-tg-theme</code>)</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+  </div>
+</div>
+
+<!-- M0 АНАЛИТИКА -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-done"></div>
+    <div class="phase-title">M0 — Аналитика (базовая)</div>
+    <span class="phase-badge badge-done">В коде · деплой pending</span>
+  </div>
+
+  <div class="note">
+    Subset PRD-04 / упреждает Фазу 6: учёт уникальных посетителей Mini App без событий по экранам.
+  </div>
+
+  <div class="items">
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Таблица telegram_users</div>
+        <div class="item-desc">Миграция 012: <code>clinic_id</code>, <code>telegram_user_id</code>, <code>first_seen</code>, <code>last_seen</code>, username, first_name</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Сбор из initData</div>
+        <div class="item-desc">После валидации initData — upsert на каждом запросе <code>/api/clinics/...</code></div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Дашборд «Обзор» в admin</div>
+        <div class="item-desc"><code>GET /api/admin/stats/summary</code> + <code>/stats/users</code>; экран <code>/dashboard</code> — карточки и таблица посетителей; только admin</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
   </div>
 </div>
 
@@ -537,11 +585,11 @@
       </div>
       <span class="item-tag tag-infra">Infra</span>
     </div>
-    <div class="item planned">
-      <div class="item-icon">📊</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
-        <div class="item-title">Дашборд в админке</div>
-        <div class="item-desc">Уникальные пользователи за день/неделю/месяц, популярные разделы</div>
+        <div class="item-title">Дашборд уникальных пользователей</div>
+        <div class="item-desc">M0: экран «Обзор» — today / 7d / 30d / total. Популярные разделы — позже</div>
       </div>
       <span class="item-tag tag-ux">UX</span>
     </div>
