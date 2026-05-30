@@ -38,7 +38,9 @@ src/
 │   ├── NavGrid/
 │   │   ├── NavGrid.tsx         — сетка 2×2 навигационных карточек
 │   │   ├── NavGrid.module.css
-│   │   └── icons.tsx           — SVG иконки: IconFirstAid, IconDoctors, IconSchedule, IconGrooming
+│   │   └── icons.tsx           — иконки меню (img из assets/menu/)
+│   ├── HomeHero/               — адрес, кот, слоган на главной
+│   ├── AppHeader/              — шапка с лого и названием клиники
 │   ├── NavList/
 │   │   └── NavList.tsx         — вертикальный список навигации (используется во вложенных экранах)
 │   ├── DoctorAvatar/
