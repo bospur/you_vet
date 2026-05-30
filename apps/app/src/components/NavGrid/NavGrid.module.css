@@ -112,13 +112,13 @@
   animation: headNod 0.28s ease;
 }
 
-.cardSchedule:active .icon [data-part='schedule-dot'] {
-  transform-origin: 32px 36px;
+.cardSchedule:active .icon svg {
+  transform-origin: center;
   animation: dotPulse 0.28s ease;
 }
 
-.cardGrooming:active .icon [data-part='grooming-blades'] {
-  transform-origin: 32px 32px;
+.cardGrooming:active .icon svg {
+  transform-origin: center;
   animation: groomSnip 0.28s ease;
 }
 
@@ -136,10 +136,6 @@
     animation: none !important;
   }
 
-  .cardSchedule:active .icon [data-part='schedule-dot'],
-  .cardGrooming:active .icon [data-part='grooming-blades'] {
-    animation: none !important;
-  }
 }
 
 .labelWrap {
