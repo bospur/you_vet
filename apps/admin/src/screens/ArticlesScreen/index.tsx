@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { Layout } from '../../shared/ui/Layout';
-import { ArticlesTable } from '../../modules/articles/features/ArticlesTable';
+import { ArticlesTable, MAX_FEATURED_ARTICLES } from '../../modules/articles/features/ArticlesTable';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { getArticles, deleteArticle, updateArticleStatus } from '../../data/source/articles';
 import { useNotification } from '../../shared/ui/Notification/NotificationContext';
@@ -52,11 +52,19 @@ export function ArticlesScreen() {
   });
 
   const role = user?.role ?? 'editor';
+  const featuredCount = articles.filter((a) => a.featured).length;
 
   return (
     <Layout title="Статьи">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight={600}>Статьи</Typography>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>Статьи</Typography>
+          {role === 'admin' && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              На главной: {featuredCount} / {MAX_FEATURED_ARTICLES}
+            </Typography>
+          )}
+        </Box>
         {isMobile ? (
           <Tooltip title="Добавить">
             <IconButton color="primary" onClick={() => navigate('/articles/new')}><AddIcon /></IconButton>

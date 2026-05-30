@@ -31,7 +31,7 @@ export function NavGrid({ items }: NavGridProps) {
             {item.icon && <span className={styles.icon}>{item.icon}</span>}
             <span className={styles.labelWrap}>
               <span className={styles.label}>{item.label}</span>
-              {item.subtitle && <span className={styles.subtitle}>{item.subtitle}</span>}
+              <span className={styles.subtitle}>{item.subtitle ?? ''}</span>
             </span>
           </button>
         ),

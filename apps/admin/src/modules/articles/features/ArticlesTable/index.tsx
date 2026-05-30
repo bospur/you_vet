@@ -7,7 +7,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
 import UnpublishedIcon from '@mui/icons-material/Unpublished';
+import StarIcon from '@mui/icons-material/Star';
 import type { Article } from '../../domain/types';
+
+export const MAX_FEATURED_ARTICLES = 3;
 
 interface ArticlesTableProps {
   data: Article[];
@@ -21,6 +24,16 @@ const statusChip = (status: Article['status']) =>
   status === 'published'
     ? <Chip label="Опубликована" size="small" color="success" variant="outlined" />
     : <Chip label="Черновик" size="small" variant="outlined" />;
+
+const featuredChip = () => (
+  <Chip
+    icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
+    label="На главной"
+    size="small"
+    color="warning"
+    variant="outlined"
+  />
+);
 
 export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: ArticlesTableProps) {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -46,6 +59,7 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                 <Typography variant="body2" color="text.secondary" noWrap>{article.animal_name ?? '—'}</Typography>
                 {statusChip(article.status)}
+                {role === 'admin' && article.featured && featuredChip()}
               </Box>
             </Box>
             {canEdit(article) && (
@@ -77,8 +91,8 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
         <Table size="small">
           <TableHead>
             <TableRow>
-              {['Заголовок', 'Животное', 'Статус', ''].map((h) => (
-                <TableCell key={h} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
+              {['Заголовок', 'Животное', 'Статус', ...(role === 'admin' ? ['На главной'] : []), ''].map((h) => (
+                <TableCell key={h || 'actions'} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
               ))}
             </TableRow>
           </TableHead>
@@ -88,6 +102,9 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
                 <TableCell>{article.title}</TableCell>
                 <TableCell>{article.animal_name ?? '—'}</TableCell>
                 <TableCell>{statusChip(article.status)}</TableCell>
+                {role === 'admin' && (
+                  <TableCell>{article.featured ? featuredChip() : '—'}</TableCell>
+                )}
                 <TableCell width={130}>
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
                     {canEdit(article) && (
