@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Avatar, Box, Button, CircularProgress, FormControlLabel, Grid, Paper,
+  Box, Button, CircularProgress, FormControlLabel, Grid, Paper,
   Stack, Switch, TextField, Typography,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
@@ -14,6 +14,11 @@ import {
 import type { ClinicInfoInput } from '../../data/source/clinic_info';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
+
+/** Слот логотипа в шапке Mini App (AppHeader.module.css) */
+const MINI_APP_LOGO_SIZE = 36;
+const MINI_APP_LOGO_RADIUS = 8;
+const LOGO_PREVIEW_SCALE = 3;
 
 const EMPTY: ClinicInfoInput = {
   name: '', description: '', phone: '', address: '', email: '', website: '',
@@ -185,13 +190,35 @@ export function ClinicInfoScreen() {
             {/* Логотип */}
             <Paper sx={{ p: 3, textAlign: 'center' }}>
               <Typography variant="subtitle1" fontWeight={600} mb={2}>Логотип</Typography>
-              <Avatar
-                src={logoSrc}
-                variant="rounded"
-                sx={{ width: 120, height: 120, mx: 'auto', mb: 2, bgcolor: 'grey.100' }}
+              <Box
+                sx={{
+                  width: MINI_APP_LOGO_SIZE * LOGO_PREVIEW_SCALE,
+                  height: MINI_APP_LOGO_SIZE * LOGO_PREVIEW_SCALE,
+                  mx: 'auto',
+                  mb: 2,
+                  borderRadius: `${MINI_APP_LOGO_RADIUS * LOGO_PREVIEW_SCALE}px`,
+                  bgcolor: 'grey.100',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                }}
               >
-                <PhotoCameraIcon sx={{ fontSize: 40, color: 'grey.400' }} />
-              </Avatar>
+                {logoSrc ? (
+                  <Box
+                    component="img"
+                    src={logoSrc}
+                    alt=""
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                    }}
+                  />
+                ) : (
+                  <PhotoCameraIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+                )}
+              </Box>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -209,7 +236,7 @@ export function ClinicInfoScreen() {
                 {logoMutation.isPending ? 'Загрузка…' : 'Загрузить логотип'}
               </Button>
               <Typography variant="caption" display="block" color="text.secondary" mt={1}>
-                JPG, PNG, WebP · до 5 МБ
+                JPG, PNG, WebP · до 5 МБ · {MINI_APP_LOGO_SIZE}×{MINI_APP_LOGO_SIZE} px в шапке Mini App
               </Typography>
             </Paper>
 
