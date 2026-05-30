@@ -34,11 +34,8 @@
 .clinicName {
   flex: 1;
   font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(90deg, #4caf50, #2e7d32);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 800;
+  color: var(--vet-green-title);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -53,7 +50,7 @@
   height: 36px;
   border-radius: 50%;
   background: transparent;
-  color: #4caf50;
+  color: var(--vet-green-title);
   text-decoration: none;
   transition: opacity 0.15s;
 }

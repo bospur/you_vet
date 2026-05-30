@@ -41,6 +41,7 @@ clinic_info                     — одна запись на клинику (U
   website
   logo_url    — путь к файлу логотипа (/uploads/...)
   banner_url  — путь к файлу баннера (/uploads/...)
+  banner_enabled — показывать блок баннера на главной Mini App (default false)
   updated_at
 ```
 

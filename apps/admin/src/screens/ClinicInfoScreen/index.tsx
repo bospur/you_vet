@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Avatar, Box, Button, CircularProgress, Grid, Paper,
-  Stack, TextField, Typography,
+  Avatar, Box, Button, CircularProgress, FormControlLabel, Grid, Paper,
+  Stack, Switch, TextField, Typography,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageIcon from '@mui/icons-material/Image';
@@ -17,6 +17,7 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 const EMPTY: ClinicInfoInput = {
   name: '', description: '', phone: '', address: '', email: '', website: '',
+  banner_enabled: false,
 };
 
 export function ClinicInfoScreen() {
@@ -45,6 +46,7 @@ export function ClinicInfoScreen() {
         address: data.address,
         email: data.email,
         website: data.website,
+        banner_enabled: data.banner_enabled,
       });
       setIsDirty(false);
     }
@@ -81,7 +83,8 @@ export function ClinicInfoScreen() {
   });
 
   const handleField = (field: keyof ClinicInfoInput) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, [field]: e.target.value }));
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setForm((f) => ({ ...f, [field]: value }));
     setIsDirty(true);
   };
 
@@ -212,7 +215,22 @@ export function ClinicInfoScreen() {
 
             {/* Баннер */}
             <Paper sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>Баннер</Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+                <Typography variant="subtitle1" fontWeight={600}>Баннер на главной</Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={form.banner_enabled}
+                      onChange={handleField('banner_enabled')}
+                      color="primary"
+                    />
+                  }
+                  label={form.banner_enabled ? 'Включён' : 'Выключен'}
+                />
+              </Stack>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Показывается в Mini App под шапкой. Сохраните форму, чтобы применить переключатель.
+              </Typography>
               {bannerSrc ? (
                 <Box
                   component="img"

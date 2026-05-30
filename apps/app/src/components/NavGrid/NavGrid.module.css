@@ -1,40 +1,41 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 25px 25px;
 }
 
 .card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 20px 12px;
-  background: rgba(76, 175, 80, 0.1);
-  border-radius: 16px;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 8px 14px;
+  background: var(--vet-green-surface);
+  border-radius: 0;
   border: none;
   cursor: pointer;
   aspect-ratio: 1;
-  transition: opacity 0.15s, background 0.15s;
+  min-height: 139px;
+  transition: opacity 0.15s;
 }
 
 .card:active {
   opacity: 0.7;
-  background: rgba(76, 175, 80, 0.18);
 }
 
 .icon {
-  color: #4caf50;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--tgui--text_color);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--vet-green-label);
   text-align: center;
   line-height: 1.3;
 }
