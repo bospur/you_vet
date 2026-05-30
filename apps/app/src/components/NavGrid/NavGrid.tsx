@@ -14,6 +14,13 @@ interface NavGridProps {
   items: NavGridItem[];
 }
 
+const CARD_ANIM: Record<string, string> = {
+  animals: styles.cardArticles,
+  doctors: styles.cardDoctors,
+  schedule: styles.cardSchedule,
+  grooming: styles.cardGrooming,
+};
+
 export function NavGrid({ items }: NavGridProps) {
   return (
     <div className={styles.grid}>
@@ -27,11 +34,16 @@ export function NavGrid({ items }: NavGridProps) {
             </span>
           </div>
         ) : (
-          <button key={item.key} type="button" className={styles.card} onClick={item.onClick}>
+          <button
+            key={item.key}
+            type="button"
+            className={`${styles.card} ${CARD_ANIM[item.key] ?? ''}`}
+            onClick={item.onClick}
+          >
             {item.icon && <span className={styles.icon}>{item.icon}</span>}
             <span className={styles.labelWrap}>
               <span className={styles.label}>{item.label}</span>
-              <span className={styles.subtitle}>{item.subtitle ?? ''}</span>
+              {item.subtitle && <span className={styles.subtitle}>{item.subtitle}</span>}
             </span>
           </button>
         ),

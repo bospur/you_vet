@@ -35,7 +35,9 @@ export function IconFirstAid() {
 export function IconDoctors() {
   return (
     <NavIcon>
-      <circle cx="32" cy="18" r="8" fill="currentColor" />
+      <g data-part="head">
+        <circle cx="32" cy="18" r="8" fill="currentColor" />
+      </g>
       <path
         d="M14 52c0-9.941 8.059-18 18-18s18 8.059 18 18"
         stroke="currentColor"
@@ -53,7 +55,9 @@ export function IconSchedule() {
       <path d="M10 26h44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
       <path d="M22 8v10M42 8v10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
       <circle cx="22" cy="36" r="3" fill="currentColor" />
-      <circle cx="32" cy="36" r="3" fill="currentColor" />
+      <g data-part="schedule-dot">
+        <circle cx="32" cy="36" r="3" fill="currentColor" />
+      </g>
       <circle cx="42" cy="36" r="3" fill="currentColor" />
       <circle cx="22" cy="46" r="3" fill="currentColor" />
       <circle cx="32" cy="46" r="3" fill="currentColor" />
@@ -64,10 +68,12 @@ export function IconSchedule() {
 export function IconGrooming() {
   return (
     <NavIcon>
-      <circle cx="16" cy="48" r="6" stroke="currentColor" strokeWidth="3" />
-      <circle cx="16" cy="16" r="6" stroke="currentColor" strokeWidth="3" />
-      <path d="M20 20L48 48" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M20 44L48 16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <g data-part="grooming-blades">
+        <circle cx="16" cy="48" r="6" stroke="currentColor" strokeWidth="3" />
+        <circle cx="16" cy="16" r="6" stroke="currentColor" strokeWidth="3" />
+        <path d="M20 20L48 48" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        <path d="M20 44L48 16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      </g>
     </NavIcon>
   );
 }

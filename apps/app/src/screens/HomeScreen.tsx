@@ -29,7 +29,7 @@ export default function HomeScreen() {
       key: 'animals',
       icon: <IconFirstAid />,
       label: 'Статьи',
-      subtitle: 'советы по видам животных',
+      subtitle: 'советы и помощь',
       onClick: () => navigate('/animals'),
     },
     {

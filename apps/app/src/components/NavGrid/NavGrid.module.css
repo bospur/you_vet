@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   padding: 16px 8px 14px;
   background: var(--vet-green-surface);
@@ -16,11 +17,17 @@
   cursor: pointer;
   aspect-ratio: 1;
   min-height: 139px;
-  transition: opacity 0.15s;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .card:active {
-  opacity: 0.7;
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+.card:active .icon svg {
+  transform: scale(1.05);
 }
 
 .cardSkeleton {
@@ -37,8 +44,7 @@
 }
 
 .skeletonIcon {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 1;
   width: 64px;
   max-height: 64px;
 }
@@ -46,15 +52,12 @@
 .skeletonLabel {
   width: 72px;
   height: 14px;
-  flex-shrink: 0;
 }
 
 .skeletonSubtitle {
   width: 88px;
   height: 11px;
   border-radius: 6px;
-  flex: 0 1 auto;
-  margin-top: auto;
 }
 
 @keyframes pulse {
@@ -63,8 +66,7 @@
 }
 
 .icon {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,21 +78,79 @@
   width: 64px;
   height: 64px;
   display: block;
+  transition: transform 0.15s ease;
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.12); }
+  65% { transform: scale(1.05); }
+}
+
+@keyframes headNod {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(8deg); }
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.65; }
+}
+
+@keyframes groomSnip {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.cardArticles:active .icon svg {
+  animation: heartBeat 0.28s ease;
+}
+
+.cardDoctors:active .icon [data-part='head'] {
+  transform-origin: 32px 24px;
+  animation: headNod 0.28s ease;
+}
+
+.cardSchedule:active .icon [data-part='schedule-dot'] {
+  transform-origin: 32px 36px;
+  animation: dotPulse 0.28s ease;
+}
+
+.cardGrooming:active .icon [data-part='grooming-blades'] {
+  transform-origin: 32px 32px;
+  animation: groomSnip 0.28s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: opacity 0.15s ease;
+  }
+
+  .card:active {
+    transform: none;
+  }
+
+  .card:active .icon svg {
+    transform: none;
+    animation: none !important;
+  }
+
+  .cardDoctors:active .icon [data-part='head'],
+  .cardSchedule:active .icon [data-part='schedule-dot'],
+  .cardGrooming:active .icon [data-part='grooming-blades'] {
+    animation: none !important;
+  }
 }
 
 .labelWrap {
-  --nav-label-line: calc(14px * 1.3);
-  --nav-subtitle-line: calc(11px * 1.2);
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  flex-shrink: 0;
-  height: calc(var(--nav-label-line) * 2 + 2px + var(--nav-subtitle-line) * 2);
+  gap: 2px;
 }
 
 .label {
-  flex-shrink: 0;
   font-size: 14px;
   font-weight: 800;
   color: var(--vet-green-label);
@@ -99,8 +159,6 @@
 }
 
 .subtitle {
-  flex: 0 1 auto;
-  margin-top: auto;
   font-size: 11px;
   font-weight: 600;
   color: var(--vet-green-address);
