@@ -44,7 +44,7 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
               <Typography fontWeight={600} noWrap>{article.title}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                <Typography variant="body2" color="text.secondary" noWrap>{article.slug}</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>{article.animal_name ?? '—'}</Typography>
                 {statusChip(article.status)}
               </Box>
             </Box>
@@ -77,7 +77,7 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
         <Table size="small">
           <TableHead>
             <TableRow>
-              {['Заголовок', 'Slug', 'Статус', ''].map((h) => (
+              {['Заголовок', 'Животное', 'Статус', ''].map((h) => (
                 <TableCell key={h} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
               ))}
             </TableRow>
@@ -86,7 +86,7 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
             {data.map((article) => (
               <TableRow key={article.id} hover>
                 <TableCell>{article.title}</TableCell>
-                <TableCell>{article.slug}</TableCell>
+                <TableCell>{article.animal_name ?? '—'}</TableCell>
                 <TableCell>{statusChip(article.status)}</TableCell>
                 <TableCell width={130}>
                   <Box sx={{ display: 'flex', gap: 0.5 }}>

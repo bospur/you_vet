@@ -16,8 +16,7 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 |---|---|---|
 | GET | `/api/clinics/{slug}/clinic-info` | Информация о клинике (название, контакты, лого, баннер) |
 | GET | `/api/clinics/{slug}/animals` | Список животных |
-| GET | `/api/clinics/{slug}/animals/{slug}/categories` | Категории животного |
-| GET | `/api/clinics/{slug}/animals/{a}/categories/{c}/articles` | Статьи категории |
+| GET | `/api/clinics/{slug}/animals/{animalSlug}/articles` | Статьи животного (список: id, title, slug) |
 | GET | `/api/clinics/{slug}/articles/{slug}` | Одна статья |
 | GET | `/api/clinics/{slug}/doctors` | Опубликованные врачи |
 | GET | `/api/clinics/{slug}/schedule` | Расписание `{ entries[], settings }` |
@@ -64,16 +63,13 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 
 ---
 
-### Животные и категории
+### Животные
 
 | Метод | URL | Описание |
 |---|---|---|
 | POST | `/api/admin/animals` | Создать |
 | PUT | `/api/admin/animals/{id}` | Обновить |
 | DELETE | `/api/admin/animals/{id}` | Удалить |
-| POST | `/api/admin/categories` | Создать |
-| PUT | `/api/admin/categories/{id}` | Обновить |
-| DELETE | `/api/admin/categories/{id}` | Удалить |
 
 ---
 
@@ -87,9 +83,8 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 | PUT | `/api/admin/articles/{id}` | Обновить (черновик) | все |
 | PATCH | `/api/admin/articles/{id}/status` | Сменить статус | только admin |
 | DELETE | `/api/admin/articles/{id}` | Удалить | все (опубликованные — только admin) |
-| GET | `/api/admin/articles/{id}/categories` | Категории статьи | все |
-| POST | `/api/admin/articles/{id}/categories/{catId}` | Привязать категорию | все |
-| DELETE | `/api/admin/articles/{id}/categories/{catId}` | Отвязать категорию | все |
+
+**POST/PUT body:** `{ "title", "content", "animal_id" }` — slug генерируется на сервере из заголовка.
 
 Статусы: `draft` → `published`. Опубликованные статьи видны в публичном API и боте.
 

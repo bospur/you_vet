@@ -16,24 +16,23 @@ func NewArticleHandler(repo *repository.ArticleRepository) *ArticleHandler {
 	return &ArticleHandler{repo: repo}
 }
 
-// GetArticles обрабатывает GET /api/clinics/{clinicSlug}/animals/{animalSlug}/categories/{categorySlug}/articles
+// GetArticles обрабатывает GET /api/clinics/{clinicSlug}/animals/{animalSlug}/articles
 func (h *ArticleHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 	clinicSlug := r.PathValue("clinicSlug")
 	animalSlug := r.PathValue("animalSlug")
-	categorySlug := r.PathValue("categorySlug")
-	if clinicSlug == "" || animalSlug == "" || categorySlug == "" {
+	if clinicSlug == "" || animalSlug == "" {
 		http.Error(w, "неверный запрос", http.StatusBadRequest)
 		return
 	}
 
-	articles, err := h.repo.GetByCategory(clinicSlug, animalSlug, categorySlug)
+	articles, err := h.repo.GetPublishedByAnimal(clinicSlug, animalSlug)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
 
 	if articles == nil {
-		articles = []repository.Article{}
+		articles = []repository.ArticleListItem{}
 	}
 
 	writeJSON(w, http.StatusOK, articles)

@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 import AppLayout from './components/AppLayout/AppLayout';
 import HomeScreen from './screens/HomeScreen';
 import AnimalsScreen from './screens/AnimalsScreen';
-import CategoriesScreen from './screens/CategoriesScreen';
 import ArticlesScreen from './screens/ArticlesScreen';
 import ArticleScreen from './screens/ArticleScreen';
 import DoctorsScreen from './screens/DoctorsScreen';
@@ -70,8 +69,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/animals" element={<AnimalsScreen />} />
-          <Route path="/animals/:animalSlug/categories" element={<CategoriesScreen />} />
-          <Route path="/animals/:animalSlug/categories/:categorySlug/articles" element={<ArticlesScreen />} />
+          <Route path="/animals/:animalSlug/articles" element={<ArticlesScreen />} />
           <Route path="/articles/:articleSlug" element={<ArticleScreen />} />
           <Route path="/doctors" element={<DoctorsScreen />} />
           <Route path="/doctors/:doctorId" element={<DoctorScreen />} />

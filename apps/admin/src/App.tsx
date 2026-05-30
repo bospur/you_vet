@@ -18,7 +18,6 @@ function DefaultRedirect() {
 
 const LoginScreen = lazy(() => import('./screens/LoginScreen').then((m) => ({ default: m.LoginScreen })));
 const AnimalsScreen = lazy(() => import('./screens/AnimalsScreen').then((m) => ({ default: m.AnimalsScreen })));
-const CategoriesScreen = lazy(() => import('./screens/CategoriesScreen').then((m) => ({ default: m.CategoriesScreen })));
 const ArticlesScreen = lazy(() => import('./screens/ArticlesScreen').then((m) => ({ default: m.ArticlesScreen })));
 const ArticleEditorScreen = lazy(() => import('./screens/ArticleEditorScreen').then((m) => ({ default: m.ArticleEditorScreen })));
 const UsersScreen = lazy(() => import('./screens/UsersScreen').then((m) => ({ default: m.UsersScreen })));
@@ -44,7 +43,6 @@ const router = createBrowserRouter([
         children: [
           { path: '/clinic-info', element: <Suspense fallback={<Loader />}><ClinicInfoScreen /></Suspense> },
           { path: '/animals', element: <Suspense fallback={<Loader />}><AnimalsScreen /></Suspense> },
-          { path: '/categories', element: <Suspense fallback={<Loader />}><CategoriesScreen /></Suspense> },
           { path: '/articles', element: <Suspense fallback={<Loader />}><ArticlesScreen /></Suspense> },
           { path: '/articles/new', element: <Suspense fallback={<Loader />}><ArticleEditorScreen /></Suspense> },
           { path: '/articles/:id/edit', element: <Suspense fallback={<Loader />}><ArticleEditorScreen /></Suspense> },

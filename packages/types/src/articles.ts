@@ -2,14 +2,22 @@ export type ArticleStatus = 'draft' | 'published';
 
 export interface Article {
   id: number;
+  animal_id: number;
+  animal_name?: string;
   title: string;
   content: string;
   slug: string;
   status: ArticleStatus;
 }
 
+export interface ArticleListItem {
+  id: number;
+  title: string;
+  slug: string;
+}
+
 export interface ArticleInput {
   title: string;
   content: string;
-  slug: string;
+  animal_id: number;
 }
