@@ -25,60 +25,44 @@ JWT токен содержит: `user_id`, `clinic_id`, `role`, `exp` (24h).
 
 ## Поведение в UI (admin)
 
-- `groomer` — все маршруты кроме `/grooming` редиректят на `/grooming` (`NonGroomerRoute` в `App.tsx`)
+- `groomer` — все маршруты кроме `/grooming` редиректят на `/grooming`
 - `editor` — кнопки публикации и редактирования опубликованного скрыты
 - `admin` — полный доступ, раздел «Пользователи» в навигации
 
-```tsx
-const { user } = useAuth();
-const isAdmin = user?.role === 'admin';
+## Проверка прав на бэкенде
 
-// Скрыть публикацию для editor
-{isAdmin && <Button onClick={publish}>Опубликовать</Button>}
-```
+> Обновлено 2026-05-30 после security hardening.
 
-## Создание первого пользователя
+### Middleware
 
-При первом запуске бэкенда (пустая таблица `users`) автоматически создаётся
-admin из env-переменных `ADMIN_LOGIN` / `ADMIN_PASSWORD` с `clinic_id = 1`.
+| Слой | Файл | Что делает |
+|---|---|---|
+| JWT | `middleware/auth.go` | Проверяет Bearer-токен, кладёт claims в context |
+| Роли | `middleware/role.go` | `RequireRole(...)` — 403 если роль не в списке |
+| CORS | `middleware/cors.go` | Whitelist origin (admin/app prod + localhost) |
+| Login | `middleware/ratelimit.go` | 10 попыток / 15 мин на IP |
 
-Последующих пользователей создаёт admin через раздел «Пользователи».
+### Группы роутов (`main.go`)
 
-## Проверка прав на бэкенде — фактическое состояние
+| Wrapper | Роли | Роуты |
+|---|---|---|
+| `contentAuth` | admin, editor | animals, categories, articles, doctors, schedule, clinic-info |
+| `groomingAuth` | admin, editor, groomer | `/api/admin/grooming/*` |
+| `adminAuth` | admin | users, settings PATCH, article/doctor status PATCH |
 
-> ⚠️ **Важно:** JWT middleware (`internal/middleware/auth.go`) проверяет только **наличие и валидность токена**, не роль.
-> Роль проверяется **выборочно** в отдельных handlers. UI admin скрывает элементы для UX, но **не является единственной защитой**.
+### Дополнительные проверки в handlers
 
-### Где роль проверяется на бэкенде
-
-| Handler / операция | Правило |
+| Операция | Правило |
 |---|---|
-| `UpdateArticleStatus`, `DeleteArticle` (published) | admin only |
 | `UpdateArticle` | editor не может редактировать published |
-| `UpdateDoctorStatus` | admin only |
-| `GetSettings`, `UpdateSettings` | admin only |
-| `GetUsers`, `CreateUser`, `DeleteUser` | admin only |
-
-### Где роль НЕ проверяется (только JWT)
-
-| Ресурс | Риск |
-|---|---|
-| Animals, categories CRUD | groomer может изменить через API |
-| Clinic info | groomer/editor без ограничений сверх матрицы |
-| Grooming CRUD | editor имеет доступ (по матрице — OK), groomer — OK |
-| Doctors CRUD (кроме status) | groomer может изменить через API |
+| `DeleteArticle` | editor не может удалять published |
+| Publish status | только admin (роут + handler) |
 
 ### Tenant-scoping
 
-- **Create:** использует `claims.ClinicID` из JWT ✅
-- **Update/Delete:** многие репозитории фильтруют только по `id`, без `clinic_id` ⚠️
+Все update/delete в repositories фильтруют по `clinic_id` из JWT.
+Create всегда использует `claims.ClinicID`.
 
-При текущем деплое (один VPS = одна клиника) риск IDOR минимален.
-При переходе к multi-clinic SaaS — **обязательно** добавить `clinic_id` в WHERE.
+## Создание первого пользователя
 
-### План hardening
-
-См. [audit.md](./audit.md) и [context/ISSUES.md](./context/ISSUES.md) (SEC-01, SEC-02):
-
-1. Middleware `RequireRole("admin", "editor", ...)` на группы роутов
-2. `WHERE id = $1 AND clinic_id = $2` во всех mutations
+При первом запуске (пустая `users`) создаётся admin из `ADMIN_LOGIN` / `ADMIN_PASSWORD` с `clinic_id = 1`.

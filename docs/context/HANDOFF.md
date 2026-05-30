@@ -1,55 +1,46 @@
 # Handoff — последняя сессия
 
-> Обновляй этот файл **в конце каждой сессии**. AI читает его первым.
+> Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30
+## Сессия 2026-05-30 (продолжение)
 
-**Участник:** Cursor (аудит + выравнивание документации)  
-**Контекст:** Переход с Claude на Cursor. Prod проверен — бот работает, VPS доступен.
+**Цель:** roadmap, кнопки «назад» в HTML, security hardening
 
 ### Сделано
 
-- [x] Полный технический аудит проекта → [audit.md](../audit.md)
-- [x] Создана папка `docs/context/` для handoff между сессиями
-- [x] Исправлены расхождения docs ↔ code:
-  - ссылки на API (`docs/server/api.md`)
-  - CI/CD деплой сервера (GHCR, не git pull)
-  - честное описание RBAC на бэкенде
-  - модель деплоя (single-clinic per VPS vs schema multi-tenant)
-  - packages/cat в структуре монорепо
-  - docs portal в deployment
-- [x] Обновлён HTML-портал (index, project-for-devs, roadmap, audit.html)
+- [x] Security hardening на бэкенде:
+  - `middleware/role.go` — RequireRole
+  - `middleware/ratelimit.go` — login 10/15min
+  - `middleware/cors.go` — whitelist origins
+  - clinic_id во всех update/delete repositories
+  - main.go: contentAuth / groomingAuth / adminAuth
+- [x] Тесты: role_test.go (3 кейса), go test ./... проходит
+- [x] HTML: кнопка «← Все документы» на всех sub-страницах
+- [x] Roadmap: security ✅, CI quality gate в backlog фазы 3
+- [x] docs/roles.md, audit.md, ISSUES.md обновлены
 
 ### Не сделано / следующая сессия
 
-- [ ] SEC-01: middleware `RequireRole` + ограничение groomer на бэкенде
-- [ ] SEC-02: `clinic_id` во всех update/delete репозиториях
-- [ ] INF-01: CI job `go test` + `npm run build` на PR
-- [ ] INF-02: добавить `packages/cat/**` в `deploy-app.yml`
-- [ ] PRD-01: скрывать груминг в Mini App если раздел пустой
-- [ ] Удалить устаревшие `apps/*/.github/workflows/`
+- [ ] PRD-01: скрывать груминг в Mini App если пустой
+- [ ] INF-01: CI quality gate на PR
+- [ ] INF-02: packages/cat в deploy-app paths
+- [ ] SEC-07: Telegram initData валидация
+- [ ] Деплой server на prod (push apps/server → CI)
 
 ### Заметки
 
-- Go module name: `go-server` (generic, не блокер)
-- Admin: React 19, App: React 18 — осознанное расхождение
-- Pre-commit hook в `apps/server/.githooks/` — ставится вручную, не в CI
+- После merge в dev — server задеплоится автоматически через GHCR
+- CORS: по умолчанию admin/app prod + localhost. Override: `CORS_ORIGINS` env
 
 ---
 
-## Шаблон для следующих сессий
+## Шаблон
 
 ```markdown
 ## Сессия YYYY-MM-DD
-
 **Цель:**
-
 ### Сделано
 - [ ]
-
-### Не сделано / следующая сессия
+### Следующая сессия
 - [ ]
-
-### Заметки
--
 ```

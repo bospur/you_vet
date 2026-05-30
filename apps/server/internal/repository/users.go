@@ -64,9 +64,9 @@ func (r *UserRepository) GetAll(clinicID int) ([]User, error) {
 	return users, nil
 }
 
-// Delete удаляет пользователя по id
-func (r *UserRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM users WHERE id=$1`, id)
+// Delete удаляет пользователя по id в рамках клиники
+func (r *UserRepository) Delete(clinicID int, id string) error {
+	_, err := r.db.Exec(`DELETE FROM users WHERE id=$1 AND clinic_id=$2`, id, clinicID)
 	return err
 }
 

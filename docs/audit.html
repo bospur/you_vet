@@ -21,6 +21,9 @@
     .header .subtitle { font-size: 15px; color: #555; margin-top: 6px; }
     .header .meta { margin-top: 14px; display: flex; gap: 24px; flex-wrap: wrap; }
     .header .meta a { color: #1a1a1a; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ccc; }
+    .doc-back { margin-bottom: 8px; }
+    .doc-back a { color: #555; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ddd; }
+    .doc-back a:hover { color: #1a1a1a; border-color: #888; }
     h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
     p { margin-bottom: 12px; color: #333; }
     a { color: #0066cc; }
@@ -49,17 +52,18 @@
 </head>
 <body>
 
+<p class="doc-back"><a href="index.html">← Все документы</a></p>
+
 <div class="header">
   <h1>Технический аудит YouVet</h1>
   <div class="subtitle">MVP в продакшене · оценка архитектуры, безопасности, техдолга</div>
   <div class="meta">
-    <a href="index.html">← Все документы</a>
-    <span style="color:#888;font-size:12px;">2026-05-30 · Cursor</span>
+    <span style="color:#888;font-size:12px;">2026-05-30 · обновлено после hardening</span>
   </div>
 </div>
 
 <div class="box box-ok">
-  <strong>Вердикт:</strong> зрелый MVP с хорошей архитектурой и документацией. Главные риски — частичный RBAC на бэкенде и отсутствие автотестов в CI. Prod проверен: бот работает, VPS доступен.
+  <strong>Вердикт:</strong> MVP в prod. Security hardening выполнен 2026-05-30 (RBAC, tenant scoping, CORS, rate limit). Остаётся: CI gate, initData, JWT→cookie.
 </div>
 
 <h2>Оценки</h2>
@@ -69,7 +73,7 @@
   <div class="score-item"><div class="score-val">★★★★</div><div class="score-label">Документация</div></div>
   <div class="score-item"><div class="score-val warn">★★★</div><div class="score-label">Бэкенд</div></div>
   <div class="score-item"><div class="score-val warn">★★★</div><div class="score-label">CI/CD deploy</div></div>
-  <div class="score-item"><div class="score-val bad">★★</div><div class="score-label">Безопасность</div></div>
+  <div class="score-item"><div class="score-val warn">★★★</div><div class="score-label">Безопасность</div></div>
   <div class="score-item"><div class="score-val bad">★</div><div class="score-label">Тесты</div></div>
 </div>
 
@@ -84,12 +88,12 @@
 <h2>Критические находки</h2>
 <table>
   <tr><th>#</th><th>Проблема</th><th>Риск</th></tr>
-  <tr><td>1</td><td>RBAC на бэкенде неполный — groomer может вызывать content API</td><td>🔴</td></tr>
-  <tr><td>2</td><td>Update/delete без <code>clinic_id</code> в WHERE (IDOR при multi-clinic)</td><td>🔴</td></tr>
-  <tr><td>3</td><td>CORS <code>*</code> на admin API</td><td>🟠</td></tr>
-  <tr><td>4</td><td>JWT в localStorage</td><td>🟠</td></tr>
-  <tr><td>5</td><td>Нет rate limit на login</td><td>🟠</td></tr>
-  <tr><td>6</td><td>1 Go test file, нет CI quality gate</td><td>🟡</td></tr>
+  <tr><td>1</td><td>RBAC RequireRole на admin роутах</td><td>✅</td></tr>
+  <tr><td>2</td><td>clinic_id в update/delete</td><td>✅</td></tr>
+  <tr><td>3</td><td>CORS whitelist</td><td>✅</td></tr>
+  <tr><td>4</td><td>Rate limit на login</td><td>✅</td></tr>
+  <tr><td>5</td><td>JWT в localStorage</td><td>🟠</td></tr>
+  <tr><td>6</td><td>CI quality gate, initData</td><td>🟡</td></tr>
 </table>
 
 <h2>Модель деплоя</h2>
@@ -110,11 +114,10 @@
 <h2>Приоритетный план</h2>
 <table>
   <tr><th>P</th><th>Задача</th></tr>
-  <tr><td>P0</td><td><code>RequireRole</code> middleware + clinic-scoped update/delete</td></tr>
-  <tr><td>P0</td><td>CORS whitelist, rate limit на login</td></tr>
+  <tr><td>—</td><td>RBAC, tenant scoping, CORS, rate limit — <strong>готово</strong></td></tr>
   <tr><td>P1</td><td>CI: <code>go test</code> + <code>npm run build</code> на PR</td></tr>
-  <tr><td>P1</td><td><code>packages/cat/**</code> в deploy-app paths</td></tr>
-  <tr><td>P2</td><td>Удалить legacy workflows в <code>apps/*/.github/</code></td></tr>
+  <tr><td>P1</td><td>Скрытие пустого груминга в Mini App</td></tr>
+  <tr><td>P2</td><td>Telegram initData валидация</td></tr>
 </table>
 
 <h2>Контекст для AI-сессий</h2>

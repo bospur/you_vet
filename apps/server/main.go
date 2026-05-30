@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"go-server/internal/bot"
 	"go-server/internal/db"
@@ -103,83 +104,89 @@ func main() {
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
 
 	// ── Авторизация ──────────────────────────────────────────────────────────
-	http.HandleFunc("POST /api/admin/login", adminHandler.Login)
+	http.HandleFunc("POST /api/admin/login", middleware.LoginRateLimit(10, 15*time.Minute, adminHandler.Login))
 
 	// ── Защищённые админ роуты ───────────────────────────────────────────────
-	auth := func(h http.HandlerFunc) http.HandlerFunc {
-		return middleware.Auth(jwtSecret, h)
+	contentAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin", "editor"))
+	}
+	groomingAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin", "editor", "groomer"))
+	}
+	adminAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin"))
 	}
 
 	// Animals
-	http.HandleFunc("POST /api/admin/animals", auth(adminHandler.CreateAnimal))
-	http.HandleFunc("PUT /api/admin/animals/{id}", auth(adminHandler.UpdateAnimal))
-	http.HandleFunc("DELETE /api/admin/animals/{id}", auth(adminHandler.DeleteAnimal))
+	http.HandleFunc("POST /api/admin/animals", contentAuth(adminHandler.CreateAnimal))
+	http.HandleFunc("PUT /api/admin/animals/{id}", contentAuth(adminHandler.UpdateAnimal))
+	http.HandleFunc("DELETE /api/admin/animals/{id}", contentAuth(adminHandler.DeleteAnimal))
 
 	// Categories
-	http.HandleFunc("POST /api/admin/categories", auth(adminHandler.CreateCategory))
-	http.HandleFunc("PUT /api/admin/categories/{id}", auth(adminHandler.UpdateCategory))
-	http.HandleFunc("DELETE /api/admin/categories/{id}", auth(adminHandler.DeleteCategory))
+	http.HandleFunc("POST /api/admin/categories", contentAuth(adminHandler.CreateCategory))
+	http.HandleFunc("PUT /api/admin/categories/{id}", contentAuth(adminHandler.UpdateCategory))
+	http.HandleFunc("DELETE /api/admin/categories/{id}", contentAuth(adminHandler.DeleteCategory))
 
 	// Users (только admin)
-	http.HandleFunc("GET /api/admin/users", auth(adminHandler.GetAdminUsers))
-	http.HandleFunc("POST /api/admin/users", auth(adminHandler.CreateAdminUser))
-	http.HandleFunc("DELETE /api/admin/users/{id}", auth(adminHandler.DeleteAdminUser))
+	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))
+	http.HandleFunc("POST /api/admin/users", adminAuth(adminHandler.CreateAdminUser))
+	http.HandleFunc("DELETE /api/admin/users/{id}", adminAuth(adminHandler.DeleteAdminUser))
 
 	// Articles
-	http.HandleFunc("GET /api/admin/articles", auth(adminHandler.GetAdminArticles))
-	http.HandleFunc("GET /api/admin/articles/{id}", auth(adminHandler.GetAdminArticle))
-	http.HandleFunc("GET /api/admin/articles/{id}/categories", auth(adminHandler.GetArticleCategories))
-	http.HandleFunc("POST /api/admin/articles", auth(adminHandler.CreateArticle))
-	http.HandleFunc("PUT /api/admin/articles/{id}", auth(adminHandler.UpdateArticle))
-	http.HandleFunc("PATCH /api/admin/articles/{id}/status", auth(adminHandler.UpdateArticleStatus))
-	http.HandleFunc("DELETE /api/admin/articles/{id}", auth(adminHandler.DeleteArticle))
-	http.HandleFunc("POST /api/admin/articles/{id}/categories/{categoryId}", auth(adminHandler.AssignArticleToCategory))
-	http.HandleFunc("DELETE /api/admin/articles/{id}/categories/{categoryId}", auth(adminHandler.RemoveArticleFromCategory))
+	http.HandleFunc("GET /api/admin/articles", contentAuth(adminHandler.GetAdminArticles))
+	http.HandleFunc("GET /api/admin/articles/{id}", contentAuth(adminHandler.GetAdminArticle))
+	http.HandleFunc("GET /api/admin/articles/{id}/categories", contentAuth(adminHandler.GetArticleCategories))
+	http.HandleFunc("POST /api/admin/articles", contentAuth(adminHandler.CreateArticle))
+	http.HandleFunc("PUT /api/admin/articles/{id}", contentAuth(adminHandler.UpdateArticle))
+	http.HandleFunc("PATCH /api/admin/articles/{id}/status", adminAuth(adminHandler.UpdateArticleStatus))
+	http.HandleFunc("DELETE /api/admin/articles/{id}", contentAuth(adminHandler.DeleteArticle))
+	http.HandleFunc("POST /api/admin/articles/{id}/categories/{categoryId}", contentAuth(adminHandler.AssignArticleToCategory))
+	http.HandleFunc("DELETE /api/admin/articles/{id}/categories/{categoryId}", contentAuth(adminHandler.RemoveArticleFromCategory))
 
 	// Doctors
-	http.HandleFunc("GET /api/admin/doctors", auth(doctorHandler.GetDoctors))
-	http.HandleFunc("GET /api/admin/doctors/{id}", auth(doctorHandler.GetDoctor))
-	http.HandleFunc("POST /api/admin/doctors", auth(doctorHandler.CreateDoctor))
-	http.HandleFunc("PUT /api/admin/doctors/{id}", auth(doctorHandler.UpdateDoctor))
-	http.HandleFunc("PATCH /api/admin/doctors/{id}/status", auth(doctorHandler.UpdateDoctorStatus))
-	http.HandleFunc("POST /api/admin/doctors/{id}/photo", auth(doctorHandler.UploadDoctorPhoto))
-	http.HandleFunc("DELETE /api/admin/doctors/{id}", auth(doctorHandler.DeleteDoctor))
+	http.HandleFunc("GET /api/admin/doctors", contentAuth(doctorHandler.GetDoctors))
+	http.HandleFunc("GET /api/admin/doctors/{id}", contentAuth(doctorHandler.GetDoctor))
+	http.HandleFunc("POST /api/admin/doctors", contentAuth(doctorHandler.CreateDoctor))
+	http.HandleFunc("PUT /api/admin/doctors/{id}", contentAuth(doctorHandler.UpdateDoctor))
+	http.HandleFunc("PATCH /api/admin/doctors/{id}/status", adminAuth(doctorHandler.UpdateDoctorStatus))
+	http.HandleFunc("POST /api/admin/doctors/{id}/photo", contentAuth(doctorHandler.UploadDoctorPhoto))
+	http.HandleFunc("DELETE /api/admin/doctors/{id}", contentAuth(doctorHandler.DeleteDoctor))
 
 	// Schedule
-	http.HandleFunc("GET /api/admin/doctors/{id}/schedule", auth(doctorHandler.GetDoctorSchedule))
-	http.HandleFunc("POST /api/admin/doctors/{id}/schedule", auth(doctorHandler.AddScheduleSlot))
-	http.HandleFunc("DELETE /api/admin/doctors/{id}/schedule/{slotId}", auth(doctorHandler.DeleteScheduleSlot))
+	http.HandleFunc("GET /api/admin/doctors/{id}/schedule", contentAuth(doctorHandler.GetDoctorSchedule))
+	http.HandleFunc("POST /api/admin/doctors/{id}/schedule", contentAuth(doctorHandler.AddScheduleSlot))
+	http.HandleFunc("DELETE /api/admin/doctors/{id}/schedule/{slotId}", contentAuth(doctorHandler.DeleteScheduleSlot))
 
 	// Schedule exceptions
-	http.HandleFunc("GET /api/admin/doctors/{id}/schedule/exceptions", auth(doctorHandler.GetExceptions))
-	http.HandleFunc("PUT /api/admin/doctors/{id}/schedule/exceptions", auth(doctorHandler.UpsertException))
-	http.HandleFunc("DELETE /api/admin/doctors/{id}/schedule/exceptions/{exceptionId}", auth(doctorHandler.DeleteException))
+	http.HandleFunc("GET /api/admin/doctors/{id}/schedule/exceptions", contentAuth(doctorHandler.GetExceptions))
+	http.HandleFunc("PUT /api/admin/doctors/{id}/schedule/exceptions", contentAuth(doctorHandler.UpsertException))
+	http.HandleFunc("DELETE /api/admin/doctors/{id}/schedule/exceptions/{exceptionId}", contentAuth(doctorHandler.DeleteException))
 
 	// Settings
-	http.HandleFunc("GET /api/admin/settings", auth(doctorHandler.GetSettings))
-	http.HandleFunc("PATCH /api/admin/settings", auth(doctorHandler.UpdateSettings))
+	http.HandleFunc("GET /api/admin/settings", contentAuth(doctorHandler.GetSettings))
+	http.HandleFunc("PATCH /api/admin/settings", adminAuth(doctorHandler.UpdateSettings))
 
 	// Clinic info
-	http.HandleFunc("GET /api/admin/clinic-info", auth(clinicInfoHandler.GetClinicInfo))
-	http.HandleFunc("PUT /api/admin/clinic-info", auth(clinicInfoHandler.UpdateClinicInfo))
-	http.HandleFunc("POST /api/admin/clinic-info/logo", auth(clinicInfoHandler.UploadLogo))
-	http.HandleFunc("POST /api/admin/clinic-info/banner", auth(clinicInfoHandler.UploadBanner))
+	http.HandleFunc("GET /api/admin/clinic-info", contentAuth(clinicInfoHandler.GetClinicInfo))
+	http.HandleFunc("PUT /api/admin/clinic-info", contentAuth(clinicInfoHandler.UpdateClinicInfo))
+	http.HandleFunc("POST /api/admin/clinic-info/logo", contentAuth(clinicInfoHandler.UploadLogo))
+	http.HandleFunc("POST /api/admin/clinic-info/banner", contentAuth(clinicInfoHandler.UploadBanner))
 
 	// Grooming breeds
-	http.HandleFunc("GET /api/admin/grooming/breeds", auth(groomingHandler.GetBreeds))
-	http.HandleFunc("POST /api/admin/grooming/breeds", auth(groomingHandler.CreateBreed))
-	http.HandleFunc("PUT /api/admin/grooming/breeds/{id}", auth(groomingHandler.UpdateBreed))
-	http.HandleFunc("DELETE /api/admin/grooming/breeds/{id}", auth(groomingHandler.DeleteBreed))
+	http.HandleFunc("GET /api/admin/grooming/breeds", groomingAuth(groomingHandler.GetBreeds))
+	http.HandleFunc("POST /api/admin/grooming/breeds", groomingAuth(groomingHandler.CreateBreed))
+	http.HandleFunc("PUT /api/admin/grooming/breeds/{id}", groomingAuth(groomingHandler.UpdateBreed))
+	http.HandleFunc("DELETE /api/admin/grooming/breeds/{id}", groomingAuth(groomingHandler.DeleteBreed))
 
 	// Grooming weekly template
-	http.HandleFunc("GET /api/admin/grooming/template", auth(groomingHandler.GetTemplate))
-	http.HandleFunc("PUT /api/admin/grooming/template", auth(groomingHandler.UpsertTemplateSlot))
-	http.HandleFunc("DELETE /api/admin/grooming/template/{dayOfWeek}", auth(groomingHandler.DeleteTemplateSlot))
+	http.HandleFunc("GET /api/admin/grooming/template", groomingAuth(groomingHandler.GetTemplate))
+	http.HandleFunc("PUT /api/admin/grooming/template", groomingAuth(groomingHandler.UpsertTemplateSlot))
+	http.HandleFunc("DELETE /api/admin/grooming/template/{dayOfWeek}", groomingAuth(groomingHandler.DeleteTemplateSlot))
 
 	// Grooming appointments
-	http.HandleFunc("GET /api/admin/grooming/appointments", auth(groomingHandler.GetAppointments))
-	http.HandleFunc("POST /api/admin/grooming/appointments", auth(groomingHandler.CreateAppointment))
-	http.HandleFunc("DELETE /api/admin/grooming/appointments/{id}", auth(groomingHandler.DeleteAppointment))
+	http.HandleFunc("GET /api/admin/grooming/appointments", groomingAuth(groomingHandler.GetAppointments))
+	http.HandleFunc("POST /api/admin/grooming/appointments", groomingAuth(groomingHandler.CreateAppointment))
+	http.HandleFunc("DELETE /api/admin/grooming/appointments/{id}", groomingAuth(groomingHandler.DeleteAppointment))
 
 	publicURL := os.Getenv("PUBLIC_URL")
 	if publicURL == "" {

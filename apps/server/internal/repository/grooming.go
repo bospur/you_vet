@@ -136,14 +136,14 @@ func (r *GroomingRepository) CreateBreed(clinicID int, input GroomingBreedInput)
 	return &b, nil
 }
 
-func (r *GroomingRepository) UpdateBreed(id string, input GroomingBreedInput) (*GroomingBreed, error) {
+func (r *GroomingRepository) UpdateBreed(clinicID int, id string, input GroomingBreedInput) (*GroomingBreed, error) {
 	var b GroomingBreed
 	err := r.db.QueryRow(`
 		UPDATE grooming_breeds
 		SET breed=$1, duration=$2, price=$3, description=$4, updated_at=NOW()
-		WHERE id=$5
+		WHERE id=$5 AND clinic_id=$6
 		RETURNING id, clinic_id, breed, duration, price, description
-	`, input.Breed, input.Duration, input.Price, input.Description, id).
+	`, input.Breed, input.Duration, input.Price, input.Description, id, clinicID).
 		Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -154,8 +154,8 @@ func (r *GroomingRepository) UpdateBreed(id string, input GroomingBreedInput) (*
 	return &b, nil
 }
 
-func (r *GroomingRepository) DeleteBreed(id string) error {
-	_, err := r.db.Exec(`DELETE FROM grooming_breeds WHERE id=$1`, id)
+func (r *GroomingRepository) DeleteBreed(clinicID int, id string) error {
+	_, err := r.db.Exec(`DELETE FROM grooming_breeds WHERE id=$1 AND clinic_id=$2`, id, clinicID)
 	return err
 }
 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -45,9 +46,10 @@ func (h *DoctorHandler) GetDoctors(w http.ResponseWriter, r *http.Request) {
 
 // GetDoctor обрабатывает GET /api/admin/doctors/{id}
 func (h *DoctorHandler) GetDoctor(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
-	doctor, err := h.doctorRepo.GetByID(id)
+	doctor, err := h.doctorRepo.GetByIDForClinic(claims.ClinicID, id)
 	if err != nil {
 		log.Printf("ошибка получения врача: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -85,6 +87,7 @@ func (h *DoctorHandler) CreateDoctor(w http.ResponseWriter, r *http.Request) {
 
 // UpdateDoctor обрабатывает PUT /api/admin/doctors/{id}
 func (h *DoctorHandler) UpdateDoctor(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
 	var input repository.DoctorInput
@@ -93,7 +96,7 @@ func (h *DoctorHandler) UpdateDoctor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	doctor, err := h.doctorRepo.Update(id, input)
+	doctor, err := h.doctorRepo.Update(claims.ClinicID, id, input)
 	if err != nil {
 		log.Printf("ошибка обновления врача: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -127,7 +130,7 @@ func (h *DoctorHandler) UpdateDoctorStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	doctor, err := h.doctorRepo.UpdateStatus(id, body.Status)
+	doctor, err := h.doctorRepo.UpdateStatus(claims.ClinicID, id, body.Status)
 	if err != nil {
 		log.Printf("ошибка обновления статуса врача: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -142,6 +145,7 @@ func (h *DoctorHandler) UpdateDoctorStatus(w http.ResponseWriter, r *http.Reques
 
 // UploadDoctorPhoto обрабатывает POST /api/admin/doctors/{id}/photo
 func (h *DoctorHandler) UploadDoctorPhoto(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
 	if err := r.ParseMultipartForm(5 << 20); err != nil { // 5 MB
@@ -180,7 +184,11 @@ func (h *DoctorHandler) UploadDoctorPhoto(w http.ResponseWriter, r *http.Request
 	}
 
 	photoURL := "/uploads/" + filename
-	if err := h.doctorRepo.UpdatePhoto(id, photoURL); err != nil {
+	if err := h.doctorRepo.UpdatePhoto(claims.ClinicID, id, photoURL); err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "не найдено", http.StatusNotFound)
+			return
+		}
 		log.Printf("ошибка обновления photo_url: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -191,9 +199,10 @@ func (h *DoctorHandler) UploadDoctorPhoto(w http.ResponseWriter, r *http.Request
 
 // DeleteDoctor обрабатывает DELETE /api/admin/doctors/{id}
 func (h *DoctorHandler) DeleteDoctor(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
-	if err := h.doctorRepo.Delete(id); err != nil {
+	if err := h.doctorRepo.Delete(claims.ClinicID, id); err != nil {
 		log.Printf("ошибка удаления врача: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -205,9 +214,10 @@ func (h *DoctorHandler) DeleteDoctor(w http.ResponseWriter, r *http.Request) {
 
 // GetDoctorSchedule обрабатывает GET /api/admin/doctors/{id}/schedule
 func (h *DoctorHandler) GetDoctorSchedule(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
-	slots, err := h.doctorRepo.GetSchedule(id)
+	slots, err := h.doctorRepo.GetScheduleForClinic(claims.ClinicID, id)
 	if err != nil {
 		log.Printf("ошибка получения расписания: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -221,6 +231,7 @@ func (h *DoctorHandler) GetDoctorSchedule(w http.ResponseWriter, r *http.Request
 
 // AddScheduleSlot обрабатывает POST /api/admin/doctors/{id}/schedule
 func (h *DoctorHandler) AddScheduleSlot(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
 	var body struct {
@@ -233,10 +244,14 @@ func (h *DoctorHandler) AddScheduleSlot(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	slot, err := h.doctorRepo.AddScheduleSlot(id, body.DayOfWeek, body.TimeFrom, body.TimeTo)
+	slot, err := h.doctorRepo.AddScheduleSlotForClinic(claims.ClinicID, id, body.DayOfWeek, body.TimeFrom, body.TimeTo)
 	if err != nil {
 		log.Printf("ошибка добавления слота: %v", err)
 		http.Error(w, "слот уже существует или неверные данные", http.StatusConflict)
+		return
+	}
+	if slot == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
 		return
 	}
 	writeJSON(w, http.StatusCreated, slot)
@@ -244,9 +259,10 @@ func (h *DoctorHandler) AddScheduleSlot(w http.ResponseWriter, r *http.Request) 
 
 // DeleteScheduleSlot обрабатывает DELETE /api/admin/doctors/{id}/schedule/{slotId}
 func (h *DoctorHandler) DeleteScheduleSlot(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	slotID := r.PathValue("slotId")
 
-	if err := h.doctorRepo.DeleteScheduleSlot(slotID); err != nil {
+	if err := h.doctorRepo.DeleteScheduleSlot(claims.ClinicID, slotID); err != nil {
 		log.Printf("ошибка удаления слота: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -258,9 +274,10 @@ func (h *DoctorHandler) DeleteScheduleSlot(w http.ResponseWriter, r *http.Reques
 
 // GetExceptions обрабатывает GET /api/admin/doctors/{id}/schedule/exceptions
 func (h *DoctorHandler) GetExceptions(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
-	exceptions, err := h.doctorRepo.GetExceptions(id)
+	exceptions, err := h.doctorRepo.GetExceptionsForClinic(claims.ClinicID, id)
 	if err != nil {
 		log.Printf("ошибка получения исключений: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -274,6 +291,7 @@ func (h *DoctorHandler) GetExceptions(w http.ResponseWriter, r *http.Request) {
 
 // UpsertException обрабатывает PUT /api/admin/doctors/{id}/schedule/exceptions
 func (h *DoctorHandler) UpsertException(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	id := r.PathValue("id")
 
 	var body struct {
@@ -287,10 +305,14 @@ func (h *DoctorHandler) UpsertException(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	exception, err := h.doctorRepo.UpsertException(id, body.Date, body.IsDayOff, body.TimeFrom, body.TimeTo)
+	exception, err := h.doctorRepo.UpsertExceptionForClinic(claims.ClinicID, id, body.Date, body.IsDayOff, body.TimeFrom, body.TimeTo)
 	if err != nil {
 		log.Printf("ошибка сохранения исключения: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if exception == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
 		return
 	}
 	writeJSON(w, http.StatusOK, exception)
@@ -298,9 +320,10 @@ func (h *DoctorHandler) UpsertException(w http.ResponseWriter, r *http.Request) 
 
 // DeleteException обрабатывает DELETE /api/admin/doctors/{id}/schedule/exceptions/{exceptionId}
 func (h *DoctorHandler) DeleteException(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
 	exceptionID := r.PathValue("exceptionId")
 
-	if err := h.doctorRepo.DeleteException(exceptionID); err != nil {
+	if err := h.doctorRepo.DeleteException(claims.ClinicID, exceptionID); err != nil {
 		log.Printf("ошибка удаления исключения: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return

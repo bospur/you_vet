@@ -6,7 +6,7 @@
 ## Резюме
 
 YouVet — **зрелый MVP в продакшене**: монорепо, три клиента, CI/CD, богатая документация.
-Архитектура и продуктовая логика на хорошем уровне. Главные риски — **безопасность admin API** и **отсутствие автотестов/quality gate в CI**.
+Архитектура и продуктовая логика на хорошем уровне. Security hardening выполнен 2026-05-30. Главный оставшийся риск — **отсутствие CI quality gate и автотестов**.
 
 | Область | Оценка |
 |---|---|
@@ -16,7 +16,7 @@ YouVet — **зрелый MVP в продакшене**: монорепо, тр�
 | Тесты | ★☆☆☆☆ |
 | CI/CD (deploy) | ★★★☆☆ |
 | Документация | ★★★★☆ (после синхронизации 2026-05-30) |
-| Безопасность | ★★☆☆☆ |
+| Безопасность | ★★★☆☆ (после hardening 2026-05-30) |
 
 ---
 
@@ -46,47 +46,25 @@ YouVet — **зрелый MVP в продакшене**: монорепо, тр�
 
 ## Критические находки
 
-### 1. RBAC на бэкенде неполный
+### 1. RBAC на бэкенде — ✅ исправлено (2026-05-30)
 
-Документация ранее утверждала, что бэкенд — «авторитетный источник прав». Фактически проверки роли есть **выборочно**:
+`RequireRole` middleware на группах роутов: content (admin+editor), grooming (+groomer), admin-only (users, settings, publish).
 
-| Проверяется на бэкенде | Не проверяется |
-|---|---|
-| Публикация/удаление статей (editor/admin) | Animals, categories CRUD |
-| Управление пользователями (admin only) | Clinic info |
-| Настройки расписания (admin only) | Groomer → любой admin endpoint |
-| Статус врачей (admin only) | |
+### 2. Tenant-scoping — ✅ исправлено (2026-05-30)
 
-Groomer блокируется только в UI admin (`NonGroomerRoute` в `App.tsx`).
+Update/delete во всех repositories используют `WHERE id = $1 AND clinic_id = $2`.
 
-**Риск:** пользователь с ролью groomer и валидным JWT может через API изменить контент клиники.
+### 3. CORS — ✅ исправлено (2026-05-30)
 
-### 2. Tenant-scoping при update/delete
+Whitelist origin вместо `*`. Env: `CORS_ORIGINS` (опционально).
 
-Create-операции используют `claims.ClinicID`, но многие update/delete — только по `id`:
+### 4. Rate limit на login — ✅ исправлено (2026-05-30)
 
-```go
-// repository/animals.go — пример
-UPDATE animals SET ... WHERE id=$5   // без clinic_id
-DELETE FROM animals WHERE id=$1      // без clinic_id
-```
+10 попыток / 15 мин на IP.
 
-Та же проблема: categories, articles, grooming breeds.
+### 5. JWT в localStorage
 
-**Риск:** IDOR при нескольких клиниках в одной БД.  
-**Текущий деплой:** один VPS = одна клиника — риск снижен, но схема обещает multi-tenant.
-
-### 3. CORS открыт для всех
-
-`middleware/cors.go`: `Access-Control-Allow-Origin: *` для всех запросов, включая admin API с Bearer.
-
-### 4. JWT в localStorage
-
-Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS — компрометация сессии. TipTap (rich text) увеличивает attack surface.
-
-### 5. Нет rate limiting на login
-
-`POST /api/admin/login` без защиты от brute-force.
+Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS — компрометация сессии.
 
 ---
 
@@ -96,7 +74,7 @@ Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS �
 
 | Область | Статус |
 |---|---|
-| Go unit tests | 1 файл: `middleware/auth_test.go` (5 кейсов) |
+| Go unit tests | 2 файла: auth_test.go + role_test.go |
 | Frontend tests | Нет (vitest/jest/cypress отсутствуют) |
 | E2E | Нет |
 | CI test job | Нет |
@@ -143,14 +121,14 @@ Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS �
 
 ## Приоритетный план
 
-### P0 — безопасность (1–2 дня)
+### P0 — безопасность
 
-1. Middleware `RequireRole(roles...)` на admin-роутах
-2. `WHERE id = $1 AND clinic_id = $2` во всех update/delete
-3. CORS whitelist (admin + app домены)
-4. Rate limit на login
+1. ~~Middleware `RequireRole`~~ ✅
+2. ~~`clinic_id` в update/delete~~ ✅
+3. ~~CORS whitelist~~ ✅
+4. ~~Rate limit на login~~ ✅
 
-### P1 — качество (2–3 дня)
+### P1 — качество (следующий шаг)
 
 5. CI quality gate: `go test ./...`, `npm run build` на PR
 6. Table-driven тесты RBAC
