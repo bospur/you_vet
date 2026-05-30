@@ -59,3 +59,24 @@ func (h *ArticleHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, article)
 }
+
+// GetFeaturedArticles обрабатывает GET /api/clinics/{clinicSlug}/articles/featured
+func (h *ArticleHandler) GetFeaturedArticles(w http.ResponseWriter, r *http.Request) {
+	clinicSlug := r.PathValue("clinicSlug")
+	if clinicSlug == "" {
+		http.Error(w, "неверный запрос", http.StatusBadRequest)
+		return
+	}
+
+	articles, err := h.repo.GetFeaturedPublished(clinicSlug, repository.MaxFeaturedArticles)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	if articles == nil {
+		articles = []repository.FeaturedArticle{}
+	}
+
+	writeJSON(w, http.StatusOK, articles)
+}

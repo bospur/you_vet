@@ -2,35 +2,31 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30 (UI)
+## Сессия 2026-05-30 (Фаза 4 — информационный ресурс)
 
-**Ветка:** `work-ui` → merge в `dev` → deploy Mini App (`deploy-app.yml`)
+**Ветка:** `work-mobile-app` (или PR в `dev`)
 
 ### Сделано
 
-- [x] Редизайн главной Mini App: `HomeHero`, `AppHeader`, обновлённые токены (`tokens.css`)
-- [x] NavGrid: иконки из Figma → `apps/app/src/assets/menu/` (`arcticles`, `doctors`, `sheldue`, `gruming`)
-- [x] Баннер: флаг `banner_enabled` в `clinic_info` (миграция 010), переключатель в admin (`ClinicInfoScreen`)
-- [x] Удалены неиспользуемые ассеты (`hero.png`, `vite.svg`)
+- [x] Быстрые UX: «Полезное», «Статьи» + подпись, баннер 120px/14px, sessionStorage «О нас»
+- [x] Средние UX: коллапс + «Позвонить», лого в хедере, скелетон груминга
+- [x] PRD-07: `articles.featured`, миграция 011, API `/articles/featured`, блок «Рекомендуем», toggle в admin
+- [x] Roadmap: **Фаза 4 — Информационный ресурс** (done), запись → **Фаза 5**
 
-### Перед релизом
+### Перед деплоем
 
-- [ ] Закоммитить `assets/menu/` + правки `icons.tsx` / `NavGrid.module.css` (если ещё не в ветке)
-- [ ] PR `work-ui` → `dev`, merge → CI + deploy `apps/app`
+- [ ] PR в `dev` → merge → миграция 011 на server + deploy app/admin
+- [ ] В admin: отметить до 3 опубликованных статей «На главной»
 
 ### Следующая сессия
 
-- [ ] PRD-03: запись на приём (фаза 4)
+- [ ] **Фаза 5 / PRD-03** — запись на приём (pending/confirm flow)
 - [ ] Mobile app: M0 backend `/api/mobile/v1` (см. `docs/mobile/`)
-- [ ] SEC-04: JWT → httpOnly cookie (опционально)
-- [ ] SEC-06: валидация загрузки по MIME
-- [ ] Оптимизация `assets/menu/arcticles.svg` (~324 KB, embedded PNG) → чистый PNG
 
 ### Заметки
 
-- CI: на PR — quality gate; после merge в `dev` — path-based deploy
-- Prod Mini App: initData обязателен; локально `TELEGRAM_INITDATA_SKIP=1`
-- Маппинг иконок: `arcticles` → Первая помощь, `doctors` → Наши врачи, `sheldue` → Расписание, `gruming` → Груминг
+- Ключевая цель до записи: **информационный ресурс** (статьи, контакты, расписание)
+- Featured сбрасывается при снятии с публикации (draft)
 
 ---
 

@@ -17,6 +17,7 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 | GET | `/api/clinics/{slug}/clinic-info` | Информация о клинике (название, контакты, лого, баннер) |
 | GET | `/api/clinics/{slug}/animals` | Список животных |
 | GET | `/api/clinics/{slug}/animals/{animalSlug}/articles` | Статьи животного (список: id, title, slug) |
+| GET | `/api/clinics/{slug}/articles/featured` | Featured-статьи для главной (до 3: id, title, slug, animal_name) |
 | GET | `/api/clinics/{slug}/articles/{slug}` | Одна статья |
 | GET | `/api/clinics/{slug}/doctors` | Опубликованные врачи |
 | GET | `/api/clinics/{slug}/schedule` | Расписание `{ entries[], settings }` |
@@ -83,6 +84,7 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 | GET | `/api/admin/articles/{id}` | Одна статья | все |
 | PUT | `/api/admin/articles/{id}` | Обновить (черновик) | все |
 | PATCH | `/api/admin/articles/{id}/status` | Сменить статус | только admin |
+| PATCH | `/api/admin/articles/{id}/featured` | Показ на главной (max 3) | только admin |
 | DELETE | `/api/admin/articles/{id}` | Удалить | все (опубликованные — только admin) |
 
 **POST/PUT body:** `{ "title", "content", "animal_id" }` — slug генерируется на сервере из заголовка.

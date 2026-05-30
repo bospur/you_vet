@@ -6,8 +6,8 @@ import { valibotResolver } from '@hookform/resolvers/valibot';
 import * as v from 'valibot';
 import {
   Box, Button, Chip, CircularProgress,
-  FormControl, FormHelperText, InputLabel, MenuItem, Select,
-  Stack, TextField, Typography,
+  FormControl, FormControlLabel, FormHelperText, InputLabel, MenuItem, Select,
+  Stack, Switch, TextField, Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
@@ -18,7 +18,7 @@ import { RichTextEditor } from '../../shared/ui/RichTextEditor';
 import { getAnimals } from '../../data/source/animals';
 import {
   getArticle,
-  createArticle, updateArticle, updateArticleStatus,
+  createArticle, updateArticle, updateArticleStatus, updateArticleFeatured,
 } from '../../data/source/articles';
 import { useNotification } from '../../shared/ui/Notification/NotificationContext';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
@@ -120,6 +120,19 @@ export function ArticleEditorScreen() {
     onError: () => notify('Ошибка изменения статуса', 'error'),
   });
 
+  const featuredMutation = useMutation({
+    mutationFn: (featured: boolean) => updateArticleFeatured(articleId!, featured),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ['article', articleId] });
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+      notify(
+        updated.featured ? 'Статья добавлена на главную' : 'Статья убрана с главной',
+        'success',
+      );
+    },
+    onError: () => notify('Не удалось изменить. На главной не более 3 статей.', 'error'),
+  });
+
   const onSubmit = form.handleSubmit((values) => saveMutation.mutate(values));
   const blocker = useBlocker(isDirty && !saveMutation.isPending);
   const isLoading = (isEdit && articleLoading) || animalsLoading;
@@ -207,6 +220,19 @@ export function ArticleEditorScreen() {
                 </FormControl>
               )}
             />
+
+            {isAdmin && isEdit && article?.status === 'published' && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={article.featured}
+                    onChange={(e) => featuredMutation.mutate(e.target.checked)}
+                    disabled={featuredMutation.isPending}
+                  />
+                }
+                label="Показывать на главной (не более 3)"
+              />
+            )}
 
             <Box>
               <Typography component="label" sx={{ mb: 0.75, fontSize: '0.875rem', display: 'block' }}>

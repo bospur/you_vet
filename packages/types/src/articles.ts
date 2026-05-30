@@ -8,12 +8,20 @@ export interface Article {
   content: string;
   slug: string;
   status: ArticleStatus;
+  featured: boolean;
 }
 
 export interface ArticleListItem {
   id: number;
   title: string;
   slug: string;
+}
+
+export interface FeaturedArticle {
+  id: number;
+  title: string;
+  slug: string;
+  animal_name: string;
 }
 
 export interface ArticleInput {

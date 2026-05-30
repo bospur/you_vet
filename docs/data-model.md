@@ -15,6 +15,8 @@ PostgreSQL. Все таблицы содержат `clinic_id` для мульт
 | `007_create_grooming` | `grooming_breeds`, `grooming_weekly_template`, `grooming_appointments` |
 | `008_create_clinic_info` | `clinic_info` — информация о клинике для главного экрана приложения |
 | `009_articles_animal_id` | `articles.animal_id`, удаление `categories` и `article_categories` |
+| `010_clinic_info_banner_enabled` | `clinic_info.banner_enabled` |
+| `011_articles_featured` | `articles.featured` — показ на главной Mini App (до 3) |
 
 ## Схема
 
@@ -53,6 +55,7 @@ animals
 
 articles
   id, clinic_id, animal_id, title, slug (unique per clinic), content (HTML), status (draft/published)
+  featured (bool, default false) — блок «Рекомендуем» на главной, max 3 на клинику
 ```
 
 ### Врачи и расписание

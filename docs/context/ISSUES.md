@@ -24,7 +24,7 @@
 | INF-02 | 🟡 | `deploy-app.yml` не следит за `packages/cat/**` | **fixed** |
 | INF-03 | ⚪ | Дублирующие workflows в `apps/*/.github/` | open |
 | INF-04 | ⚪ | `turbo: "latest"` не закреплён | open |
-| UI-01 | ⚪ | `assets/menu/arcticles.svg` ~324 KB (embedded PNG в SVG) | open — заменить на PNG |
+| UI-01 | ⚪ | Dreamstime PNG в SVG-ассетах меню | **fixed** — inline SVG в `NavGrid/icons.tsx` |
 
 ## Документация
 
@@ -39,13 +39,14 @@
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
-| PRD-03 | ⚪ | Запись на приём | planned |
-| PRD-04 | ⚪ | Аналитика | planned |
+| PRD-03 | ⚪ | Запись на приём | planned — **Фаза 5** |
+| PRD-04 | ⚪ | Аналитика | planned — **Фаза 6** |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
+| PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
 
 ## Следующие шаги
 
-1. PRD-03 — запись на приём (pending/confirm flow)
+1. PRD-03 — запись на приём (Фаза 5, pending/confirm flow)
 2. SEC-04 — JWT из localStorage в httpOnly cookie
 3. SEC-06 — валидация загрузки файлов по MIME

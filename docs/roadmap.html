@@ -186,7 +186,7 @@
 </p>
 
 <p>
-  Архитектура БД рассчитана на несколько клиник (<code>clinic_id</code> во всех таблицах). <strong>Production сейчас:</strong> один VPS = одна клиника. Полный multi-tenant SaaS — фаза 6.
+  Архитектура БД рассчитана на несколько клиник (<code>clinic_id</code> во всех таблицах). <strong>Production сейчас:</strong> один VPS = одна клиника. Полный multi-tenant SaaS — фаза 7.
 </p>
 
 <div class="stats">
@@ -195,7 +195,7 @@
     <div class="stat-label">приложения в монорепо</div>
   </div>
   <div class="stat">
-    <div class="stat-num">9</div>
+    <div class="stat-num">11</div>
     <div class="stat-label">миграций БД</div>
   </div>
   <div class="stat">
@@ -409,11 +409,67 @@
   </div>
 </div>
 
-<!-- ФАЗА 4 -->
+<!-- ФАЗА 4 — Информационный ресурс -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-done"></div>
+    <div class="phase-title">Фаза 4 — Информационный ресурс</div>
+    <span class="phase-badge badge-done">Завершено</span>
+  </div>
+
+  <div class="note">
+    Ключевая цель до записи на приём: Mini App как удобный источник статей, контактов и расписания.
+  </div>
+
+  <div class="items">
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Главная: приоритет контента</div>
+        <div class="item-desc">Меню и статьи выше баннера; баннер внизу, скругление 14px, высота 120px</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Коллапс «О нас»</div>
+        <div class="item-desc">Свёрнут по умолчанию, sessionStorage, кнопка «Позвонить» в контактах</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Inline-иконки и «Статьи»</div>
+        <div class="item-desc">SVG в коде; подпись «советы по видам животных», секция «Полезное»</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Лого в хедере + скелетон груминга</div>
+        <div class="item-desc"><code>logo_url</code> рядом с названием; placeholder-плитка при загрузке груминга</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Featured-статьи на главной (PRD-07)</div>
+        <div class="item-desc"><code>articles.featured</code>, миграция 011, блок «Рекомендуем» (до 3), toggle в admin</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+  </div>
+</div>
+
+<!-- ФАЗА 5 -->
 <div class="phase">
   <div class="phase-header">
     <div class="phase-dot dot-planned"></div>
-    <div class="phase-title">Фаза 4 — Запись на приём</div>
+    <div class="phase-title">Фаза 5 — Запись на приём</div>
     <span class="phase-badge badge-planned">Запланировано</span>
   </div>
 
@@ -426,7 +482,7 @@
       <div class="item-icon">📋</div>
       <div class="item-body">
         <div class="item-title">Заявка на запись (pending flow)</div>
-        <div class="item-desc">Пользователь выбирает врача → слот → отправляет заявку. Статус: pending</div>
+        <div class="item-desc">Пользователь выбирает врача → слот → отправляет заявку. Статус: pending · PRD-03</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
@@ -457,11 +513,11 @@
   </div>
 </div>
 
-<!-- ФАЗА 5 -->
+<!-- ФАЗА 6 -->
 <div class="phase">
   <div class="phase-header">
     <div class="phase-dot dot-planned"></div>
-    <div class="phase-title">Фаза 5 — Аналитика</div>
+    <div class="phase-title">Фаза 6 — Аналитика</div>
     <span class="phase-badge badge-planned">Запланировано</span>
   </div>
   <div class="items">
@@ -484,11 +540,11 @@
   </div>
 </div>
 
-<!-- ФАЗА 6 — SaaS -->
+<!-- ФАЗА 7 — SaaS -->
 <div class="phase">
   <div class="phase-header">
     <div class="phase-dot dot-future"></div>
-    <div class="phase-title">Фаза 6 — SaaS и масштабирование</div>
+    <div class="phase-title">Фаза 7 — SaaS и масштабирование</div>
     <span class="phase-badge badge-future">Будущее</span>
   </div>
 
@@ -528,7 +584,7 @@
 <div class="phase">
   <div class="phase-header">
     <div class="phase-dot dot-future"></div>
-    <div class="phase-title">Фаза 7 — Личные кабинеты</div>
+    <div class="phase-title">Фаза 8 — Личные кабинеты</div>
     <span class="phase-badge badge-future">Идея</span>
   </div>
 
@@ -568,7 +624,7 @@
 <div class="phase">
   <div class="phase-header">
     <div class="phase-dot dot-future"></div>
-    <div class="phase-title">Фаза 8 — Анализы и медицинские данные</div>
+    <div class="phase-title">Фаза 9 — Анализы и медицинские данные</div>
     <span class="phase-badge badge-future">Идея</span>
   </div>
 
@@ -608,7 +664,7 @@
 <div class="phase">
   <div class="phase-header">
     <div class="phase-dot dot-future"></div>
-    <div class="phase-title">Фаза 9 — Документационный портал</div>
+    <div class="phase-title">Фаза 10 — Документационный портал</div>
     <span class="phase-badge badge-future">Идея</span>
   </div>
 
