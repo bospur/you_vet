@@ -2,35 +2,30 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30 (продолжение)
+## Сессия work-audit-clear (завершена)
 
-**Цель:** roadmap, кнопки «назад» в HTML, security hardening
+**Ветка:** `work-audit-clear`
 
 ### Сделано
 
-- [x] Security hardening на бэкенде:
-  - `middleware/role.go` — RequireRole
-  - `middleware/ratelimit.go` — login 10/15min
-  - `middleware/cors.go` — whitelist origins
-  - clinic_id во всех update/delete repositories
-  - main.go: contentAuth / groomingAuth / adminAuth
-- [x] Тесты: role_test.go (3 кейса), go test ./... проходит
-- [x] HTML: кнопка «← Все документы» на всех sub-страницах
-- [x] Roadmap: security ✅, CI quality gate в backlog фазы 3
-- [x] docs/roles.md, audit.md, ISSUES.md обновлены
+- [x] **PRD-01** — скрытие груминга в Mini App если breeds + schedule пусты
+- [x] **INF-01** — `.github/workflows/ci.yml` (go test, lint, build admin+app на PR → dev)
+- [x] **INF-02** — `packages/cat/**` в paths `deploy-app.yml`
+- [x] **SEC-07** — валидация Telegram initData на публичных `/api/clinics/...`
+  - `middleware/telegram_initdata.go` + тесты
+  - Mini App шлёт заголовок `X-Telegram-Init-Data`
+  - Локально: `TELEGRAM_INITDATA_SKIP=1` в `.env` server
 
-### Не сделано / следующая сессия
+### Следующая сессия
 
-- [ ] PRD-01: скрывать груминг в Mini App если пустой
-- [ ] INF-01: CI quality gate на PR
-- [ ] INF-02: packages/cat в deploy-app paths
-- [ ] SEC-07: Telegram initData валидация
-- [ ] Деплой server на prod (push apps/server → CI)
+- [ ] PR → `dev`, деплой app + server (initData обязателен на prod)
+- [ ] SEC-04: JWT → httpOnly cookie (опционально)
+- [ ] PRD-02: архитектура статей
 
 ### Заметки
 
-- После merge в dev — server задеплоится автоматически через GHCR
-- CORS: по умолчанию admin/app prod + localhost. Override: `CORS_ORIGINS` env
+- После деплоя server без `TELEGRAM_INITDATA_SKIP` Mini App **должен** отправлять initData (уже в `api/client.ts`)
+- `/uploads/` без initData — картинки грузятся напрямую
 
 ---
 

@@ -102,6 +102,9 @@ npm run dev   # localhost:5174
 
 > Для тестирования в Telegram нужен HTTPS — используйте ngrok или аналог.
 
+API-запросы отправляют `X-Telegram-Init-Data` из `Telegram.WebApp.initData` (см. `api/client.ts`).
+На бэкенде без этого заголовка публичные эндпоинты вернут 401. Для локальной отладки API без Telegram: `TELEGRAM_INITDATA_SKIP=1` на server.
+
 ## Деплой
 
 CI/CD: пуш в `dev` → GitHub Actions → `npm build` → `scp dist/` → `/var/www/vp-bot-app/`

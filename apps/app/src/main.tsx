@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
   },
 });
 
-function Root() {
+export function Root() {
   const [appearance, setAppearance] = useState<'light' | 'dark'>(
     () => window.Telegram?.WebApp?.colorScheme ?? 'light',
   );

@@ -9,6 +9,7 @@ import ArticleScreen from './screens/ArticleScreen';
 import DoctorsScreen from './screens/DoctorsScreen';
 import DoctorScreen from './screens/DoctorScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
+import { GroomingGuard } from './components/GroomingGuard/GroomingGuard';
 import GroomingScreen from './screens/GroomingScreen';
 import GroomingBreedsScreen from './screens/GroomingBreedsScreen';
 import GroomingScheduleScreen from './screens/GroomingScheduleScreen';
@@ -18,7 +19,10 @@ function BackButtonHandler() {
   const navigate = useNavigate();
   const location = useLocation();
   const navigateRef = useRef(navigate);
-  navigateRef.current = navigate;
+
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   // Регистрируем обработчик один раз — стабильная ссылка через ref
   useEffect(() => {
@@ -72,9 +76,11 @@ export default function App() {
           <Route path="/doctors" element={<DoctorsScreen />} />
           <Route path="/doctors/:doctorId" element={<DoctorScreen />} />
           <Route path="/schedule" element={<ScheduleScreen />} />
-          <Route path="/grooming" element={<GroomingScreen />} />
-          <Route path="/grooming/breeds" element={<GroomingBreedsScreen />} />
-          <Route path="/grooming/schedule" element={<GroomingScheduleScreen />} />
+          <Route element={<GroomingGuard />}>
+            <Route path="/grooming" element={<GroomingScreen />} />
+            <Route path="/grooming/breeds" element={<GroomingBreedsScreen />} />
+            <Route path="/grooming/schedule" element={<GroomingScheduleScreen />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

@@ -89,16 +89,17 @@ func main() {
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
 
-	// ── Публичные роуты ──────────────────────────────────────────────────────
-	http.HandleFunc("/api/clinics/{clinicSlug}/animals", animalHandler.GetAnimals)
-	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{slug}/categories", animalHandler.GetCategories)
-	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{animalSlug}/categories/{categorySlug}/articles", articleHandler.GetArticles)
-	http.HandleFunc("/api/clinics/{clinicSlug}/articles/{slug}", articleHandler.GetArticle)
-	http.HandleFunc("GET /api/clinics/{clinicSlug}/doctors", doctorHandler.GetPublicDoctors)
-	http.HandleFunc("GET /api/clinics/{clinicSlug}/schedule", doctorHandler.GetPublicSchedule)
-	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/breeds", groomingHandler.GetPublicBreeds)
-	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/schedule", groomingHandler.GetPublicSchedule)
-	http.HandleFunc("GET /api/clinics/{clinicSlug}/clinic-info", clinicInfoHandler.GetPublicClinicInfo)
+	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
+	miniApp := middleware.TelegramInitData(botToken)
+	http.HandleFunc("/api/clinics/{clinicSlug}/animals", miniApp(animalHandler.GetAnimals))
+	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{slug}/categories", miniApp(animalHandler.GetCategories))
+	http.HandleFunc("/api/clinics/{clinicSlug}/animals/{animalSlug}/categories/{categorySlug}/articles", miniApp(articleHandler.GetArticles))
+	http.HandleFunc("/api/clinics/{clinicSlug}/articles/{slug}", miniApp(articleHandler.GetArticle))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/doctors", miniApp(doctorHandler.GetPublicDoctors))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/schedule", miniApp(doctorHandler.GetPublicSchedule))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/breeds", miniApp(groomingHandler.GetPublicBreeds))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/schedule", miniApp(groomingHandler.GetPublicSchedule))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/clinic-info", miniApp(clinicInfoHandler.GetPublicClinicInfo))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))

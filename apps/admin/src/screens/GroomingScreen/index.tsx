@@ -145,8 +145,12 @@ export function GroomingScreen() {
       setApptDialog({ open: false });
       notify('Запись создана', 'success');
     },
-    onError: (err: any) => {
-      const msg = err?.response?.data ?? 'Ошибка создания записи';
+    onError: (err: unknown) => {
+      const data =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: string } }).response?.data
+          : undefined;
+      const msg = data ?? 'Ошибка создания записи';
       notify(msg, 'error');
     },
   });
