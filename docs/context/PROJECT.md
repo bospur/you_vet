@@ -33,7 +33,7 @@ packages/cat/    @you-vet/cat (CatLogo, CatPreloader)
 
 **Фактически:** один VPS = одна клиника (`CLINIC_SLUG`, `VITE_CLINIC_SLUG` в secrets).
 
-**В схеме БД:** мультитенантность (`clinics`, `clinic_id` на таблицах). Код частично готов, но tenant-scoping в update/delete неполный — см. [ISSUES.md](./ISSUES.md).
+**В схеме БД:** мультитенантность (`clinics`, `clinic_id` на таблицах). Tenant-scoping на update/delete — см. [ISSUES.md](./ISSUES.md) (SEC-02 fixed).
 
 ## CI/CD (актуальные workflows в `.github/workflows/`)
 

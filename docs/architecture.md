@@ -68,7 +68,7 @@ src/
 src/
 ├── api/          — запросы к публичному API (fetchClinicInfo, fetchAnimals…)
 ├── screens/      — Home, Animals, Categories, Articles, Doctors, Schedule, Grooming
-└── components/   — NavGrid (2×2 сетка), NavList, DoctorAvatar…
+└── components/   — NavGrid (2×2, tap-анимации), FeaturedArticles, NavList, DoctorAvatar…
 ```
 
 ### packages/types — Общие TypeScript типы

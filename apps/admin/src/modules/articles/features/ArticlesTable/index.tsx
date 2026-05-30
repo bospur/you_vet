@@ -25,15 +25,24 @@ const statusChip = (status: Article['status']) =>
     ? <Chip label="Опубликована" size="small" color="success" variant="outlined" />
     : <Chip label="Черновик" size="small" variant="outlined" />;
 
-const featuredChip = () => (
-  <Chip
-    icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
-    label="На главной"
-    size="small"
-    color="warning"
-    variant="outlined"
-  />
-);
+const featuredChip = (compact = false) => {
+  const chip = (
+    <Chip
+      icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
+      label={compact ? ' ' : 'На главной'}
+      size="small"
+      color="warning"
+      variant="outlined"
+      sx={compact ? {
+        height: 24,
+        '& .MuiChip-label': { width: 0, p: 0, overflow: 'hidden' },
+        '& .MuiChip-icon': { m: 0, ml: '6px !important' },
+      } : undefined}
+    />
+  );
+
+  return compact ? <Tooltip title="На главной">{chip}</Tooltip> : chip;
+};
 
 export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: ArticlesTableProps) {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -53,15 +62,29 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {data.map((article) => (
-          <Paper key={article.id} sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Paper key={article.id} sx={{ p: 2, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-              <Typography fontWeight={600} noWrap>{article.title}</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                <Typography variant="body2" color="text.secondary" noWrap>{article.animal_name ?? '—'}</Typography>
+              <Typography
+                fontWeight={600}
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
+                {article.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.5 }}>
+                {article.animal_name ?? '—'}
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
                 {statusChip(article.status)}
-                {role === 'admin' && article.featured && featuredChip()}
+                {role === 'admin' && article.featured && featuredChip(true)}
               </Box>
             </Box>
+            <Box sx={{ display: 'flex', flexShrink: 0, gap: 0.25 }}>
             {canEdit(article) && (
               <Tooltip title="Редактировать">
                 <IconButton size="small" onClick={() => onEdit(article)}><EditIcon fontSize="small" /></IconButton>
@@ -79,6 +102,7 @@ export function ArticlesTable({ data, role, onEdit, onDelete, onPublish }: Artic
                 <IconButton size="small" color="error" onClick={() => onDelete(article)}><DeleteIcon fontSize="small" /></IconButton>
               </Tooltip>
             )}
+            </Box>
           </Paper>
         ))}
       </Box>
