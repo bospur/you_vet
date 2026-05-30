@@ -54,25 +54,24 @@ export default function HomeScreen() {
 
   const bannerUrl = info?.banner_url ? `${BASE_URL}${info.banner_url}` : null;
   const bannerEnabled = info?.banner_enabled ?? false;
-  const showBannerImage = bannerEnabled && bannerUrl && !bannerClosed;
-  const showBannerPlaceholder = bannerEnabled && !showBannerImage;
+  const showBanner = bannerEnabled && !bannerClosed;
 
   return (
     <div className={styles.wrapper}>
       <HomeHero info={info} />
 
-      {bannerEnabled && (
+      {showBanner && (
         <div className={styles.bannerWrap}>
-          {showBannerImage ? (
+          {bannerUrl ? (
             <>
               <img src={bannerUrl} alt="banner" className={styles.banner} />
               <button className={styles.bannerClose} onClick={handleCloseBanner} aria-label="Закрыть баннер">
                 ✕
               </button>
             </>
-          ) : showBannerPlaceholder ? (
+          ) : (
             <div className={styles.bannerPlaceholder} aria-hidden />
-          ) : null}
+          )}
         </div>
       )}
 
