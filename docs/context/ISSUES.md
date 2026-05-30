@@ -47,6 +47,7 @@
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
 | PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
 | PRD-08 | ⚪ | Polish главной (haptic, сегодня в клинике, sticky звонок, skeleton/fallback) | **fixed 2026-05-30** — ожидает деплой |
+| PRD-09 | ⚪ | Карточка клиента со штрихкодом (бот + Mini App → mobile) | planned — **Фаза 8**; интеграция с БД клиники по запросу |
 
 ## Следующие шаги
 
