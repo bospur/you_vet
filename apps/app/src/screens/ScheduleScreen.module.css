@@ -48,8 +48,8 @@
 }
 
 .chipActive {
-  border-color: #2e7d32;
-  background: rgba(76, 175, 80, 0.1);
+  border-color: var(--vet-accent);
+  background: var(--vet-accent-soft-chip);
 }
 
 .chipDay {
@@ -60,7 +60,7 @@
 }
 
 .chipActive .chipDay {
-  color: #2e7d32;
+  color: var(--vet-accent);
 }
 
 .chipDate {
@@ -70,12 +70,12 @@
 }
 
 .chipActive .chipDate {
-  color: #2e7d32;
+  color: var(--vet-accent);
 }
 
 .slotsCard {
-  background: rgba(76, 175, 80, 0.06);
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  background: var(--vet-accent-soft-subtle);
+  border: 1px solid var(--vet-accent-border-light);
   border-radius: 16px;
   padding: 14px;
   display: flex;
@@ -86,7 +86,7 @@
 .slotsHeader {
   font-size: 15px;
   font-weight: 600;
-  color: #2e7d32;
+  color: var(--vet-accent);
   text-transform: capitalize;
 }
 
@@ -130,9 +130,9 @@
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
-  color: #2e7d32;
-  background: rgba(76, 175, 80, 0.12);
-  border: 1px solid rgba(76, 175, 80, 0.35);
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
+  border: 1px solid var(--vet-accent-border);
   border-radius: 14px;
   padding: 12px 20px;
   text-align: center;

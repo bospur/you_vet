@@ -33,3 +33,25 @@ func (h *StatsHandler) GetSummary(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, summary)
 }
+
+// ListUsers обрабатывает GET /api/admin/stats/users
+func (h *StatsHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	users, err := h.telegramRepo.ListByClinicID(claims.ClinicID, 500)
+	if err != nil {
+		log.Printf("ошибка получения списка telegram_users: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	if users == nil {
+		users = []repository.TelegramUserListItem{}
+	}
+
+	writeJSON(w, http.StatusOK, users)
+}

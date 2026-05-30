@@ -128,6 +128,7 @@ func main() {
 
 	// Stats (только admin)
 	http.HandleFunc("GET /api/admin/stats/summary", adminAuth(statsHandler.GetSummary))
+	http.HandleFunc("GET /api/admin/stats/users", adminAuth(statsHandler.ListUsers))
 
 	// Users (только admin)
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))

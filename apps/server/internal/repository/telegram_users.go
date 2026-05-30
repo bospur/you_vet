@@ -75,3 +75,48 @@ func (r *TelegramUserRepository) GetStatsSummary(clinicID int) (*StatsSummary, e
 	}
 	return &s, nil
 }
+
+// TelegramUserListItem — строка для таблицы в admin.
+type TelegramUserListItem struct {
+	TelegramUserID int64     `json:"telegram_user_id"`
+	FirstName      string    `json:"first_name"`
+	Username       string    `json:"username"`
+	FirstSeen      time.Time `json:"first_seen"`
+	LastSeen       time.Time `json:"last_seen"`
+}
+
+// ListByClinicID возвращает посетителей Mini App, новые активности сверху.
+func (r *TelegramUserRepository) ListByClinicID(clinicID int, limit int) ([]TelegramUserListItem, error) {
+	if limit <= 0 {
+		limit = 500
+	}
+
+	rows, err := r.db.Query(`
+		SELECT telegram_user_id, first_name, username, first_seen, last_seen
+		FROM telegram_users
+		WHERE clinic_id = $1
+		ORDER BY last_seen DESC
+		LIMIT $2
+	`, clinicID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []TelegramUserListItem
+	for rows.Next() {
+		var u TelegramUserListItem
+		var firstName, username sql.NullString
+		if err := rows.Scan(&u.TelegramUserID, &firstName, &username, &u.FirstSeen, &u.LastSeen); err != nil {
+			return nil, err
+		}
+		if firstName.Valid {
+			u.FirstName = firstName.String
+		}
+		if username.Valid {
+			u.Username = username.String
+		}
+		users = append(users, u)
+	}
+	return users, nil
+}

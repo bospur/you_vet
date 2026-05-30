@@ -2,110 +2,54 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30 (post-release polish + планирование)
+## Сессия 2026-05-30 (M0 polish + admin «Обзор»)
 
-**Ветка:** `work-home-fix` → запушено, **деплой сделан** ✅
+**Ветка:** `work-doc-up` → push в origin, затем PR в `dev`
 
 ### Сделано
 
-- [x] Mini App: подписи у карточек «Полезное»; «Статьи» — «советы и помощь» (одна строка)
-- [x] Mini App: иконки ❤️ (статьи), 👤 (врачи)
-- [x] Mini App: tap-feedback + микроанимации иконок (`prefers-reduced-motion`)
-- [x] Admin: featured UX — счётчик, колонка в таблице, toggle с лимитом, моб. адаптив ⭐
-- [x] Документация: context, roadmap, app/admin guides
-- [x] **Prod:** главная одобрена владельцем — «выглядит намного лучше»
+**Mini App:**
+- [x] Haptic, «Сегодня в клинике», skeleton/fallback «Рекомендуем», spinner вместо CatPreloader
+- [x] Тёмная тема TG: `data-tg-theme` + токены `--vet-*` на всех экранах
+- [x] Sticky «Позвонить» — **убран** (фидбек); звонок: «О нас» + иконка в хедере
 
-### Следующая сессия (приоритет)
+**M0 аналитика (в `dev` после PR #35 + эта ветка):**
+- [x] `012_telegram_users`, upsert из initData
+- [x] `GET /api/admin/stats/summary` + `GET /api/admin/stats/users`
+- [x] Admin «Обзор»: карточки + **таблица посетителей** (имя, @username, ID, first/last_seen)
+- [x] Fix 404: admin вызывал `/stats/summary` → `/api/admin/stats/summary`
 
-**1. M0 аналитика + мини-дашборд в admin** (согласовано, начать здесь)
+**Документация:** context, roadmap.html, api.md, user-guide, README
 
-**2.** Фаза 5 / PRD-03 — запись на приём (после или параллельно)
+### Следующая сессия
+
+1. **Merge + деплой** `work-doc-up` → `dev` → проверить «Обзор» в prod
+2. **Фаза 5** — запись на приём (PRD-03)
+3. M0 шаг 2 — `analytics_events` (по необходимости)
 
 ---
 
-## Аудит: учёт уникальных пользователей
+## M0 — что в коде
 
-> Проверено 2026-05-30. «Заклад» есть только в roadmap (Фаза 6), **в коде не реализовано**.
-
-| Что есть | Что делает |
+| API / UI | Статус |
 |---|---|
-| `TelegramInitData` middleware | Проверяет подпись initData, **не сохраняет** `user.id` |
-| `users` в БД | **Сотрудники админки** (login/password), не клиенты Telegram |
-| Бот (`bot.go`) | Видит `c.Sender().ID`, **не пишет в БД** |
-| Миграций analytics | **Нет** (последняя — `011_articles_featured`) |
-
-**Точка входа для сбора:** initData уже на каждом запросе Mini App → JSON-поле `user` содержит `id`, `first_name`, `username`.
-
----
-
-## План M0 аналитики (следующая реализация)
-
-### Шаг 1 — сбор без тяжёлого UI (1–2 сессии)
-
-**Миграция `012_telegram_users`:**
-```sql
-telegram_users (
-  clinic_id, telegram_user_id, first_seen, last_seen,
-  username, first_name
-)
--- опционально позже: app_visits для графиков по дням
-```
-
-**Backend:**
-- После успешной валидации initData → upsert `telegram_users`, обновить `last_seen`
-- `GET /api/admin/stats/summary` (только admin):
-  - уникальные: сегодня / 7 дней / 30 дней / всего
-
-**Admin UI:**
-- Экран «Обзор» / «Статистика» — 3–4 карточки MUI
-- Пункт меню для admin (можно первым в sidebar)
-- Default redirect admin → `/dashboard` вместо `/animals` (опционально)
-
-**Бонус для Фазы 5:** та же `telegram_users` нужна для уведомлений бота о записи.
-
-### Шаг 2 — события (когда понадобится глубже, PRD-04 / Фаза 6)
-
-- Таблица `analytics_events`
-- События: `screen_view`, `article_open`, `doctor_view`
-- Дашборд: топ разделов, топ статей
-- **Можно начать писать события до UI** — копить данные заранее
+| Upsert `telegram_users` | ✅ |
+| `GET /api/admin/stats/summary` | ✅ |
+| `GET /api/admin/stats/users` | ✅ |
+| Admin `/dashboard` | ✅ |
+| `analytics_events` | ❌ Фаза 6 |
 
 ---
 
-## Идеи по главной Mini App (backlog)
+## Backlog главной
 
-### Быстро и полезно
-- [ ] **Haptic feedback** на tap карточек — `Telegram.WebApp.HapticFeedback.impactOccurred('light')`
-- [ ] **«Сегодня в клинике»** — строка из расписания под «Полезное»
-- [ ] **Sticky «Позвонить»** когда «О нас» свёрнут
-
-### Средний приоритет
-- [ ] **PRD-05** — баннер: текст / текст+картинка / превью → info-страница
-- [ ] **Fallback «Рекомендуем»** — последние статьи, если featured пуст
-- [ ] **Skeleton для «Рекомендуем»** (как у груминга)
-
-### После Фазы 5
-- [ ] CTA **«Записаться»** на главной
-
-### Не трогать пока
-- UI-02 — выравнивание подписей NavGrid (костыль с короткими подписями работает)
+- [ ] PRD-05 — баннер (текст / картинка / info-страница)
+- [ ] CTA «Записаться» — после Фазы 5
+- UI-02 NavGrid — не трогать
 
 ---
 
 ## Заметки
 
-- Featured сбрасывается при снятии с публикации (draft)
-- Mobile app M0: `/api/mobile/v1` — research, см. `docs/mobile/`
-
----
-
-## Шаблон
-
-```markdown
-## Сессия YYYY-MM-DD
-**Цель:**
-### Сделано
-- [ ]
-### Следующая сессия
-- [ ]
-```
+- Featured → draft сбрасывает featured
+- Таблица «Обзор» пустая до визитов Mini App после деплоя server+012

@@ -77,7 +77,7 @@ src/
 
 ### packages/cat — UI-компоненты
 
-`@you-vet/cat` — CatLogo, CatPreloader (используется в Mini App).
+`@you-vet/cat` — legacy-пакет (CatLogo, CatPreloader); Mini App с 2026-05-30 использует локальный CSS spinner.
 
 ## Модель деплоя vs схема данных
 

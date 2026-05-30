@@ -149,7 +149,7 @@ you_vet/<br>
 │   └── mobile/    <span class="comment">← Mobile App (Capacitor) — planned</span><br>
 ├── packages/<br>
 │   ├── types/     <span class="comment">← @you-vet/types — общие TypeScript типы</span><br>
-│   └── cat/       <span class="comment">← @you-vet/cat — CatLogo, CatPreloader</span><br>
+│   └── cat/       <span class="comment">← @you-vet/cat — legacy (Mini App: CSS spinner)</span><br>
 ├── docker-compose.yml  <span class="comment">← локальный запуск (db + server)</span><br>
 ├── turbo.json<br>
 └── package.json   <span class="comment">← npm workspaces</span>
@@ -268,9 +268,10 @@ apps/server/<br>
   <tr><td>Grooming</td><td>Породы, шаблон недели, записи</td></tr>
   <tr><td>Settings</td><td>GET/PATCH <code>/api/admin/settings</code></td></tr>
   <tr><td>Users</td><td>CRUD (только admin)</td></tr>
+  <tr><td>Stats</td><td><code>GET /api/admin/stats/summary</code>, <code>GET /api/admin/stats/users</code> — обзор Mini App (только admin)</td></tr>
 </table>
 
-<h3>База данных — 9 миграций</h3>
+<h3>База данных — 12 миграций</h3>
 <table>
   <tr><th>#</th><th>Что создаёт</th></tr>
   <tr><td>001</td><td><code>animals</code> — животные (slug, icon, sort_order)</td></tr>
@@ -281,6 +282,9 @@ apps/server/<br>
   <tr><td>007</td><td><code>grooming_breeds</code>, <code>grooming_template</code>, <code>grooming_appointments</code></td></tr>
   <tr><td>008</td><td><code>clinic_info</code> — профиль клиники</td></tr>
   <tr><td>009</td><td><code>articles.animal_id</code>, удаление categories / article_categories</td></tr>
+  <tr><td>010</td><td><code>clinic_info.banner_enabled</code></td></tr>
+  <tr><td>011</td><td><code>articles.featured</code> — блок «Рекомендуем» на главной</td></tr>
+  <tr><td>012</td><td><code>telegram_users</code> — учёт посетителей Mini App (M0 аналитика)</td></tr>
 </table>
 
 <div class="tip">
@@ -298,6 +302,7 @@ apps/server/<br>
       <li>Публикация статей и врачей</li>
       <li>Управление пользователями</li>
       <li>Настройки клиники</li>
+      <li>«Обзор» — статистика Mini App</li>
     </ul>
   </div>
   <div class="role-card">

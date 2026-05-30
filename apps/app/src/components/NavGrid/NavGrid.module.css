@@ -38,7 +38,7 @@
 .skeletonIcon,
 .skeletonLabel,
 .skeletonSubtitle {
-  background: rgba(51, 139, 78, 0.12);
+  background: var(--vet-skeleton);
   border-radius: 8px;
   animation: pulse 1.2s ease-in-out infinite;
 }

@@ -5,7 +5,7 @@
   width: 100%;
   margin-top: 10px;
   padding: 12px 14px;
-  background: rgba(51, 139, 78, 0.1);
+  background: var(--vet-brand-soft);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -36,7 +36,7 @@
   margin-top: 10px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(51, 139, 78, 0.12);
+  background: var(--vet-skeleton);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
