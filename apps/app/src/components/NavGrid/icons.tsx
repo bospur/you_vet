@@ -22,12 +22,11 @@ function NavIcon({ children }: NavIconProps) {
 export function IconFirstAid() {
   return (
     <NavIcon>
-      <rect x="12" y="10" width="40" height="44" rx="6" stroke="currentColor" strokeWidth="3" />
       <path
-        d="M32 22v20M22 32h20"
+        d="M32 50c0 0-18-12-18-22 0-6 4-10 10-10 4 0 7 3 8 7 1-4 4-7 8-7 6 0 10 4 10 10 0 10-18 22-18 22z"
         stroke="currentColor"
-        strokeWidth="3.5"
-        strokeLinecap="round"
+        strokeWidth="3"
+        strokeLinejoin="round"
       />
     </NavIcon>
   );
@@ -42,14 +41,6 @@ export function IconDoctors() {
         stroke="currentColor"
         strokeWidth="3"
         strokeLinecap="round"
-      />
-      <circle cx="46" cy="46" r="5" stroke="currentColor" strokeWidth="2.5" />
-      <path
-        d="M46 41V32h-8"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </NavIcon>
   );

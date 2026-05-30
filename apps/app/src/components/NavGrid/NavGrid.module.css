@@ -30,7 +30,8 @@
 }
 
 .skeletonIcon,
-.skeletonLabel {
+.skeletonLabel,
+.skeletonSubtitle {
   background: rgba(51, 139, 78, 0.12);
   border-radius: 8px;
   animation: pulse 1.2s ease-in-out infinite;
@@ -45,6 +46,12 @@
 .skeletonLabel {
   width: 72px;
   height: 14px;
+}
+
+.skeletonSubtitle {
+  width: 88px;
+  height: 11px;
+  border-radius: 6px;
 }
 
 @keyframes pulse {
