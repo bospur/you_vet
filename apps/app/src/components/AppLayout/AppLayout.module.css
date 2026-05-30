@@ -4,64 +4,8 @@
   min-height: 100dvh;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: var(--tgui--bg_color);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.logoLink {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  border-radius: 8px;
-  background: rgba(76, 175, 80, 0.08);
-}
-
-.clinicName {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--vet-green-title);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.callBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--vet-green-title);
-  text-decoration: none;
-  transition: opacity 0.15s;
-}
-
-.callBtn:active {
-  opacity: 0.6;
-}
-
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
-

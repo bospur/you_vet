@@ -3,10 +3,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { ClinicInfo } from '../api';
 import { HomeHero } from '../components/HomeHero/HomeHero';
 import { NavGrid } from '../components/NavGrid/NavGrid';
+import { IconFirstAid, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
-import iconFirstAid from '../assets/home/icon-first-aid.png';
-import iconSchedule from '../assets/home/icon-schedule.png';
-import iconGrooming from '../assets/home/icon-grooming.png';
 import styles from './HomeScreen.module.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -28,7 +26,7 @@ export default function HomeScreen() {
   const navItems = [
     {
       key: 'animals',
-      icon: <img src={iconFirstAid} alt="" className={styles.navIcon} />,
+      icon: <IconFirstAid />,
       label: 'Первая помощь',
       onClick: () => navigate('/animals'),
     },
@@ -39,14 +37,14 @@ export default function HomeScreen() {
     },
     {
       key: 'schedule',
-      icon: <img src={iconSchedule} alt="" className={styles.navIcon} />,
+      icon: <IconSchedule />,
       label: 'Расписание',
       onClick: () => navigate('/schedule'),
     },
     ...(!groomingLoading && groomingAvailable
       ? [{
           key: 'grooming',
-          icon: <img src={iconGrooming} alt="" className={styles.navIcon} />,
+          icon: <IconGrooming />,
           label: 'Груминг',
           onClick: () => navigate('/grooming'),
         }]

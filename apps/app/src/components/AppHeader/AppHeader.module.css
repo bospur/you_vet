@@ -1,0 +1,48 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px var(--vet-page-padding);
+  background: var(--tgui--bg_color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.titleBtn {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: clamp(28px, 8vw, 35px);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--vet-green-title);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  transition: opacity 0.15s;
+}
+
+.titleBtn:active {
+  opacity: 0.65;
+}
+
+.phoneBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 42px;
+  color: var(--vet-green-title);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.phoneBtn:active {
+  opacity: 0.6;
+}
