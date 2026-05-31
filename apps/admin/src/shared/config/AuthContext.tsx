@@ -4,7 +4,7 @@ import { fetchCurrentUser, logoutRequest, type AuthUserResponse } from '../../da
 export interface AuthUser {
   id: number;
   clinicId: number;
-  role: 'admin' | 'editor' | 'groomer';
+  role: 'admin' | 'editor' | 'groomer' | 'manager';
 }
 
 interface AuthContextValue {

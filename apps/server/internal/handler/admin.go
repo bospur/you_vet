@@ -499,7 +499,7 @@ func (h *AdminHandler) CreateAdminUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "логин и пароль обязательны", http.StatusBadRequest)
 		return
 	}
-	if body.Role != "admin" && body.Role != "editor" && body.Role != "groomer" {
+	if body.Role != "admin" && body.Role != "editor" && body.Role != "groomer" && body.Role != "manager" {
 		http.Error(w, "недопустимая роль", http.StatusBadRequest)
 		return
 	}

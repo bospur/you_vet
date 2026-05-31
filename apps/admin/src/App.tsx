@@ -5,15 +5,32 @@ import { NotificationProvider } from './shared/ui/Notification/NotificationConte
 import { ProtectedRoute } from './shared/ui/ProtectedRoute';
 import { Loader } from './shared/ui/Loader';
 
-function NonGroomerRoute() {
+/** Контент (статьи, врачи…) — admin и editor */
+function ContentRoute() {
   const { user } = useAuth();
   if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
+  if (user?.role === 'manager') return <Navigate to="/booking/services" replace />;
+  return <Outlet />;
+}
+
+/** Запись на приём — admin и manager */
+function BookingRoute() {
+  const { user } = useAuth();
+  if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
+  if (user?.role === 'editor') return <Navigate to="/animals" replace />;
+  return <Outlet />;
+}
+
+function GroomingRoute() {
+  const { user } = useAuth();
+  if (user?.role === 'manager') return <Navigate to="/booking/services" replace />;
   return <Outlet />;
 }
 
 function DefaultRedirect() {
   const { user } = useAuth();
   if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
+  if (user?.role === 'manager') return <Navigate to="/booking/services" replace />;
   if (user?.role === 'admin') return <Navigate to="/dashboard" replace />;
   return <Navigate to="/animals" replace />;
 }
@@ -29,6 +46,9 @@ const ScheduleScreen = lazy(() => import('./screens/ScheduleScreen').then((m) =>
 const GroomingScreen = lazy(() => import('./screens/GroomingScreen').then((m) => ({ default: m.GroomingScreen })));
 const ClinicInfoScreen = lazy(() => import('./screens/ClinicInfoScreen').then((m) => ({ default: m.ClinicInfoScreen })));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen').then((m) => ({ default: m.DashboardScreen })));
+const BookingServicesScreen = lazy(() =>
+  import('./screens/BookingServicesScreen').then((m) => ({ default: m.BookingServicesScreen })),
+);
 
 const router = createBrowserRouter([
   { path: '/login', element: <Suspense fallback={<Loader />}><LoginScreen /></Suspense> },
@@ -36,7 +56,16 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <NonGroomerRoute />,
+        element: <BookingRoute />,
+        children: [
+          {
+            path: '/booking/services',
+            element: <Suspense fallback={<Loader />}><BookingServicesScreen /></Suspense>,
+          },
+        ],
+      },
+      {
+        element: <ContentRoute />,
         children: [
           { path: '/dashboard', element: <Suspense fallback={<Loader />}><DashboardScreen /></Suspense> },
           { path: '/clinic-info', element: <Suspense fallback={<Loader />}><ClinicInfoScreen /></Suspense> },
@@ -51,7 +80,12 @@ const router = createBrowserRouter([
           { path: '/schedule', element: <Suspense fallback={<Loader />}><ScheduleScreen /></Suspense> },
         ],
       },
-      { path: '/grooming', element: <Suspense fallback={<Loader />}><GroomingScreen /></Suspense> },
+      {
+        element: <GroomingRoute />,
+        children: [
+          { path: '/grooming', element: <Suspense fallback={<Loader />}><GroomingScreen /></Suspense> },
+        ],
+      },
     ],
   },
   { path: '*', element: <DefaultRedirect /> },

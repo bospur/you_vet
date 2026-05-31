@@ -25,8 +25,15 @@
 
 ### Следующая сессия
 
-1. **B1:** миграция `013_booking` + CRUD услуг + роль `manager` + admin `/booking/services`
-2. Обновить `server/api.md`, `data-model.md` по мере кода
+1. **Деплой B1:** server (миграция 013) + admin
+2. **B2:** расписание и ёмкость
+3. Создать пользователя с ролью `manager` в admin → Users
+
+### B1 (код готов, ждёт деплой)
+
+- [x] Миграция `013_booking`, seed 6 услуг
+- [x] API `/api/admin/booking/service-types`
+- [x] Роль `manager`, admin «Запись → Услуги»
 
 ---
 

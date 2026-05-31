@@ -8,7 +8,7 @@ export interface LoginPayload {
 export interface AuthUserResponse {
   id: number;
   clinic_id: number;
-  role: 'admin' | 'editor' | 'groomer';
+  role: 'admin' | 'editor' | 'groomer' | 'manager';
 }
 
 export interface LoginResponse {

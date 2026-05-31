@@ -14,7 +14,7 @@ export const MAX_FEATURED_ARTICLES = 3;
 
 interface ArticlesTableProps {
   data: Article[];
-  role: 'admin' | 'editor' | 'groomer';
+  role: 'admin' | 'editor' | 'groomer' | 'manager';
   onEdit: (article: Article) => void;
   onDelete: (article: Article) => void;
   onPublish: (article: Article) => void;

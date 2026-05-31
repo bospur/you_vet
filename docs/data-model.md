@@ -97,6 +97,19 @@ grooming_appointments
   start_time, end_time (вычисляется: start_time + breed.duration)
 ```
 
+### Запись на приём (миграция 013, B1)
+
+```
+booking_settings
+  clinic_id PK, horizon_weeks (default 2), staff_chat_id
+
+booking_service_types
+  id, clinic_id, name, category (uzi|surgery|xray)
+  species_filter (any|cats_only), capacity_group (напр. cat_surgery)
+  default_duration_min, booking_mode (instant|pending_request)
+  instructions_client, rules JSONB, is_active, sort_order
+```
+
 ## Форматы полей
 
 ### day_of_week

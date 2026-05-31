@@ -61,6 +61,7 @@ func main() {
 	userRepo := repository.NewUserRepository(database)
 	doctorRepo := repository.NewDoctorRepository(database)
 	groomingRepo := repository.NewGroomingRepository(database)
+	bookingRepo := repository.NewBookingRepository(database)
 	clinicInfoRepo := repository.NewClinicInfoRepository(database)
 	telegramUserRepo := repository.NewTelegramUserRepository(database)
 
@@ -88,6 +89,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(animalRepo, articleRepo, userRepo, jwtSecret)
 	doctorHandler := handler.NewDoctorHandler(doctorRepo, uploadsDir)
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
+	bookingHandler := handler.NewBookingHandler(bookingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
 	statsHandler := handler.NewStatsHandler(telegramUserRepo)
 
@@ -117,6 +119,9 @@ func main() {
 	}
 	groomingAuth := func(h http.HandlerFunc) http.HandlerFunc {
 		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin", "editor", "groomer"))
+	}
+	bookingAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin", "manager"))
 	}
 	adminAuth := func(h http.HandlerFunc) http.HandlerFunc {
 		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin"))
@@ -189,6 +194,12 @@ func main() {
 	http.HandleFunc("GET /api/admin/grooming/appointments", groomingAuth(groomingHandler.GetAppointments))
 	http.HandleFunc("POST /api/admin/grooming/appointments", groomingAuth(groomingHandler.CreateAppointment))
 	http.HandleFunc("DELETE /api/admin/grooming/appointments/{id}", groomingAuth(groomingHandler.DeleteAppointment))
+
+	// Booking (запись на приём) — B1: услуги
+	http.HandleFunc("GET /api/admin/booking/service-types", bookingAuth(bookingHandler.GetServiceTypes))
+	http.HandleFunc("POST /api/admin/booking/service-types", bookingAuth(bookingHandler.CreateServiceType))
+	http.HandleFunc("PUT /api/admin/booking/service-types/{id}", bookingAuth(bookingHandler.UpdateServiceType))
+	http.HandleFunc("DELETE /api/admin/booking/service-types/{id}", bookingAuth(bookingHandler.DeleteServiceType))
 
 	publicURL := os.Getenv("PUBLIC_URL")
 	if publicURL == "" {
