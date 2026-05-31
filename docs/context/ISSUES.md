@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-05-30
+> Последнее обновление: 2026-05-30 (prod актуален)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -27,6 +27,8 @@
 | UI-01 | ⚪ | Dreamstime PNG в SVG-ассетах меню | **fixed** — inline SVG в `NavGrid/icons.tsx` |
 | UI-02 | ⚪ | Выравнивание заголовков NavGrid при разной длине подписи | open — костыль: короткие подписи в одну строку |
 | UI-03 | ⚪ | CatPreloader в Mini App | **fixed 2026-05-30** — зелёный CSS spinner |
+| UI-04 | ⚪ | Картинка кота в блоке «О нас» на главной | **fixed 2026-05-30** — убрана, `cat.png` удалён, слоган по центру |
+| UI-05 | 🟡 | Прочие UI-правки по фидбеку заказчика | open — уточнить список пунктов |
 
 ## Документация
 
@@ -46,12 +48,12 @@
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
 | PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
-| PRD-08 | ⚪ | Polish главной (haptic, сегодня в клинике, sticky звонок, skeleton/fallback) | **fixed 2026-05-30** — ожидает деплой |
+| PRD-08 | ⚪ | Polish главной (haptic, сегодня в клинике, sticky звонок, skeleton/fallback) | **fixed 2026-05-30** — в prod |
 | PRD-09 | ⚪ | Карточка клиента со штрихкодом (бот + Mini App → mobile) | planned — **Фаза 8**; интеграция с БД клиники по запросу |
 
 ## Следующие шаги
 
-1. **Merge `work-doc-up`** → деплой server (012) + app + admin + docs
+1. **Анкета директору** — [registration-phase-survey.html](../registration-phase-survey.html) → ответы → UX Фазы 5
 2. PRD-03 — запись на приём (Фаза 5)
 3. PRD-04 шаг 2 — `analytics_events`, топ разделов/статей
 4. SEC-04 — JWT из localStorage в httpOnly cookie

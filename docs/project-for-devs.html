@@ -527,8 +527,9 @@ const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
   <tr><td>RBAC + tenant scoping на бэкенде</td><td>✅ Готово</td><td>2026-05-30</td></tr>
   <tr><td>CORS whitelist + rate limit login</td><td>✅ Готово</td><td>2026-05-30</td></tr>
   <tr><td>CI quality gate (test/build)</td><td>✅ Готово</td><td>ci.yml на PR</td></tr>
-  <tr><td>Запись на приём (pending/confirm flow)</td><td>🔴 Не сделано</td><td>Ключевая фича</td></tr>
-  <tr><td>Аналитика посещений</td><td>🟡 Не начато</td><td>После записи</td></tr>
+  <tr><td>Запись на приём (pending/confirm flow)</td><td>🔴 Не сделано</td><td>Ключевая фича · <a href="registration-phase-survey.html">анкета для клиники</a></td></tr>
+  <tr><td>Аналитика посещений (M0)</td><td>✅ Готово</td><td>«Обзор» в admin, миграция 012, prod</td></tr>
+  <tr><td>Аналитика событий (полная)</td><td>🟡 Не начато</td><td>Фаза 6</td></tr>
 </table>
 
 <h2>Документация в репо</h2>
@@ -542,10 +543,17 @@ const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
   <tr><td><code>docs/roles.md</code></td><td>Ролевая матрица прав</td></tr>
   <tr><td><code>docs/deployment.md</code></td><td>Деплой, VPS, Nginx, SSL</td></tr>
   <tr><td><code>docs/development.md</code></td><td>Локальная разработка, git workflow</td></tr>
+  <tr><td><code>docs/registration-phase-survey.html</code></td><td>Анкета для клиники перед фазой записи</td></tr>
   <tr><td><code>docs/monorepo.md</code></td><td>Устройство монорепо, Turborepo</td></tr>
 </table>
 
 <hr>
+
+<div style="background:#f0f7ff;border:1px solid #c8e6c9;border-radius:8px;padding:16px 20px;margin:32px 0 24px;">
+  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#2e7d32;margin-bottom:6px;">Для клиники</div>
+  <a href="registration-phase-survey.html" style="font-weight:600;font-size:15px;color:#1a1a1a;text-decoration:none;">📋 Сбор данных для фазы записи на приём</a>
+  <p style="margin:6px 0 0;font-size:13px;color:#555;">Анкета для директора — как у вас работает запись сейчас и что нужно в приложении.</p>
+</div>
 
 <p style="color:#888; font-size:12px; text-align:center;">YouVet · github.com/bospur/you_vet · вопросы — в Issues или напрямую</p>
 

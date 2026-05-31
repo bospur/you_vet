@@ -29,6 +29,7 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [design-brief.html](./design-brief.html) | Дизайнеры |
 | [audit.html](./audit.html) | Технический аудит |
 | [mobile.html](./mobile.html) | Мобильное приложение (Capacitor, research, roadmap) |
+| [registration-phase-survey.html](./registration-phase-survey.html) | Анкета для клиники — сбор данных перед записью на приём |
 
 ### Мобильное приложение (`apps/mobile` — planned)
 

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouVet — Сбор данных для фазы записи</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      color: #1a1a1a;
+      background: #ffffff;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 24px 80px;
+      line-height: 1.65;
+    }
+    .doc-back { margin-bottom: 8px; }
+    .doc-back a { color: #555; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ddd; }
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 32px; }
+    .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; }
+    .header .subtitle { font-size: 15px; color: #555; margin-top: 8px; }
+    .header .meta { margin-top: 12px; font-size: 13px; color: #888; }
+    .intro {
+      background: #f0f7ff;
+      border-left: 3px solid #4caf50;
+      padding: 16px 18px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 36px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; }
+    p { margin-bottom: 12px; color: #333; }
+    .hint {
+      font-size: 13px;
+      color: #666;
+      margin: -4px 0 12px;
+      padding-left: 0;
+    }
+    .hint em { font-style: normal; color: #888; }
+    .question {
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px dashed #eee;
+    }
+    .question:last-of-type { border-bottom: none; }
+    .q-num {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #2e7d32;
+      background: #e8f5e9;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .q-title { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+    .options { list-style: none; margin: 10px 0 12px; }
+    .options li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .box {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #bbb;
+      border-radius: 4px;
+      margin-top: 2px;
+    }
+    .box.round { border-radius: 50%; }
+    .answer-lines {
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      min-height: 72px;
+      padding: 10px 12px;
+      background: #fafafa;
+      color: #aaa;
+      font-size: 13px;
+    }
+    .glossary {
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 24px 0 32px;
+      font-size: 13px;
+    }
+    .glossary dt { font-weight: 600; margin-top: 10px; }
+    .glossary dt:first-child { margin-top: 0; }
+    .glossary dd { color: #555; margin: 4px 0 0; }
+    .footer-note {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      font-size: 13px;
+      color: #666;
+    }
+    @media print {
+      body { margin: 0; padding: 16px; }
+      .doc-back { display: none; }
+      .answer-lines { min-height: 96px; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 0 16px 60px; margin-top: 24px; }
+      .header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<p class="doc-back"><a href="index.html">← Все документы</a></p>
+
+<div class="header">
+  <h1>Сбор данных для фазы записи на приём</h1>
+  <div class="subtitle">Анкета для директора клиники · поможет спроектировать запись в Telegram-приложении</div>
+  <div class="meta">YouVet · обновлено 30 мая 2026 · ответы можно прислать текстом или заполнить на печати</div>
+</div>
+
+<div class="intro">
+  <strong>Зачем это нужно.</strong> Следующий большой шаг — клиент сможет <strong>оставить заявку на приём</strong> прямо в приложении в Telegram (то же самое, что вы уже видите как «бот» / Mini App). Чтобы сделать это удобно для вас и для клиентов, нужно понять, <strong>как запись работает у вас сейчас</strong> и кто принимает решения. Здесь нет «правильных» ответов — важен ваш реальный процесс.
+</div>
+
+<dl class="glossary">
+  <dt>Mini App (мини-приложение)</dt>
+  <dd>Экран внутри Telegram — то, что открывается по кнопке у бота. Клиенты уже пользуются им для расписания, врачей и статей.</dd>
+  <dt>Заявка (не «автозапись»)</dt>
+  <dd>Клиент отправляет пожелание (врач, день, время). Клиника <strong>смотрит заявку и подтверждает или отклоняет</strong> — мы не записываем автоматически без вашего участия.</dd>
+  <dt>Админка (панель управления)</dt>
+  <dd>Сайт для сотрудников клиники, где вы редактируете врачей, расписание, статьи. Туда же добавим список заявок.</dd>
+  <dt>Уведомление в Telegram</dt>
+  <dd>Короткое сообщение от бота клиенту: «заявка принята», «запись подтверждена на …», «к сожалению, время занято».</dd>
+</dl>
+
+<h2>Как сейчас записываются клиенты</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 1</div>
+  <div class="q-title">Как клиенты записываются к вам сегодня?</div>
+  <p class="hint">Можно отметить несколько вариантов.</p>
+  <ul class="options">
+    <li><span class="box"></span> Звонок на телефон клиники</li>
+    <li><span class="box"></span> Приход без записи («живая очередь»)</li>
+    <li><span class="box"></span> Запись через администратора на ресепшене</li>
+    <li><span class="box"></span> Мессенджеры (WhatsApp, Telegram и т.д.)</li>
+    <li><span class="box"></span> Через вашу программу учёта (база клиентов на компьютере)</li>
+    <li><span class="box"></span> Другое:</li>
+  </ul>
+  <div class="answer-lines">Комментарий (если нужно):</div>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 2</div>
+  <div class="q-title">Какой способ записи вы хотите видеть в Telegram в первую очередь?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Только заявка — клиент пишет желаемое время, вы перезваниваете или подтверждаете в админке</li>
+    <li><span class="box round"></span> Клиент выбирает из свободных слотов в расписании (как в календаре), вы только подтверждаете</li>
+    <li><span class="box round"></span> Комбинация: можно и выбрать слот, и написать «удобно после 18:00»</li>
+    <li><span class="box round"></span> Пока не уверена — нужно обсудить</li>
+  </ul>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 3</div>
+  <div class="q-title">У вас бывает смешанный режим: и запись по времени, и пациенты «с улицы» без записи?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, часто — это норма</li>
+    <li><span class="box round"></span> Иногда</li>
+    <li><span class="box round"></span> Нет, почти все по записи</li>
+  </ul>
+  <div class="answer-lines">Как вы обычно совмещаете поток и запись? (например: «утром больше без записи, вечером только по записи»)</div>
+</div>
+
+<h2>Кто и как принимает решение</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 4</div>
+  <div class="q-title">Кто подтверждает или отклоняет заявку из приложения?</div>
+  <ul class="options">
+    <li><span class="box"></span> Администратор на ресепшене</li>
+    <li><span class="box"></span> Директор / старший администратор</li>
+    <li><span class="box"></span> Конкретный врач (только свои заявки)</li>
+    <li><span class="box"></span> Любой сотрудник с доступом в админку</li>
+    <li><span class="box"></span> Другое:</li>
+  </ul>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 5</div>
+  <div class="q-title">Как быстро вы обычно отвечаете на запрос о записи?</div>
+  <ul class="options">
+    <li><span class="box round"></span> В течение часа</li>
+    <li><span class="box round"></span> В тот же рабочий день</li>
+    <li><span class="box round"></span> На следующий день</li>
+    <li><span class="box round"></span> По-разному — зависит от загрузки</li>
+  </ul>
+  <div class="answer-lines">Клиенту в Telegram писать «мы ответим в течение …»? Какую формулировку вы бы хотели?</div>
+</div>
+
+<h2>Что спрашивать у клиента</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 6</div>
+  <div class="q-title">Какие данные обязательно нужны при записи?</div>
+  <p class="hint">Отметьте обязательные поля. Лишнее можно не включать — форма будет короче.</p>
+  <ul class="options">
+    <li><span class="box"></span> Имя и фамилия владельца</li>
+    <li><span class="box"></span> Телефон</li>
+    <li><span class="box"></span> Имя питомца</li>
+    <li><span class="box"></span> Вид / порода животного</li>
+    <li><span class="box"></span> Возраст или дата рождения питомца</li>
+    <li><span class="box"></span> К какому врачу (или «любой свободный»)</li>
+    <li><span class="box"></span> Желаемая дата и время</li>
+    <li><span class="box"></span> Причина визита / жалобы (кратко)</li>
+    <li><span class="box"></span> Первичный или повторный приём</li>
+    <li><span class="box"></span> Другое:</li>
+  </ul>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 7</div>
+  <div class="q-title">Нужно ли клиенту выбирать конкретного врача?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, всегда — у нас узкие специалисты</li>
+    <li><span class="box round"></span> Желательно, но можно «любой терапевт»</li>
+    <li><span class="box round"></span> Нет — записываем к тому, кто свободен</li>
+  </ul>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 8</div>
+  <div class="q-title">Один клиент может записать несколько питомцев в одной заявке?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, так бывает</li>
+    <li><span class="box round"></span> Нет, лучше отдельная заявка на каждого</li>
+    <li><span class="box round"></span> Редко — можно не усложнять в первой версии</li>
+  </ul>
+</div>
+
+<h2>Расписание и время</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 9</div>
+  <div class="q-title">Расписание врачей в приложении (то, что вы уже заполняете в админке) — оно совпадает с реальностью?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, стараемся держать актуальным</li>
+    <li><span class="box round"></span> Примерно — бывают изменения в последний момент</li>
+    <li><span class="box round"></span> Пока заполнено частично — дорабатываем</li>
+  </ul>
+  <div class="answer-lines">Кто у вас отвечает за обновление расписания, если врач заболел или уехал?</div>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 10</div>
+  <div class="q-title">Минимальное время заранее для записи?</div>
+  <p class="hint">Например: «нельзя записаться на сегодня», «минимум за 2 часа», «можно на ближайший свободный слот».</p>
+  <div class="answer-lines">Ваш вариант:</div>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 11</div>
+  <div class="q-title">Нужна ли отдельная запись на груминг через то же приложение?</div>
+  <p class="hint">Сейчас груминг записывается только сотрудниками в админке — это другой процесс.</p>
+  <ul class="options">
+    <li><span class="box round"></span> Да, клиенты тоже должны подавать заявки на груминг</li>
+    <li><span class="box round"></span> Нет, груминг только через звонок / администратора</li>
+    <li><span class="box round"></span> Позже, сначала только приём к врачу</li>
+  </ul>
+</div>
+
+<h2>Экстренные случаи и отмена</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 12</div>
+  <div class="q-title">Бывают ли срочные / экстренные обращения?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, принимаем вне очереди или в отдельные часы</li>
+    <li><span class="box round"></span> Направляем в другую клинику / на дежурство</li>
+    <li><span class="box round"></span> Редко — достаточно написать «позвоните по телефону клиники»</li>
+  </ul>
+  <div class="answer-lines">Что показать клиенту в приложении, если ситуация срочная?</div>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 13</div>
+  <div class="q-title">Клиент может отменить или перенести запись через приложение?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, сам — за N часов до визита</li>
+    <li><span class="box round"></span> Только через звонок администратору</li>
+    <li><span class="box round"></span> В первой версии не нужно — только заявка и подтверждение</li>
+  </ul>
+</div>
+
+<h2>Уведомления и связь с клиентом</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 14</div>
+  <div class="q-title">Устраивает ли вас, что статус заявки клиент получает сообщением в Telegram?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, это удобно</li>
+    <li><span class="box round"></span> Да, но дублировать звонком для подтверждения</li>
+    <li><span class="box round"></span> Лучше только звонок — Telegram как дополнение</li>
+  </ul>
+</div>
+
+<div class="question">
+  <div class="q-num">Вопрос 15</div>
+  <div class="q-title">Нужно ли напоминание клиенту накануне визита?</div>
+  <ul class="options">
+    <li><span class="box round"></span> Да, за день</li>
+    <li><span class="box round"></span> Да, за несколько часов</li>
+    <li><span class="box round"></span> Не обязательно в первой версии</li>
+  </ul>
+</div>
+
+<h2>Карточки клиентов (на будущее)</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 16</div>
+  <div class="q-title">У вас есть электронные карточки клиентов со штрихкодом в вашей программе учёта?</div>
+  <p class="hint">Мы планируем позже дать клиенту возможность показать свою карту в телефоне — данные будем брать из вашей базы, а не дублировать.</p>
+  <ul class="options">
+    <li><span class="box round"></span> Да, и это было бы полезно клиентам</li>
+    <li><span class="box round"></span> Есть, но не приоритет</li>
+    <li><span class="box round"></span> Нет / не используем</li>
+  </ul>
+  <div class="answer-lines">Как называется программа, где хранятся карточки? (если знаете)</div>
+</div>
+
+<h2>Открытый вопрос</h2>
+
+<div class="question">
+  <div class="q-num">Вопрос 17</div>
+  <div class="q-title">Что для вас самое важное в записи через приложение? Чего точно нельзя допустить?</div>
+  <div class="answer-lines">Например: «чтобы не было двойных записей», «чтобы администратор видел всё в одном месте», «чтобы клиент не путал груминг и приём»…</div>
+</div>
+
+<div class="footer-note">
+  <strong>Куда отправить ответы:</strong> передайте заполненную анкету или ответы текстом команде разработки.<br>
+  После этого мы зафиксируем сценарий и начнём Фазу 5 — запись на приём.<br><br>
+  <a href="index.html">← Все документы</a> · <a href="roadmap.html">Roadmap</a>
+</div>
+
+</body>
+</html>
