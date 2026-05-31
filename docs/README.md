@@ -12,7 +12,7 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 |---|---|
 | [architecture.md](./architecture.md) | Схема системы, монорепо, CI/CD |
 | [data-model.md](./data-model.md) | Схема базы данных, миграции |
-| [roles.md](./roles.md) | Ролевая модель (admin, editor, groomer) |
+| [roles.md](./roles.md) | Ролевая модель (admin, manager, editor, groomer) |
 | [deployment.md](./deployment.md) | Инфраструктура, деплой, env-переменные |
 | [development.md](./development.md) | Локальная разработка |
 | [monorepo.md](./monorepo.md) | Устройство монорепо, Turborepo |
@@ -27,12 +27,11 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [index.html](./index.html) | Навигация по документам |
 | [project-for-devs.html](./project-for-devs.html) | Разработчики |
 | [roadmap.html](./roadmap.html) | Roadmap проекта |
-| [phase-5-appointments.html](./phase-5-appointments.html) | **Фаза 5** — запись на приём (план) |
+| [booking-for-clinic.html](./booking-for-clinic.html) | **Для клиники** — запись на приём, решения простым языком |
+| [phase-5-appointments.html](./phase-5-appointments.html) | **Фаза 5** — запись на приём (технический план) |
 | [design-brief.html](./design-brief.html) | Дизайнеры |
 | [audit.html](./audit.html) | Технический аудит |
 | [mobile.html](./mobile.html) | Мобильное приложение (Capacitor, research, roadmap) |
-| [registration-phase-survey.html](./registration-phase-survey.html) | Анкета для клиники — сбор данных перед записью на приём |
-
 ### Мобильное приложение (`apps/mobile` — planned)
 
 | Документ | Описание |

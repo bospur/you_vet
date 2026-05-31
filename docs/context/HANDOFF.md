@@ -2,49 +2,43 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-31 (техдолг + план Фазы 5)
+## Сессия 2026-05-31 (спека записи v2)
 
-**Ветка:** `work-F-5` · техдолг и docs **не в prod** — нужен деплой server + admin + docs
+**Ветка:** `work-F-5` (или новая от `dev`) · техдолг **в prod** (деплой пользователем)
 
-### Сделано
+### Зафиксировано с клиникой
 
-**Техдолг (кроме UI-02 NavGrid — deferred):**
-- [x] SEC-04 — httpOnly cookie, `/api/admin/me`, `/api/admin/logout`
-- [x] SEC-06 — MIME-валидация загрузок
-- [x] INF-03 — удалены дубликаты workflows
-- [x] INF-04 — turbo `2.8.21`
-- [x] UI-05 — закрыт
+- Узкий каталог: УЗИ ×3, кастрация/стерилизация кошек (**общая ёмкость** на день), рентген ×1
+- Слоты гибко по услуге (шаблон вт/чт + разовые окна); горизонт **2 недели**
+- `pending` → **резерв места**, клиент видит «не подтверждено»; `instant` — на услуге
+- Роль **`manager`** (Менеджер); один **чат врачей** для уведомлений бота
+- Клиент v1: **Mini App**; admin+API первыми
+- Анкета удалена — требования собраны вручную
 
-**Документация + план Фазы 5:**
-- [x] [phase-5-appointments.md](../phase-5-appointments.md) + [phase-5-appointments.html](../phase-5-appointments.html)
-- [x] Roadmap.html — подфазы 5.0–5.6, PRD-05 вынесен отдельно
-- [x] Context (STATUS, ISSUES, PROJECT), README, deployment
+### Backlog (не v1)
 
-**Согласованный подход к записи (PRD-03):**
-- Клиент: бот FSM + Mini App форма
-- Staff: admin «Заявки» + бот whitelist для врачей (push без RuStore)
-- Backend: `/api/v1/...`, `appointment_requests`, pending flow
-- Детали UX — **следующая сессия** после анкеты директора
+- Очередь: при отказе — уведомить следующего, слот свободен; сдвиг времени
+
+### Для заказчика (docs portal)
+
+- [booking-for-clinic.html](../booking-for-clinic.html) — памятка простым языком (деплой `docs/**`)
 
 ### Следующая сессия
 
-1. **Деплой:** merge → server + admin + docs; VPS: `COOKIE_SECURE=1`, `COOKIE_DOMAIN=.snzbeachvolleyball25.ru`
-2. **Анкета** директору → разбор ответов → финальный UX-flow (5.0)
-3. **Код:** начать 5.1 — миграция + API заявок
+1. **B1:** миграция `013_booking` + CRUD услуг + роль `manager` + admin `/booking/services`
+2. Обновить `server/api.md`, `data-model.md` по мере кода
 
 ---
 
-## Фаза 5 — кратко
+## Фаза 5 — этапы
 
-| Подфаза | Содержание |
+| Этап | Содержание |
 |---|---|
-| 5.0 | Анкета + UX |
-| 5.1 | API v1, БД |
-| 5.2 | Бот клиент |
-| 5.3 | Mini App |
-| 5.4 | Admin заявки |
-| 5.5 | Staff-бот |
-| 5.6 | Polish, деплой |
+| B1 | Услуги, роль manager |
+| B2 | Расписание, ёмкость |
+| B3 | Заявки, резерв |
+| B4 | Бот → чат врачей + личка клиенту |
+| C1 | Mini App |
 
 Полный план: [phase-5-appointments.md](../phase-5-appointments.md)
 
@@ -55,20 +49,11 @@
 | API / UI | Статус |
 |---|---|
 | `telegram_users` + дашборд «Обзор» | ✅ |
-| `analytics_events` | ❌ Фаза 6 |
 
 ---
 
 ## Backlog
 
-- [ ] PRD-05 — баннер (не блокирует Фазу 5)
-- [ ] CTA «Записаться» — часть 5.3
+- [ ] PRD-05 — баннер
+- [ ] Очередь на освободившийся слот (Фаза 5+)
 - UI-02 NavGrid — **deferred**
-
----
-
-## Заметки
-
-- Admin после деплоя: перелогиниться (cookie вместо localStorage)
-- Анкета: https://docs.snzbeachvolleyball25.ru/registration-phase-survey.html
-- План Ф5: https://docs.snzbeachvolleyball25.ru/phase-5-appointments.html

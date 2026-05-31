@@ -530,65 +530,49 @@
   </div>
 
   <div class="note">
-    Ключевая фича для реальных пользователей. <strong>Pending flow:</strong> клиент оставляет заявку → клиника подтверждает или отклоняет → бот уведомляет. Перед кодом — <a href="registration-phase-survey.html">анкета для директора</a>. Детальный план: <a href="phase-5-appointments.html"><strong>Фаза 5 — спецификация</strong></a>.
+    Узкий каталог (УЗИ, операции кошек с общим лимитом, рентген). Слоты на 2 недели; при pending место резервируется. Роль <strong>manager</strong>, уведомления в общий чат врачей. План: <a href="phase-5-appointments.html"><strong>Фаза 5 — спецификация v2</strong></a>.
   </div>
 
   <div class="items">
     <div class="item planned">
-      <div class="item-icon">📋</div>
-      <div class="item-body">
-        <div class="item-title">5.0 — Анкета + UX-flow</div>
-        <div class="item-desc">Ответы директора → обязательные поля, выбор врача, отмена клиентом. Уточнение в следующей сессии</div>
-      </div>
-      <span class="item-tag tag-ux">UX</span>
-    </div>
-    <div class="item planned">
       <div class="item-icon">🗄</div>
       <div class="item-body">
-        <div class="item-title">5.1 — API v1 + модель заявок</div>
-        <div class="item-desc"><code>appointment_requests</code>, <code>staff_telegram_users</code>. POST/PATCH, статусы pending → confirmed / rejected / rescheduled / cancelled</div>
+        <div class="item-title">B1 — Услуги + роль manager</div>
+        <div class="item-desc"><code>booking_service_types</code>, admin «Запись → Услуги»</div>
       </div>
       <span class="item-tag tag-infra">Infra</span>
     </div>
     <div class="item planned">
-      <div class="item-icon">🤖</div>
+      <div class="item-icon">📅</div>
       <div class="item-body">
-        <div class="item-title">5.2 — Клиент: бот</div>
-        <div class="item-desc">FSM «Записаться», «Мои заявки», идентификация по <code>telegram_user_id</code></div>
+        <div class="item-title">B2 — Расписание и ёмкость</div>
+        <div class="item-desc">Шаблон недели + окна, общий лимит кошек-операций, 2 недели вперёд</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">🖥</div>
+      <div class="item-body">
+        <div class="item-title">B3 — Заявки</div>
+        <div class="item-desc">Резерв при pending, confirm/reject; admin очередь</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">💬</div>
+      <div class="item-body">
+        <div class="item-title">B4 — Бот: чат врачей + клиент</div>
+        <div class="item-desc">Один групповой чат; личные уведомления клиенту</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
     <div class="item planned">
       <div class="item-icon">📱</div>
       <div class="item-body">
-        <div class="item-title">5.3 — Клиент: Mini App</div>
-        <div class="item-desc">CTA на главной, форма заявки, список «мои заявки» — те же API что бот</div>
+        <div class="item-title">C1 — Mini App</div>
+        <div class="item-desc">CTA, выбор услуги/даты, «мои заявки»</div>
       </div>
       <span class="item-tag tag-ux">UX</span>
-    </div>
-    <div class="item planned">
-      <div class="item-icon">🖥</div>
-      <div class="item-body">
-        <div class="item-title">5.4 — Staff: admin «Заявки»</div>
-        <div class="item-desc">Очередь, фильтры, подтвердить / отклонить / перенести. Настройка staff Telegram IDs</div>
-      </div>
-      <span class="item-tag tag-core">Core</span>
-    </div>
-    <div class="item planned">
-      <div class="item-icon">👨‍⚕️</div>
-      <div class="item-body">
-        <div class="item-title">5.5 — Staff: бот (whitelist)</div>
-        <div class="item-desc">Отдельное меню для врачей, push о новых заявках, inline-действия. Без RuStore/FCM на MVP</div>
-      </div>
-      <span class="item-tag tag-core">Core</span>
-    </div>
-    <div class="item planned">
-      <div class="item-icon">🔔</div>
-      <div class="item-body">
-        <div class="item-title">5.6 — Уведомления клиенту</div>
-        <div class="item-desc">При смене статуса бот пишет клиенту: принято, подтверждено, отклонено, перенесено</div>
-      </div>
-      <span class="item-tag tag-core">Core</span>
     </div>
   </div>
 </div>
@@ -950,9 +934,9 @@
 <hr>
 <hr>
 <div style="background:#f0f7ff;border:1px solid #c8e6c9;border-radius:8px;padding:16px 20px;margin:32px 0 24px;">
-  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#2e7d32;margin-bottom:6px;">Для клиники</div>
-  <a href="registration-phase-survey.html" style="font-weight:600;font-size:15px;color:#1a1a1a;text-decoration:none;">📋 Сбор данных для фазы записи на приём</a>
-  <p style="margin:6px 0 0;font-size:13px;color:#555;">Анкета для директора — как у вас работает запись сейчас и что нужно в приложении.</p>
+  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#2e7d32;margin-bottom:6px;">Запись на приём</div>
+  <a href="booking-for-clinic.html" style="font-weight:600;font-size:15px;color:#1a1a1a;text-decoration:none;">📋 Запись на приём — для клиники</a>
+  <p style="margin:6px 0 0;font-size:13px;color:#555;">Памятка для директора · <a href="phase-5-appointments.html">технический план</a></p>
 </div>
 
 <p style="color:#888; font-size:12px; text-align:center;">YouVet · <a href="index.html" style="color:#bbb;">docs.snzbeachvolleyball25.ru</a></p>

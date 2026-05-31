@@ -43,7 +43,7 @@
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
-| PRD-03 | ⚪ | Запись на приём | **planned** — [phase-5-appointments.md](../phase-5-appointments.md) |
+| PRD-03 | ⚪ | Запись на приём | **in progress (B1)** — [phase-5-appointments.md](../phase-5-appointments.md) v2: слоты, manager, чат врачей |
 | PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
@@ -53,6 +53,6 @@
 
 ## Следующие шаги
 
-1. Деплой техдолга (server + admin)
-2. Анкета → UX 5.0 → реализация [phase-5-appointments.md](../phase-5-appointments.md)
+1. B1 → B3 запись ([phase-5-appointments.md](../phase-5-appointments.md))
+2. C1 Mini App запись
 3. PRD-04 шаг 2 — `analytics_events`
