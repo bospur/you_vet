@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -43,48 +43,20 @@ import {
   type BookingWindow,
   type BookingAvailabilityDay,
 } from '../../../../data/source/booking';
+import { bookingApiErrorMessage } from '../../domain/bookingApiError';
 import { DAY_DISPLAY_ORDER, DAY_NAMES_FULL, DAY_NAMES_SHORT } from '../../domain/days';
+import {
+  countEnabledDays,
+  emptyWeeklyDraft,
+  type DayDraft,
+  weeklyDraftFromRules,
+  weeklyDraftsEqual,
+  weeklyDraftSyncKey,
+} from '../../domain/weeklyDraft';
 
 function formatDateRu(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', weekday: 'short' });
-}
-
-type DayDraft = {
-  enabled: boolean;
-  max_per_day: number;
-  intake_from: string;
-  intake_to: string;
-  pickup_after: string;
-};
-
-const DEFAULT_DAY: Omit<DayDraft, 'enabled'> = {
-  max_per_day: 10,
-  intake_from: '12:00',
-  intake_to: '13:00',
-  pickup_after: '17:00',
-};
-
-function emptyDraft(): Record<number, DayDraft> {
-  const d: Record<number, DayDraft> = {};
-  for (const day of DAY_DISPLAY_ORDER) {
-    d[day] = { enabled: false, ...DEFAULT_DAY };
-  }
-  return d;
-}
-
-function draftFromWeekly(weekly: { day_of_week: number; max_per_day: number; intake_from: string | null; intake_to: string | null; pickup_after: string | null }[]): Record<number, DayDraft> {
-  const d = emptyDraft();
-  for (const rule of weekly) {
-    d[rule.day_of_week] = {
-      enabled: true,
-      max_per_day: rule.max_per_day,
-      intake_from: (rule.intake_from ?? '12:00').slice(0, 5),
-      intake_to: (rule.intake_to ?? '13:00').slice(0, 5),
-      pickup_after: (rule.pickup_after ?? '17:00').slice(0, 5),
-    };
-  }
-  return d;
 }
 
 export function BookingSchedulePanel() {
@@ -96,8 +68,8 @@ export function BookingSchedulePanel() {
 
   const [serviceId, setServiceId] = useState<number | ''>('');
   const [tab, setTab] = useState(0);
-  const [weeklyDraft, setWeeklyDraft] = useState<Record<number, DayDraft>>(emptyDraft);
-  const [weeklyDirty, setWeeklyDirty] = useState(false);
+  const [weeklyDraft, setWeeklyDraft] = useState<Record<number, DayDraft>>(emptyWeeklyDraft);
+  const [weeklySyncKey, setWeeklySyncKey] = useState('');
   const [horizonDraft, setHorizonDraft] = useState<number | null>(null);
   const [windowOpen, setWindowOpen] = useState(false);
   const [windowForm, setWindowForm] = useState({
@@ -128,16 +100,16 @@ export function BookingSchedulePanel() {
     enabled: sid > 0,
   });
 
-  useEffect(() => {
-    if (sid > 0 && !weeklyLoading) {
-      setWeeklyDraft(draftFromWeekly(weekly));
-      setWeeklyDirty(false);
-    }
-  }, [sid, weekly, weeklyLoading]);
+  const weeklyBaseline = useMemo(
+    () => (sid > 0 && !weeklyLoading ? weeklyDraftFromRules(weekly) : emptyWeeklyDraft()),
+    [sid, weekly, weeklyLoading],
+  );
 
-  useEffect(() => {
-    if (settings) setHorizonDraft(null);
-  }, [settings?.horizon_weeks]);
+  const nextWeeklySyncKey = sid > 0 && !weeklyLoading ? weeklyDraftSyncKey(sid, weekly) : '';
+  if (nextWeeklySyncKey !== weeklySyncKey) {
+    setWeeklySyncKey(nextWeeklySyncKey);
+    setWeeklyDraft(weeklyBaseline);
+  }
 
   const { data: windows = [], isLoading: windowsLoading } = useQuery({
     queryKey: ['booking-windows', sid],
@@ -149,6 +121,7 @@ export function BookingSchedulePanel() {
     data: availability,
     isLoading: calLoading,
     isError: calError,
+    error: calErr,
     refetch: refetchCal,
   } = useQuery({
     queryKey: ['booking-availability', sid],
@@ -193,7 +166,6 @@ export function BookingSchedulePanel() {
     },
     onSuccess: () => {
       invalidateSchedule();
-      setWeeklyDirty(false);
       notify('Шаблон недели сохранён', 'success');
     },
     onError: () => notify('Ошибка сохранения шаблона', 'error'),
@@ -234,11 +206,38 @@ export function BookingSchedulePanel() {
       ...prev,
       [day]: { ...prev[day], ...patch },
     }));
-    setWeeklyDirty(true);
+  };
+
+  const handleServiceChange = (nextId: number | '') => {
+    setServiceId(nextId);
+    setWeeklySyncKey('');
+    setWeeklyDraft(emptyWeeklyDraft());
   };
 
   const displayHorizon = horizonDraft ?? settings?.horizon_weeks ?? 2;
   const horizonDirty = horizonDraft !== null && horizonDraft !== settings?.horizon_weeks;
+
+  const enabledDaysInDraft = countEnabledDays(weeklyDraft);
+  const hasWeeklyChanges = sid > 0 && !weeklyLoading && !weeklyDraftsEqual(weeklyDraft, weeklyBaseline);
+  const canSaveWeekly = hasWeeklyChanges && enabledDaysInDraft > 0 && !saveWeeklyMutation.isPending;
+
+  const weeklySaveHint = (() => {
+    if (sid === 0 || weeklyLoading) return null;
+    if (enabledDaysInDraft === 0) {
+      return 'Включите переключатель хотя бы у одного дня недели.';
+    }
+    if (!hasWeeklyChanges) {
+      return 'Нет изменений относительно сохранённого шаблона — измените дни, места или время.';
+    }
+    return null;
+  })();
+
+  const calErrorMessage = calError
+    ? bookingApiErrorMessage(
+      calErr,
+      'Не удалось загрузить календарь. Убедитесь, что API обновлён и миграции 013–015 применены.',
+    )
+    : '';
 
   const openDaysCount = useMemo(
     () => availability?.days.filter((d) => d.is_open).length ?? 0,
@@ -252,7 +251,7 @@ export function BookingSchedulePanel() {
           select
           label="Услуга"
           value={serviceId}
-          onChange={(e) => setServiceId(e.target.value ? Number(e.target.value) : '')}
+          onChange={(e) => handleServiceChange(e.target.value ? Number(e.target.value) : '')}
           sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 280 } }}
           size="small"
           fullWidth={isMobile}
@@ -396,11 +395,16 @@ export function BookingSchedulePanel() {
                       </Stack>
                     );
                   })}
+                  {weeklySaveHint && (
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      {weeklySaveHint}
+                    </Alert>
+                  )}
                   <Box sx={{ pt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                       variant="contained"
                       startIcon={<SaveIcon />}
-                      disabled={!weeklyDirty || saveWeeklyMutation.isPending}
+                      disabled={!canSaveWeekly}
                       onClick={() => saveWeeklyMutation.mutate()}
                     >
                       {saveWeeklyMutation.isPending ? 'Сохранение…' : 'Сохранить шаблон'}
@@ -450,7 +454,7 @@ export function BookingSchedulePanel() {
                 <Alert severity="error" sx={{ mb: 2 }} action={
                   <Button color="inherit" size="small" onClick={() => refetchCal()}>Повторить</Button>
                 }>
-                  Не удалось загрузить календарь. Проверьте, что сервер обновлён (миграции 013–015).
+                  {calErrorMessage}
                 </Alert>
               )}
 

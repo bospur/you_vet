@@ -84,12 +84,13 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
   });
 
   const category = watch('category');
+  const capacityGroup = watch('capacity_group');
 
   useEffect(() => {
-    if (category === 'surgery' && !watch('capacity_group')) {
+    if (category === 'surgery' && !capacityGroup) {
       setValue('capacity_group', 'cat_surgery');
     }
-  }, [category, setValue, watch]);
+  }, [category, capacityGroup, setValue]);
 
   useEffect(() => {
     if (open) {
