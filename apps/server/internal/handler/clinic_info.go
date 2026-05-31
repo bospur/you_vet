@@ -3,12 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"go-server/internal/middleware"
@@ -100,24 +98,17 @@ func (h *ClinicInfoHandler) uploadImage(
 	}
 	defer file.Close()
 
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
-		http.Error(w, "допустимые форматы: jpg, png, webp", http.StatusBadRequest)
+	data, ext, err := ReadAndValidateImage(file, header.Filename)
+	if err != nil {
+		msg, status := imageUploadError(err)
+		http.Error(w, msg, status)
 		return
 	}
 
 	filename := fmt.Sprintf("clinic_%d_%s_%d%s", clinicID, kind, time.Now().UnixMilli(), ext)
 	dstPath := filepath.Join(h.uploadsDir, filename)
 
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		log.Printf("ошибка создания файла: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, file); err != nil {
+	if err := os.WriteFile(dstPath, data, 0644); err != nil {
 		log.Printf("ошибка записи файла: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return

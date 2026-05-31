@@ -1,54 +1,63 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { fetchCurrentUser, logoutRequest, type AuthUserResponse } from '../../data/source/auth';
 
-const TOKEN_KEY = 'vp_admin_token';
-
-interface AuthUser {
+export interface AuthUser {
   id: number;
   clinicId: number;
   role: 'admin' | 'editor' | 'groomer';
 }
 
 interface AuthContextValue {
-  token: string | null;
   user: AuthUser | null;
-  saveToken: (token: string) => void;
-  logout: () => void;
+  loading: boolean;
+  establishSession: (user: AuthUserResponse) => void;
+  logout: () => Promise<void>;
 }
 
-function decodeUser(token: string): AuthUser | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return { id: payload.user_id, clinicId: payload.clinic_id, role: payload.role };
-  } catch {
-    return null;
-  }
+function mapUser(raw: AuthUserResponse): AuthUser {
+  return { id: raw.id, clinicId: raw.clinic_id, role: raw.role };
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(
-    () => localStorage.getItem(TOKEN_KEY),
-  );
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    return t ? decodeUser(t) : null;
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const saveToken = (t: string) => {
-    localStorage.setItem(TOKEN_KEY, t);
-    setToken(t);
-    setUser(decodeUser(t));
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchCurrentUser()
+      .then((raw) => {
+        if (!cancelled) setUser(mapUser(raw));
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const establishSession = (raw: AuthUserResponse) => {
+    setUser(mapUser(raw));
   };
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
+  const logout = async () => {
+    try {
+      await logoutRequest();
+    } catch {
+      // cookie may already be cleared
+    }
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, saveToken, logout }}>
+    <AuthContext.Provider value={{ user, loading, establishSession, logout }}>
       {children}
     </AuthContext.Provider>
   );

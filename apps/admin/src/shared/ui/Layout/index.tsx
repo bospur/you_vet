@@ -53,8 +53,8 @@ export function Layout({ children, title = 'VP Admin' }: LayoutProps) {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     notify('Вы вышли из системы', 'info');
     navigate('/login');
   };

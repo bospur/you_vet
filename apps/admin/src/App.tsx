@@ -1,9 +1,9 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
-import { CircularProgress, Box } from '@mui/material';
 import { AuthProvider, useAuth } from './shared/config/AuthContext';
 import { NotificationProvider } from './shared/ui/Notification/NotificationContext';
 import { ProtectedRoute } from './shared/ui/ProtectedRoute';
+import { Loader } from './shared/ui/Loader';
 
 function NonGroomerRoute() {
   const { user } = useAuth();
@@ -29,12 +29,6 @@ const ScheduleScreen = lazy(() => import('./screens/ScheduleScreen').then((m) =>
 const GroomingScreen = lazy(() => import('./screens/GroomingScreen').then((m) => ({ default: m.GroomingScreen })));
 const ClinicInfoScreen = lazy(() => import('./screens/ClinicInfoScreen').then((m) => ({ default: m.ClinicInfoScreen })));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen').then((m) => ({ default: m.DashboardScreen })));
-
-const Loader = () => (
-  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <CircularProgress />
-  </Box>
-);
 
 const router = createBrowserRouter([
   { path: '/login', element: <Suspense fallback={<Loader />}><LoginScreen /></Suspense> },

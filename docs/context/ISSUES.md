@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-05-30 (prod актуален)
+> Последнее обновление: 2026-05-31
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -11,9 +11,9 @@
 | SEC-01 | 🔴 | RBAC на бэкенде неполный | **fixed 2026-05-30** |
 | SEC-02 | 🔴 | Update/delete без clinic_id | **fixed 2026-05-30** |
 | SEC-03 | 🟠 | CORS `*` | **fixed 2026-05-30** |
-| SEC-04 | 🟠 | JWT в localStorage (XSS surface) | open |
+| SEC-04 | 🟠 | JWT в localStorage (XSS surface) | **fixed 2026-05-31** — httpOnly cookie + `/api/admin/me` |
 | SEC-05 | 🟠 | Rate limit на login | **fixed 2026-05-30** |
-| SEC-06 | 🟡 | Загрузка файлов — только по расширению | open |
+| SEC-06 | 🟡 | Загрузка файлов — только по расширению | **fixed 2026-05-31** — sniff MIME + проверка расширения |
 | SEC-07 | 🟡 | Telegram initData не валидируется | **fixed** (work-audit-clear) |
 
 ## Инфра / CI
@@ -22,13 +22,13 @@
 |---|---|---|---|
 | INF-01 | 🟠 | Нет CI quality gate (test/lint/build) на PR | **fixed** — `ci.yml` |
 | INF-02 | 🟡 | `deploy-app.yml` не следит за `packages/cat/**` | **fixed** (пакет больше не в Mini App) |
-| INF-03 | ⚪ | Дублирующие workflows в `apps/*/.github/` | open |
-| INF-04 | ⚪ | `turbo: "latest"` не закреплён | open |
+| INF-03 | ⚪ | Дублирующие workflows в `apps/*/.github/` | **fixed 2026-05-31** — удалены |
+| INF-04 | ⚪ | `turbo: "latest"` не закреплён | **fixed 2026-05-31** — `2.8.21` |
 | UI-01 | ⚪ | Dreamstime PNG в SVG-ассетах меню | **fixed** — inline SVG в `NavGrid/icons.tsx` |
-| UI-02 | ⚪ | Выравнивание заголовков NavGrid при разной длине подписи | open — костыль: короткие подписи в одну строку |
+| UI-02 | ⚪ | Выравнивание заголовков NavGrid при разной длине подписи | **deferred** — костыль: короткие подписи в одну строку |
 | UI-03 | ⚪ | CatPreloader в Mini App | **fixed 2026-05-30** — зелёный CSS spinner |
-| UI-04 | ⚪ | Картинка кота в блоке «О нас» на главной | **fixed 2026-05-30** — убрана, `cat.png` удалён, слоган по центру |
-| UI-05 | 🟡 | Прочие UI-правки по фидбеку заказчика | open — уточнить список пунктов |
+| UI-04 | ⚪ | Картинка кота в блоке «О нас» на главной | **fixed 2026-05-30** |
+| UI-05 | 🟡 | Прочие UI-правки по фидбеку заказчика | **fixed 2026-05-31** — новых пунктов нет |
 
 ## Документация
 
@@ -43,7 +43,7 @@
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
-| PRD-03 | ⚪ | Запись на приём | planned — **Фаза 5** |
+| PRD-03 | ⚪ | Запись на приём | **planned** — [phase-5-appointments.md](../phase-5-appointments.md) |
 | PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
@@ -53,8 +53,6 @@
 
 ## Следующие шаги
 
-1. **Анкета директору** — [registration-phase-survey.html](../registration-phase-survey.html) → ответы → UX Фазы 5
-2. PRD-03 — запись на приём (Фаза 5)
-3. PRD-04 шаг 2 — `analytics_events`, топ разделов/статей
-4. SEC-04 — JWT из localStorage в httpOnly cookie
-5. SEC-06 — валидация загрузки файлов по MIME
+1. Деплой техдолга (server + admin)
+2. Анкета → UX 5.0 → реализация [phase-5-appointments.md](../phase-5-appointments.md)
+3. PRD-04 шаг 2 — `analytics_events`

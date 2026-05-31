@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouVet — Фаза 5: Запись на приём</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 900px;
+      margin: 48px auto;
+      padding: 0 40px 80px;
+      line-height: 1.7;
+    }
+    .doc-back { margin-bottom: 8px; }
+    .doc-back a { color: #555; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ddd; }
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 32px; }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .header .subtitle { font-size: 16px; color: #555; margin-top: 6px; }
+    h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+    h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; }
+    p { margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+    th { background: #f5f5f5; text-align: left; padding: 8px 12px; font-weight: 600; border: 1px solid #ddd; }
+    td { padding: 7px 12px; border: 1px solid #ddd; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+    code { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; color: #c7254e; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 16px 20px; border-radius: 6px; font-size: 12px; line-height: 1.6; overflow-x: auto; margin: 12px 0 20px; }
+    ul, ol { padding-left: 22px; margin-bottom: 12px; }
+    li { margin-bottom: 5px; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
+    .badge-planned { background: #fff3e0; color: #e65100; }
+    .tip { background: #f0f7ff; border-left: 3px solid #0066cc; padding: 12px 16px; margin: 12px 0 20px; font-size: 13px; }
+    .phase-item { padding: 12px 16px; border: 1px solid #e8e8e8; border-radius: 6px; margin-bottom: 10px; background: #fafafa; }
+    .phase-item h3 { margin: 0 0 8px; font-size: 14px; }
+    .phase-item ul { margin: 0; font-size: 13px; color: #444; }
+    .tree { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; line-height: 1.8; background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px 20px; margin: 12px 0 20px; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+
+<p class="doc-back"><a href="index.html">← Все документы</a> · <a href="roadmap.html">Roadmap</a> · <a href="registration-phase-survey.html">Анкета</a></p>
+
+<div class="header">
+  <h1>Фаза 5 — Запись на приём</h1>
+  <div class="subtitle">PRD-03 · заявка → подтверждение клиникой · бот + admin + Mini App</div>
+  <p style="margin-top:12px;"><span class="badge badge-planned">Спроектировано</span> <span style="color:#888;font-size:12px;">Обновлено: 31 мая 2026</span></p>
+</div>
+
+<div class="tip">
+  Клиент <strong>оставляет заявку</strong>, клиника <strong>подтверждает или отклоняет</strong>. Автозапись без участия персонала — не делаем. Детали UX уточняются по <a href="registration-phase-survey.html">анкете для директора</a> (следующая сессия).
+</div>
+
+<h2>Каналы MVP</h2>
+<table>
+  <tr><th>Кто</th><th>Где</th><th>Что делает</th></tr>
+  <tr><td>Клиент</td><td>Telegram-бот, Mini App</td><td>Создать заявку, «мои заявки»</td></tr>
+  <tr><td>Админ / регистратура</td><td>Admin «Заявки»</td><td>Очередь, фильтры, подтвердить / отклонить / перенести</td></tr>
+  <tr><td>Врач</td><td>Бот (staff mode)</td><td>Уведомление о новой заявке, быстрые действия</td></tr>
+</table>
+
+<p><strong>Не в MVP:</strong> RuStore/mobile app, полный ЛК клиента, FCM push врачам, автобронирование слотов.</p>
+
+<h2>Архитектура</h2>
+<div class="tree">
+Клиент → POST /api/v1/clinics/{slug}/appointment-requests (initData)<br>
+Admin → GET/PATCH /api/v1/admin/appointment-requests<br>
+Staff-бот (whitelist TG id) → новые заявки + inline-действия<br>
+Смена статуса → bot SendMessage клиенту
+</div>
+
+<h2>Подфазы</h2>
+
+<div class="phase-item">
+  <h3>5.0 — Вход</h3>
+  <ul>
+    <li>Ответы директора по анкете</li>
+    <li>Финальный UX-flow (поля, выбор врача, отмена)</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h3>5.1 — Backend + API v1 (~1 нед)</h3>
+  <ul>
+    <li>Таблицы <code>appointment_requests</code>, <code>staff_telegram_users</code></li>
+    <li>CRUD заявок, статусы: pending → confirmed / rejected / rescheduled / cancelled</li>
+    <li>Tenant-scoping, rate limit на создание</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h3>5.2 — Клиент: бот (~1 нед)</h3>
+  <ul>
+    <li>FSM «Записаться», команда «Мои заявки»</li>
+    <li>Уведомление «заявка принята»</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h3>5.3 — Клиент: Mini App (~3–5 дней)</h3>
+  <ul>
+    <li>CTA на главной, форма, список заявок</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h3>5.4 — Staff: admin (~1 нед)</h3>
+  <ul>
+    <li>Раздел <code>/appointments</code>, фильтры, действия</li>
+    <li>Настройка staff Telegram IDs</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h3>5.5 — Staff: бот (~3–5 дней)</h3>
+  <ul>
+    <li>Отдельное меню для whitelist, push о новых заявках</li>
+    <li>Inline: принять / отказать / перенести</li>
+  </ul>
+</div>
+
+<div class="phase-item">
+  <h3>5.6 — Polish + деплой</h3>
+  <ul>
+    <li>Тесты, документация API, инструкция для клиники</li>
+  </ul>
+</div>
+
+<h2>Оценка</h2>
+<p><strong>~3–4 недели</strong> (1 разработчик) после утверждения UX по анкете.</p>
+
+<h2>Связи</h2>
+<ul>
+  <li><strong>Mobile (PRD-06):</strong> M2 использует ту же модель заявок</li>
+  <li><strong>PRD-05 (баннер):</strong> не блокирует Фазу 5</li>
+  <li><strong>telegram_users (M0):</strong> уже в prod</li>
+</ul>
+
+<p style="margin-top:32px;padding-top:16px;border-top:1px solid #e0e0e0;">
+  <a href="registration-phase-survey.html" style="font-weight:600;color:#1a1a1a;text-decoration:none;">📋 Сбор данных для фазы записи</a><br>
+  <span style="font-size:13px;color:#555;">Анкета для директора — как у вас работает запись сейчас.</span>
+</p>
+
+</body>
+</html>

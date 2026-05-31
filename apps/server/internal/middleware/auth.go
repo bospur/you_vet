@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -31,19 +30,13 @@ func ClaimsFromContext(r *http.Request) *Claims {
 // Auth проверяет JWT токен и кладёт claims в контекст запроса
 func Auth(secret string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
+		rawToken := TokenFromRequest(r)
+		if rawToken == "" {
 			http.Error(w, "требуется авторизация", http.StatusUnauthorized)
 			return
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "неверный формат токена", http.StatusUnauthorized)
-			return
-		}
-
-		token, err := jwt.Parse(parts[1], func(t *jwt.Token) (any, error) {
+		token, err := jwt.Parse(rawToken, func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}

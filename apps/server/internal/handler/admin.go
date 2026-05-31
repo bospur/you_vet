@@ -44,7 +44,11 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Token string `json:"token"`
+	User struct {
+		ID       int    `json:"id"`
+		ClinicID int    `json:"clinic_id"`
+		Role     string `json:"role"`
+	} `json:"user"`
 }
 
 // Login обрабатывает POST /api/admin/login
@@ -80,7 +84,29 @@ func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, loginResponse{Token: tokenString})
+	middleware.SetAdminAuthCookie(w, tokenString)
+
+	resp := loginResponse{}
+	resp.User.ID = user.ID
+	resp.User.ClinicID = user.ClinicID
+	resp.User.Role = user.Role
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// Logout обрабатывает POST /api/admin/logout
+func (h *AdminHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	middleware.ClearAdminAuthCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// Me обрабатывает GET /api/admin/me
+func (h *AdminHandler) Me(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"id":        claims.UserID,
+		"clinic_id": claims.ClinicID,
+		"role":      claims.Role,
+	})
 }
 
 // ── Animals CRUD ─────────────────────────────────────────────────────────────

@@ -2,11 +2,9 @@
 
 Base URL: `https://api.snzbeachvolleyball25.ru`
 
-Admin-эндпоинты требуют заголовок:
-```
-Authorization: Bearer <JWT>
-```
-JWT действует **24 часа**, содержит `user_id`, `clinic_id`, `role`.
+Admin-эндпоинты требуют авторизацию через **httpOnly cookie** `vp_admin_token` (устанавливается при login) или заголовок `Authorization: Bearer <JWT>` (fallback для тестов).
+
+Admin SPA отправляет запросы с `credentials: include`. JWT действует **24 часа**, содержит `user_id`, `clinic_id`, `role`.
 
 ---
 
@@ -33,7 +31,9 @@ JWT действует **24 часа**, содержит `user_id`, `clinic_id`,
 
 | Метод | URL | Описание |
 |---|---|---|
-| POST | `/api/admin/login` | Получить JWT. Body: `{ login, password }` |
+| POST | `/api/admin/login` | Вход. Body: `{ login, password }`. Ответ: `{ user }`, cookie `vp_admin_token` |
+| POST | `/api/admin/logout` | Выход, очищает cookie |
+| GET | `/api/admin/me` | Текущий пользователь `{ id, clinic_id, role }` |
 
 ---
 

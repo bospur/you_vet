@@ -51,6 +51,8 @@
 | `TELEGRAM_BOT_TOKEN` | Токен Telegram бота |
 | `CLINIC_SLUG` | Slug клиники для бота |
 | `JWT_SECRET` | Секрет для JWT |
+| `COOKIE_SECURE` | `1` на prod (HTTPS) — флаг Secure для admin cookie |
+| `COOKIE_DOMAIN` | `.snzbeachvolleyball25.ru` — общий домен admin + api |
 | `PUBLIC_URL` | Базовый URL для фото (`https://api.snzbeachvolleyball25.ru`) |
 | `APP_URL` | URL Mini App для кнопки в боте (`https://app.snzbeachvolleyball25.ru`) |
 | `ADMIN_LOGIN` | Логин первого admin (только при первом запуске) |
@@ -59,8 +61,6 @@
 ## CI/CD
 
 Актуальные workflows: `.github/workflows/` (корень репо).
-
-> Устаревшие дубликаты в `apps/*/.github/workflows/` **не используются**.
 
 ### Backend — `deploy-server.yml`
 

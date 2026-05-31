@@ -174,7 +174,7 @@
   <h1>YouVet — Roadmap</h1>
   <div class="subtitle">Состояние проекта · что сделано · что планируется</div>
   <div class="meta">
-    <span style="color:#888; font-size:12px;">Обновлено: 30 мая 2026 (prod актуален · анкета для фазы записи)</span>
+    <span style="color:#888; font-size:12px;">Обновлено: 31 мая 2026 (техдолг закрыт · план Фазы 5)</span>
   </div>
 </div>
 
@@ -530,39 +530,82 @@
   </div>
 
   <div class="note">
-    Ключевая фича для реальных пользователей. Требует детального UX-плана — автоматическое подтверждение не подходит, т.к. клиники работают в смешанном режиме (поток + запись). Перед стартом разработки — <a href="registration-phase-survey.html">анкета для директора клиники</a>.
+    Ключевая фича для реальных пользователей. <strong>Pending flow:</strong> клиент оставляет заявку → клиника подтверждает или отклоняет → бот уведомляет. Перед кодом — <a href="registration-phase-survey.html">анкета для директора</a>. Детальный план: <a href="phase-5-appointments.html"><strong>Фаза 5 — спецификация</strong></a>.
   </div>
 
   <div class="items">
     <div class="item planned">
       <div class="item-icon">📋</div>
       <div class="item-body">
-        <div class="item-title">Заявка на запись (pending flow)</div>
-        <div class="item-desc">Пользователь выбирает врача → слот → отправляет заявку. Статус: pending · PRD-03</div>
+        <div class="item-title">5.0 — Анкета + UX-flow</div>
+        <div class="item-desc">Ответы директора → обязательные поля, выбор врача, отмена клиентом. Уточнение в следующей сессии</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">🗄</div>
+      <div class="item-body">
+        <div class="item-title">5.1 — API v1 + модель заявок</div>
+        <div class="item-desc"><code>appointment_requests</code>, <code>staff_telegram_users</code>. POST/PATCH, статусы pending → confirmed / rejected / rescheduled / cancelled</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">🤖</div>
+      <div class="item-body">
+        <div class="item-title">5.2 — Клиент: бот</div>
+        <div class="item-desc">FSM «Записаться», «Мои заявки», идентификация по <code>telegram_user_id</code></div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
     <div class="item planned">
-      <div class="item-icon">📋</div>
+      <div class="item-icon">📱</div>
       <div class="item-body">
-        <div class="item-title">Подтверждение клиникой</div>
-        <div class="item-desc">Экран заявок в админке. Клиника подтверждает или отклоняет → статус меняется</div>
+        <div class="item-title">5.3 — Клиент: Mini App</div>
+        <div class="item-desc">CTA на главной, форма заявки, список «мои заявки» — те же API что бот</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">🖥</div>
+      <div class="item-body">
+        <div class="item-title">5.4 — Staff: admin «Заявки»</div>
+        <div class="item-desc">Очередь, фильтры, подтвердить / отклонить / перенести. Настройка staff Telegram IDs</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
     <div class="item planned">
-      <div class="item-icon">📋</div>
+      <div class="item-icon">👨‍⚕️</div>
       <div class="item-body">
-        <div class="item-title">Уведомления через бота</div>
-        <div class="item-desc">При смене статуса бот пишет пользователю в Telegram. Бот уже работает — нужно сохранять telegram_user_id и вызывать SendMessage</div>
+        <div class="item-title">5.5 — Staff: бот (whitelist)</div>
+        <div class="item-desc">Отдельное меню для врачей, push о новых заявках, inline-действия. Без RuStore/FCM на MVP</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
+    <div class="item planned">
+      <div class="item-icon">🔔</div>
+      <div class="item-body">
+        <div class="item-title">5.6 — Уведомления клиенту</div>
+        <div class="item-desc">При смене статуса бот пишет клиенту: принято, подтверждено, отклонено, перенесено</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+  </div>
+</div>
+
+<!-- PRD-05 отдельно от фазы 5 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-planned"></div>
+    <div class="phase-title">PRD-05 — Баннер на главной</div>
+    <span class="phase-badge badge-planned">После / параллельно</span>
+  </div>
+  <div class="items">
     <div class="item planned">
       <div class="item-icon">🖼</div>
       <div class="item-body">
-        <div class="item-title">PRD-05 — Концепция баннера на главной</div>
-        <div class="item-desc">Выбрать формат: только текст · текст + картинка · превью-карточка со ссылкой на отдельную info-страницу. Сейчас: картинка + placeholder, переключатель вкл/выкл в админке</div>
+        <div class="item-title">Концепция баннера</div>
+        <div class="item-desc">Формат: только текст · текст + картинка · превью → info-страница. Не блокирует Фазу 5</div>
       </div>
       <span class="item-tag tag-ux">UX</span>
     </div>
