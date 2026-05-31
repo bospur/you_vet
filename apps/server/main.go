@@ -108,6 +108,8 @@ func main() {
 
 	// ── Авторизация ──────────────────────────────────────────────────────────
 	http.HandleFunc("POST /api/admin/login", middleware.LoginRateLimit(10, 15*time.Minute, adminHandler.Login))
+	http.HandleFunc("POST /api/admin/logout", adminHandler.Logout)
+	http.HandleFunc("GET /api/admin/me", middleware.Auth(jwtSecret, adminHandler.Me))
 
 	// ── Защищённые админ роуты ───────────────────────────────────────────────
 	contentAuth := func(h http.HandlerFunc) http.HandlerFunc {

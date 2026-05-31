@@ -17,6 +17,7 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [development.md](./development.md) | Локальная разработка |
 | [monorepo.md](./monorepo.md) | Устройство монорепо, Turborepo |
 | [audit.md](./audit.md) | Технический аудит проекта |
+| [phase-5-appointments.md](./phase-5-appointments.md) | Фаза 5 — запись на приём (детальный план) |
 | [context/](./context/) | Контекст для AI-сессий (handoff) |
 
 ### HTML-портал (деploy → docs.snzbeachvolleyball25.ru)
@@ -26,6 +27,7 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [index.html](./index.html) | Навигация по документам |
 | [project-for-devs.html](./project-for-devs.html) | Разработчики |
 | [roadmap.html](./roadmap.html) | Roadmap проекта |
+| [phase-5-appointments.html](./phase-5-appointments.html) | **Фаза 5** — запись на приём (план) |
 | [design-brief.html](./design-brief.html) | Дизайнеры |
 | [audit.html](./audit.html) | Технический аудит |
 | [mobile.html](./mobile.html) | Мобильное приложение (Capacitor, research, roadmap) |

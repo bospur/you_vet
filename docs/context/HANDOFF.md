@@ -2,55 +2,73 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30 (доку + подготовка к Фазе 5)
+## Сессия 2026-05-31 (техдолг + план Фазы 5)
 
-**Ветка:** `dev` · prod проверен пользователем — всё работает
+**Ветка:** `work-F-5` · техдолг и docs **не в prod** — нужен деплой server + admin + docs
 
 ### Сделано
 
-**Документация:**
-- [x] Анкета для директора: `docs/registration-phase-survey.html` — 17 вопросов, простой язык
-- [x] Ссылка «Сбор данных для фазы записи» на всех страницах HTML-портала + раздел на index
-- [x] Синхронизация context (STATUS, HANDOFF, ISSUES), roadmap (M0 → prod), project-for-devs
+**Техдолг (кроме UI-02 NavGrid — deferred):**
+- [x] SEC-04 — httpOnly cookie, `/api/admin/me`, `/api/admin/logout`
+- [x] SEC-06 — MIME-валидация загрузок
+- [x] INF-03 — удалены дубликаты workflows
+- [x] INF-04 — turbo `2.8.21`
+- [x] UI-05 — закрыт
 
-**Mini App — «О нас» (по фидбеку заказчика):**
-- [x] Убрана картинка кота, файл `cat.png` удалён
-- [x] Описание (слоган) по центру; контакты и основная инфа без изменений
-- [x] Логотип из админки — проверен, ок
+**Документация + план Фазы 5:**
+- [x] [phase-5-appointments.md](../phase-5-appointments.md) + [phase-5-appointments.html](../phase-5-appointments.html)
+- [x] Roadmap.html — подфазы 5.0–5.6, PRD-05 вынесен отдельно
+- [x] Context (STATUS, ISSUES, PROJECT), README, deployment
 
-**Техдолг:**
-- [x] UI-04 — кот в «О нас» → **fixed**
-- [ ] UI-05 — прочие UI-правки от заказчика (уточнить список)
+**Согласованный подход к записи (PRD-03):**
+- Клиент: бот FSM + Mini App форма
+- Staff: admin «Заявки» + бот whitelist для врачей (push без RuStore)
+- Backend: `/api/v1/...`, `appointment_requests`, pending flow
+- Детали UX — **следующая сессия** после анкеты директора
 
 ### Следующая сессия
 
-1. Передать директору анкету → получить ответы
-2. **Фаза 5** — проектирование + backend заявок (PRD-03)
-3. Деплой docs + app (кот убран) после merge
+1. **Деплой:** merge → server + admin + docs; VPS: `COOKIE_SECURE=1`, `COOKIE_DOMAIN=.snzbeachvolleyball25.ru`
+2. **Анкета** директору → разбор ответов → финальный UX-flow (5.0)
+3. **Код:** начать 5.1 — миграция + API заявок
 
 ---
 
-## M0 — что в prod
+## Фаза 5 — кратко
+
+| Подфаза | Содержание |
+|---|---|
+| 5.0 | Анкета + UX |
+| 5.1 | API v1, БД |
+| 5.2 | Бот клиент |
+| 5.3 | Mini App |
+| 5.4 | Admin заявки |
+| 5.5 | Staff-бот |
+| 5.6 | Polish, деплой |
+
+Полный план: [phase-5-appointments.md](../phase-5-appointments.md)
+
+---
+
+## M0 — prod
 
 | API / UI | Статус |
 |---|---|
-| Upsert `telegram_users` | ✅ |
-| `GET /api/admin/stats/summary` | ✅ |
-| `GET /api/admin/stats/users` | ✅ |
-| Admin `/dashboard` | ✅ |
+| `telegram_users` + дашборд «Обзор» | ✅ |
 | `analytics_events` | ❌ Фаза 6 |
 
 ---
 
-## Backlog главной
+## Backlog
 
-- [ ] PRD-05 — баннер (текст / картинка / info-страница)
-- [ ] CTA «Записаться» — после Фазы 5
-- UI-02 NavGrid — не трогать
+- [ ] PRD-05 — баннер (не блокирует Фазу 5)
+- [ ] CTA «Записаться» — часть 5.3
+- UI-02 NavGrid — **deferred**
 
 ---
 
 ## Заметки
 
-- Featured → draft сбрасывает featured
+- Admin после деплоя: перелогиниться (cookie вместо localStorage)
 - Анкета: https://docs.snzbeachvolleyball25.ru/registration-phase-survey.html
+- План Ф5: https://docs.snzbeachvolleyball25.ru/phase-5-appointments.html

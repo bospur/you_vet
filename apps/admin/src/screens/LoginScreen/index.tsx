@@ -2,11 +2,13 @@ import { Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { LoginForm } from '../../modules/auth/features/LoginForm';
 import { useAuth } from '../../shared/config/AuthContext';
+import { Loader } from '../../shared/ui/Loader';
 
 export function LoginScreen() {
-  const { token } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (token) return <Navigate to="/dashboard" replace />;
+  if (loading) return <Loader />;
+  if (user) return <Navigate to="/dashboard" replace />;
 
   return (
     <Box

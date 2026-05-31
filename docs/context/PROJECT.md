@@ -1,12 +1,12 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-05-30
+> Последнее обновление: 2026-05-31
 
 ## Что это
 
 SaaS для ветклиник: **Telegram Mini App** (клиенты) + **веб-admin** (персонал) + **Go API** + **PostgreSQL** + **Telegram-бот**.
 
-## Prod (проверено 2026-05-30)
+## Prod
 
 | Сервис | URL |
 |---|---|
@@ -15,47 +15,44 @@ SaaS для ветклиник: **Telegram Mini App** (клиенты) + **ве�
 | Admin | https://admin.snzbeachvolleyball25.ru |
 | API | https://api.snzbeachvolleyball25.ru |
 | Docs portal | https://docs.snzbeachvolleyball25.ru |
-| VPS | Ubuntu, пользователь `deploy`, SSH alias `vps` |
+| VPS | Ubuntu, `deploy`, SSH alias `vps` |
 
 ## Монорепо
 
 ```
-apps/server/     Go API + bot (не npm workspace)
+apps/server/     Go API + bot
 apps/admin/      React 19 + MUI v7
 apps/app/        React 18 + Telegram UI
 packages/types/  @you-vet/types
-packages/cat/    @you-vet/cat (legacy; Mini App не использует с 2026-05-30)
 ```
 
-Оркестрация фронтов: Turborepo + npm workspaces (корень).
+Turborepo + npm workspaces. `turbo` закреплён `2.8.21`.
 
 ## Модель деплоя
 
-**Фактически:** один VPS = одна клиника (`CLINIC_SLUG`, `VITE_CLINIC_SLUG` в secrets).
+Один VPS = одна клиника (`CLINIC_SLUG`). БД multi-tenant ready.
 
-**В схеме БД:** мультитенантность (`clinics`, `clinic_id` на таблицах). Tenant-scoping на update/delete — см. [ISSUES.md](./ISSUES.md) (SEC-02 fixed).
+## CI/CD
 
-## CI/CD (актуальные workflows в `.github/workflows/`)
+Workflows только в `.github/workflows/` (корень).
 
-| Workflow | Триггер | Действие |
-|---|---|---|
-| `deploy-server.yml` | `apps/server/**` | Build → GHCR → SSH → `docker compose pull/up` |
-| `deploy-admin.yml` | `apps/admin/**`, `packages/types/**` | npm build → scp → `/var/www/vp-bot-admin/` |
-| `deploy-app.yml` | `apps/app/**`, `packages/types/**` | npm build → scp → `/var/www/vp-bot-app/` |
-| `deploy-docs.yml` | `docs/**` | scp `docs/*.html` → `/var/www/you-vet-docs/` |
+## Текущая работа
 
-> Устаревшие дубликаты: `apps/*/.github/workflows/` — не используются.
+| Тема | Статус |
+|---|---|
+| Техдолг SEC-04/06, INF-03/04 | ✅ в коде, **ожидает деплой** |
+| **Фаза 5 — запись** | 📋 [phase-5-appointments.md](../phase-5-appointments.md) — спланировано, код не начат |
 
 ## Git
 
 - Основная ветка: `dev` (деплой по push)
-- Не пушить напрямую в `dev` — только через PR
+- Активная ветка: `work-F-5`
+- В `dev` — только через PR
 
 ## Ключевые документы
 
-- [audit.md](../audit.md) — технический аудит
-- [architecture.md](../architecture.md) — схема системы
-- [mobile/overview.md](../mobile/overview.md) — мобильное приложение (Capacitor, research)
-- [server/api.md](../server/api.md) — API reference
-- [roles.md](../roles.md) — роли (с фактическим состоянием RBAC на бэкенде)
-- [registration-phase-survey.html](../registration-phase-survey.html) — анкета для клиники перед Фазой 5 (запись)
+- [phase-5-appointments.md](../phase-5-appointments.md) — **план Фазы 5**
+- [registration-phase-survey.html](../registration-phase-survey.html) — анкета перед Ф5
+- [roadmap.html](../roadmap.html) · [mobile/overview.md](../mobile/overview.md)
+- [server/api.md](../server/api.md) · [roles.md](../roles.md)
+- [context/](./) — handoff для AI

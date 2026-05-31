@@ -59,6 +59,20 @@ func TestAuth_InvalidFormat(t *testing.T) {
 	}
 }
 
+func TestAuth_ValidCookie(t *testing.T) {
+	token := makeToken(testSecret, false)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: middleware.AdminTokenCookie, Value: token})
+	rr := httptest.NewRecorder()
+
+	middleware.Auth(testSecret, okHandler)(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("ожидали 200, получили %d", rr.Code)
+	}
+}
+
 func TestAuth_ValidToken(t *testing.T) {
 	token := makeToken(testSecret, false)
 

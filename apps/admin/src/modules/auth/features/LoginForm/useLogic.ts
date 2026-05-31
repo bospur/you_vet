@@ -15,7 +15,7 @@ const schema = v.object({
 });
 
 export function useLoginFormLogic() {
-  const { saveToken } = useAuth();
+  const { establishSession } = useAuth();
   const { notify } = useNotification();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -28,8 +28,8 @@ export function useLoginFormLogic() {
   const onSubmit = form.handleSubmit(async (values) => {
     setLoading(true);
     try {
-      const { token } = await loginRequest(values);
-      saveToken(token);
+      const { user } = await loginRequest(values);
+      establishSession(user);
       notify('Вход выполнен', 'success');
       navigate('/dashboard');
     } catch (err) {

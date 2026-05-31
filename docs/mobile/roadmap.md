@@ -64,12 +64,12 @@ npm run build && npx cap sync
 
 Документация: [Getting Started](https://capacitorjs.com/docs/getting-started)
 
-### Фаза M2 — Auth + запись (2–3 нед, пересекается с PRD-03)
+### Фаза M2 — Auth + запись (2–3 нед, после PRD-03 / Фазы 5)
 
 - [ ] Экраны login: телефон → код
 - [ ] Onboarding: deeplink «Привязать Telegram» → бот
 - [ ] JWT interceptor в axios
-- [ ] Заявка на приём (pending flow) — общий backend с roadmap PRD-03
+- [ ] Заявка на приём — **общий backend** с [phase-5-appointments.md](../phase-5-appointments.md) (`appointment_requests`)
 - [ ] Push: `@capacitor/push-notifications` + FCM/APNs
 
 ### Фаза M2.5 — Карточка клиента (после MVP бота + метрик)
@@ -119,7 +119,7 @@ Mini App и бот **не блокируются** — параллельные 
 
 | ID | Связь |
 |---|---|
-| PRD-03 | Запись на приём — общая модель заявок для Mini App и mobile |
+| PRD-03 | Запись — модель `appointment_requests` из [phase-5-appointments.md](../phase-5-appointments.md) |
 | PRD-04 | Аналитика — mobile client_id в events |
 | PRD-09 | Карточка клиента — общий backend-коннектор к БД клиники; mobile после MVP бота |
 | SEC-04 | Только admin; mobile JWT — отдельная схема |
