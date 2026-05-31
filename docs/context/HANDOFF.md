@@ -2,29 +2,32 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-31 (B2 + контекст + mobile admin)
+## Сессия 2026-05-31 (B4 — бот + уведомления)
 
-**B1 + B2** в prod (по словам пользователя).
+### Сделано
 
-### Сделано в коде (после деплоя B2 — подтянуть admin)
+- **`/link_staff`** в группе/канале — привязка `staff_chat_id` в `booking_settings`
+- **Admin** `/booking/settings` — статус привязки, инструкция, ручной Chat ID, отвязка
+- **API:** `POST /api/admin/booking/settings/link-chat`, PATCH `staff_chat_id` / `clear_staff_chat`
+- **Уведомления staff-чат:** новая заявка, confirm/reject/cancel/reschedule
+- **Уведомления клиенту** в личку (если есть `telegram_user_id`)
 
-- Улучшена **мобильная вёрстка** раздела «Запись»: scrollable tabs, fullWidth поля, fullScreen диалоги, карточки вместо таблицы (услуги), календарь 2 колонки на `< sm`.
+### Как привязать чат (prod)
 
-### Следующая сессия — B3
+1. Бот @VPract_bot — админ канала/группы с правом публиковать
+2. Опубликовать в канале: `/link_staff`
+3. Admin → «Запись · настройки» → «Обновить статус»
 
-1. `booking_requests` + резерв при `pending`
-2. **PRD-03a** антиспам (лимит заявок на TG-user / день / услугу)
-3. Admin «Заявки»
+### Следующая сессия — C1
 
-### Правило для AI (admin UI)
-
-При любых новых экранах admin — **обязательно** `< sm`: карточки вместо таблиц, IconButton «Добавить», `useMediaQuery`, диалоги `fullScreen`, вкладки `variant="scrollable"`. Эталон: `GroomingScreen`, `BookingScheduleScreen`.
+1. Mini App: CTA «Записаться», выбор услуги → дата → форма
+2. «Мои заявки»
 
 ### Backlog
 
 - Очередь на освободившийся слот
 - PRD-05 баннер
-- UI-02 NavGrid deferred
+- Admin: ручное создание заявки (форма)
 
 ---
 

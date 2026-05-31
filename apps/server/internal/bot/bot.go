@@ -17,15 +17,25 @@ import (
 type Bot struct {
 	tele        *tele.Bot
 	clinicSlug  string
+	clinicID    int
 	publicURL   string
 	appURL      string
 	animalRepo  *repository.AnimalRepository
 	articleRepo *repository.ArticleRepository
 	doctorRepo  *repository.DoctorRepository
+	bookingRepo *repository.BookingRepository
 }
 
 // New создаёт и настраивает Telegram бота
-func New(token, clinicSlug, publicURL, appURL string, animalRepo *repository.AnimalRepository, articleRepo *repository.ArticleRepository, doctorRepo *repository.DoctorRepository) (*Bot, error) {
+func New(
+	token, clinicSlug string,
+	clinicID int,
+	publicURL, appURL string,
+	animalRepo *repository.AnimalRepository,
+	articleRepo *repository.ArticleRepository,
+	doctorRepo *repository.DoctorRepository,
+	bookingRepo *repository.BookingRepository,
+) (*Bot, error) {
 	pref := tele.Settings{
 		Token:  token,
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
@@ -64,11 +74,13 @@ func New(token, clinicSlug, publicURL, appURL string, animalRepo *repository.Ani
 	bot := &Bot{
 		tele:        b,
 		clinicSlug:  clinicSlug,
+		clinicID:    clinicID,
 		publicURL:   publicURL,
 		appURL:      appURL,
 		animalRepo:  animalRepo,
 		articleRepo: articleRepo,
 		doctorRepo:  doctorRepo,
+		bookingRepo: bookingRepo,
 	}
 
 	bot.registerHandlers()
@@ -99,6 +111,8 @@ func (b *Bot) registerHandlers() {
 	b.tele.Handle("/start", b.handleStart)
 	b.tele.Handle("/menu", b.handleMenu)
 	b.tele.Handle("/help", b.handleHelp)
+	b.tele.Handle("/link_staff", b.handleLinkStaff)
+	b.tele.Handle(tele.OnChannelPost, b.handleChannelPost)
 
 	// Обработчик Reply-кнопок (текстовые кнопки под полем ввода)
 	b.tele.Handle("🐾 Выбрать животное", b.handleMenu)

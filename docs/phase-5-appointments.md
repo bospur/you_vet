@@ -159,13 +159,18 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ### B3 — Заявки
 
-- [ ] POST/PATCH requests, резерв при pending, освобождение при reject/cancel
-- [ ] Admin: очередь, confirm/reject
+- [x] Миграция `015_booking_requests`
+- [x] POST/PATCH requests, резерв при pending, освобождение при reject/cancel
+- [x] GET availability учитывает booked_slots
+- [x] PRD-03a антиспам (1 заявка / user+услуга+день, max 3 / user+день)
+- [x] Admin: `/booking/requests` — очередь, confirm/reject
+- [x] Public POST `/api/clinics/{slug}/booking/requests` (для C1)
 
 ### B4 — Бот: чат + клиент
 
-- [ ] Привязка `staff_chat_id`, посты в группу
-- [ ] Личные уведомления клиенту
+- [x] Привязка `staff_chat_id` (`/link_staff` + admin settings)
+- [x] Посты в группу/канал врачей
+- [x] Личные уведомления клиенту
 
 ### C1 — Mini App
 
@@ -211,4 +216,4 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ## Следующий шаг
 
-**B1:** миграция `013` + API услуг + роль `manager` + admin «Услуги».
+**C1:** Mini App — запись, «Мои заявки».

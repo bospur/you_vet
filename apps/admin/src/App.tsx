@@ -27,6 +27,13 @@ function GroomingRoute() {
   return <Outlet />;
 }
 
+/** Настройки записи — только admin */
+function BookingSettingsRoute() {
+  const { user } = useAuth();
+  if (user?.role !== 'admin') return <Navigate to="/booking/services" replace />;
+  return <Outlet />;
+}
+
 function DefaultRedirect() {
   const { user } = useAuth();
   if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
@@ -52,6 +59,12 @@ const BookingServicesScreen = lazy(() =>
 const BookingScheduleScreen = lazy(() =>
   import('./screens/BookingScheduleScreen').then((m) => ({ default: m.BookingScheduleScreen })),
 );
+const BookingRequestsScreen = lazy(() =>
+  import('./screens/BookingRequestsScreen').then((m) => ({ default: m.BookingRequestsScreen })),
+);
+const BookingSettingsScreen = lazy(() =>
+  import('./screens/BookingSettingsScreen').then((m) => ({ default: m.BookingSettingsScreen })),
+);
 
 const router = createBrowserRouter([
   { path: '/login', element: <Suspense fallback={<Loader />}><LoginScreen /></Suspense> },
@@ -68,6 +81,19 @@ const router = createBrowserRouter([
           {
             path: '/booking/schedule',
             element: <Suspense fallback={<Loader />}><BookingScheduleScreen /></Suspense>,
+          },
+          {
+            path: '/booking/requests',
+            element: <Suspense fallback={<Loader />}><BookingRequestsScreen /></Suspense>,
+          },
+        ],
+      },
+      {
+        element: <BookingSettingsRoute />,
+        children: [
+          {
+            path: '/booking/settings',
+            element: <Suspense fallback={<Loader />}><BookingSettingsScreen /></Suspense>,
           },
         ],
       },

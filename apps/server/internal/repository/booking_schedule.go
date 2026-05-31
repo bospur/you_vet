@@ -211,6 +211,18 @@ func (r *BookingRepository) UpdateHorizonWeeks(clinicID, weeks int) (*BookingSet
 	return r.GetSettings(clinicID)
 }
 
+func (r *BookingRepository) UpdateStaffChatID(clinicID int, chatID *int64) (*BookingSettings, error) {
+	_, err := r.db.Exec(`
+		INSERT INTO booking_settings (clinic_id, staff_chat_id)
+		VALUES ($1, $2)
+		ON CONFLICT (clinic_id) DO UPDATE SET staff_chat_id = $2, updated_at = NOW()
+	`, clinicID, chatID)
+	if err != nil {
+		return nil, err
+	}
+	return r.GetSettings(clinicID)
+}
+
 func scanWeeklyRule(row interface{ Scan(dest ...any) error }) (*BookingWeeklyRule, error) {
 	var rule BookingWeeklyRule
 	var svcID sql.NullInt64
@@ -757,7 +769,7 @@ func resolveDaySchedule(
 	return daySchedule{}, false
 }
 
-// GetAvailability — ёмкость по дням (booked_slots = 0 до B3)
+// GetAvailability — ёмкость по дням с учётом активных заявок (pending + confirmed)
 func (r *BookingRepository) GetAvailability(clinicID, serviceTypeID int, fromStr, toStr string) (*BookingAvailabilityResponse, error) {
 	svc, _, err := r.resolveTarget(clinicID, serviceTypeID)
 	if err != nil {
@@ -797,6 +809,11 @@ func (r *BookingRepository) GetAvailability(clinicID, serviceTypeID int, fromStr
 		return nil, err
 	}
 
+	bookedCounts, err := r.loadBookedCounts(clinicID, serviceTypeID, from, to)
+	if err != nil {
+		return nil, err
+	}
+
 	var days []BookingAvailabilityDay
 	for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
 		dateKey := d.Format("2006-01-02")
@@ -805,15 +822,19 @@ func (r *BookingRepository) GetAvailability(clinicID, serviceTypeID int, fromStr
 			ov = &o
 		}
 		sched, open := resolveDaySchedule(d, weekly, windows, ov)
+		booked := bookedCounts[dateKey]
 		day := BookingAvailabilityDay{
 			Date:        dateKey,
 			IsOpen:      open,
-			BookedSlots: 0,
+			BookedSlots: booked,
 			Source:      "closed",
 		}
 		if open {
 			day.MaxSlots = sched.max
-			day.Remaining = sched.max
+			day.Remaining = sched.max - booked
+			if day.Remaining < 0 {
+				day.Remaining = 0
+			}
 			day.IntakeFrom = sched.intakeFrom
 			day.IntakeTo = sched.intakeTo
 			day.PickupAfter = sched.pickupAfter
