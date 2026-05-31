@@ -155,7 +155,7 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 - [x] Миграция `014_booking_schedule`
 - [x] Weekly rules + windows + overrides + day_staff API
 - [x] GET availability (горизонт из settings)
-- [x] Admin: `/booking/schedule` (шаблон, окна, календарь)
+- [x] Admin: `/booking/schedule` (шаблон, окна, календарь) + mobile `< sm`
 
 ### B3 — Заявки
 

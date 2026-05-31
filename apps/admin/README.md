@@ -45,9 +45,23 @@ npm run dev
 
 > RBAC на бэкенде — см. [docs/roles.md](../../docs/roles.md)
 
+## Мобильная адаптация (обязательно для новых экранов)
+
+Breakpoint: MUI `theme.breakpoints.down('sm')`.
+
+| Паттерн | Реализация |
+|---|---|
+| Списки | `Table` на `≥ sm`, карточки / `Paper` на `< sm` |
+| Заголовок + действие | `h6` на mobile, кнопка «Добавить» → `IconButton` + `Tooltip` |
+| Формы в диалогах | `fullScreen={isMobile}`, поля `fullWidth` |
+| Вкладки | `variant="scrollable"` + короткие подписи на mobile |
+| Сетки | `gridTemplateColumns: repeat(2, 1fr)` на календаре и т.п. |
+
+Эталоны: `GroomingScreen`, `BookingServicesScreen`, `BookingScheduleScreen`.
+
 ## Функциональность
 
-- [x] Auth: JWT, роли admin / editor / groomer, axios interceptor
+- [x] Auth: JWT, роли admin / editor / groomer / manager, axios interceptor
 - [x] Layout: AppBar + Sidebar (mobile hamburger)
 - [x] Мобильная адаптация: карточки вместо таблиц на `< sm`
 - [x] CRUD: Животные, категории, статьи (TipTap, draft/published)

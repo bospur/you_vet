@@ -8,5 +8,15 @@ export const DAY_NAMES_FULL: Record<number, string> = {
   6: 'Суббота',
 };
 
+export const DAY_NAMES_SHORT: Record<number, string> = {
+  0: 'Вс',
+  1: 'Пн',
+  2: 'Вт',
+  3: 'Ср',
+  4: 'Чт',
+  5: 'Пт',
+  6: 'Сб',
+};
+
 /** Порядок отображения: Пн … Вс */
 export const DAY_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];

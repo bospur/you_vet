@@ -42,7 +42,7 @@ import {
   deleteBookingDayOverride,
   type BookingWeeklyRule,
 } from '../../data/source/booking';
-import { DAY_DISPLAY_ORDER, DAY_NAMES_FULL } from '../../modules/booking/domain/days';
+import { DAY_DISPLAY_ORDER, DAY_NAMES_FULL, DAY_NAMES_SHORT } from '../../modules/booking/domain/days';
 
 function formatDateRu(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -198,7 +198,9 @@ export function BookingScheduleScreen() {
 
   return (
     <Layout title="Запись — Расписание">
-      <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>Расписание и ёмкость</Typography>
+      <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={600} sx={{ mb: 2 }}>
+        Расписание и ёмкость
+      </Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
         <TextField
@@ -206,8 +208,9 @@ export function BookingScheduleScreen() {
           label="Услуга"
           value={serviceId}
           onChange={(e) => setServiceId(e.target.value ? Number(e.target.value) : '')}
-          sx={{ minWidth: 280 }}
+          sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 280 } }}
           size="small"
+          fullWidth={isMobile}
         >
           <MenuItem value="">Выберите услугу</MenuItem>
           {activeServices.map((s) => (
@@ -222,7 +225,8 @@ export function BookingScheduleScreen() {
             value={settings.horizon_weeks}
             onChange={(e) => horizonMutation.mutate(Number(e.target.value))}
             disabled={horizonMutation.isPending}
-            sx={{ width: 160 }}
+            sx={{ width: { xs: '100%', sm: 160 } }}
+            fullWidth={isMobile}
           >
             {[1, 2, 3, 4].map((w) => (
               <MenuItem key={w} value={w}>{w}</MenuItem>
@@ -243,9 +247,16 @@ export function BookingScheduleScreen() {
 
       {serviceId !== '' && (
         <>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-            <Tab label="Шаблон недели" />
-            <Tab label="Разовые окна" />
+          <Tabs
+            value={tab}
+            onChange={(_, v) => setTab(v)}
+            variant={isMobile ? 'scrollable' : 'standard'}
+            scrollButtons={isMobile ? 'auto' : false}
+            allowScrollButtonsMobile
+            sx={{ mb: 2 }}
+          >
+            <Tab label={isMobile ? 'Неделя' : 'Шаблон недели'} />
+            <Tab label={isMobile ? 'Окна' : 'Разовые окна'} />
             <Tab label="Календарь" />
           </Tabs>
 
@@ -275,11 +286,17 @@ export function BookingScheduleScreen() {
                               onChange={(e) => handleToggleDay(day, e.target.checked)}
                             />
                           }
-                          label={DAY_NAMES_FULL[day]}
-                          sx={{ minWidth: 140, m: 0 }}
+                          label={isMobile ? DAY_NAMES_SHORT[day] : DAY_NAMES_FULL[day]}
+                          sx={{ minWidth: { sm: 140 }, m: 0 }}
                         />
                         {enabled && rule && (
-                          <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
+                          <Stack
+                            direction={isMobile ? 'column' : 'row'}
+                            flexWrap="wrap"
+                            gap={1}
+                            alignItems={isMobile ? 'stretch' : 'center'}
+                            sx={{ width: isMobile ? '100%' : 'auto' }}
+                          >
                             <TextField
                               label="Мест"
                               type="number"
@@ -287,15 +304,39 @@ export function BookingScheduleScreen() {
                               value={rule.max_per_day}
                               onChange={(e) => handleWeeklyField(day, 'max_per_day', e.target.value)}
                               disabled={saving}
-                              sx={{ width: 80 }}
+                              sx={{ width: isMobile ? '100%' : 80 }}
                               inputProps={{ min: 1 }}
                             />
-                            <TextField label="С" type="time" size="small" value={(rule.intake_from ?? '').slice(0, 5)}
-                              onChange={(e) => handleWeeklyField(day, 'intake_from', e.target.value)} disabled={saving} sx={{ width: 120 }} />
-                            <TextField label="До" type="time" size="small" value={(rule.intake_to ?? '').slice(0, 5)}
-                              onChange={(e) => handleWeeklyField(day, 'intake_to', e.target.value)} disabled={saving} sx={{ width: 120 }} />
-                            <TextField label="Забор после" type="time" size="small" value={(rule.pickup_after ?? '').slice(0, 5)}
-                              onChange={(e) => handleWeeklyField(day, 'pickup_after', e.target.value)} disabled={saving} sx={{ width: 130 }} />
+                            <TextField
+                              label="С"
+                              type="time"
+                              size="small"
+                              fullWidth={isMobile}
+                              value={(rule.intake_from ?? '').slice(0, 5)}
+                              onChange={(e) => handleWeeklyField(day, 'intake_from', e.target.value)}
+                              disabled={saving}
+                              sx={{ width: isMobile ? '100%' : 120 }}
+                            />
+                            <TextField
+                              label="До"
+                              type="time"
+                              size="small"
+                              fullWidth={isMobile}
+                              value={(rule.intake_to ?? '').slice(0, 5)}
+                              onChange={(e) => handleWeeklyField(day, 'intake_to', e.target.value)}
+                              disabled={saving}
+                              sx={{ width: isMobile ? '100%' : 120 }}
+                            />
+                            <TextField
+                              label="Забор после"
+                              type="time"
+                              size="small"
+                              fullWidth={isMobile}
+                              value={(rule.pickup_after ?? '').slice(0, 5)}
+                              onChange={(e) => handleWeeklyField(day, 'pickup_after', e.target.value)}
+                              disabled={saving}
+                              sx={{ width: isMobile ? '100%' : 130 }}
+                            />
                           </Stack>
                         )}
                       </Stack>
@@ -318,8 +359,19 @@ export function BookingScheduleScreen() {
               ) : (
                 <Stack spacing={1}>
                   {windows.map((w) => (
-                    <Paper key={w.id} variant="outlined" sx={{ p: 2, display: 'flex', justifyContent: 'space-between' }}>
-                      <Box>
+                    <Paper
+                      key={w.id}
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        alignItems: isMobile ? 'flex-start' : 'center',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                      }}
+                    >
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography fontWeight={600}>{w.date_from} — {w.date_to}</Typography>
                         <Typography variant="body2" color="text.secondary">
                           Мест в день: {w.max_per_day}
@@ -386,7 +438,13 @@ export function BookingScheduleScreen() {
         </>
       )}
 
-      <Dialog open={windowOpen} onClose={() => setWindowOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={windowOpen}
+        onClose={() => setWindowOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        fullScreen={isMobile}
+      >
         <DialogTitle>Разовое окно</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -409,7 +467,13 @@ export function BookingScheduleScreen() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!dayDialog} onClose={() => setDayDialog(null)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={!!dayDialog}
+        onClose={() => setDayDialog(null)}
+        maxWidth="xs"
+        fullWidth
+        fullScreen={isMobile}
+      >
         <DialogTitle>{dayDialog && formatDateRu(dayDialog.date)}</DialogTitle>
         <DialogContent>
           {dayDialog && (
@@ -436,9 +500,18 @@ export function BookingScheduleScreen() {
             </Stack>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions
+          sx={{
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: 'stretch',
+            gap: 1,
+            px: 2,
+            pb: 2,
+          }}
+        >
           <Button
             color="inherit"
+            fullWidth={isMobile}
             onClick={() => dayDialog && deleteBookingDayOverride(sid, dayDialog.date).then(invalidateSchedule).then(() => {
               setDayDialog(null);
               notify('Сброшено к шаблону', 'success');
@@ -446,9 +519,10 @@ export function BookingScheduleScreen() {
           >
             Сбросить правку
           </Button>
-          <Button onClick={() => setDayDialog(null)}>Отмена</Button>
+          <Button fullWidth={isMobile} onClick={() => setDayDialog(null)}>Отмена</Button>
           <Button
             variant="contained"
+            fullWidth={isMobile}
             disabled={overrideMutation.isPending || !dayDialog}
             onClick={() => dayDialog && overrideMutation.mutate({
               date: dayDialog.date,

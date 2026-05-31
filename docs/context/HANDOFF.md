@@ -2,38 +2,32 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-31 (B2 расписание)
+## Сессия 2026-05-31 (B2 + контекст + mobile admin)
 
-**Ветка:** `work-F-5` · B1 в prod
+**B1 + B2** в prod (по словам пользователя).
 
-### B2 (код готов, ждёт деплой)
+### Сделано в коде (после деплоя B2 — подтянуть admin)
 
-- [x] Миграция `014_booking_schedule`
-- [x] API: weekly-rules, windows, day-overrides, availability, settings
-- [x] Admin: **Запись · расписание** (`/booking/schedule`)
+- Улучшена **мобильная вёрстка** раздела «Запись»: scrollable tabs, fullWidth поля, fullScreen диалоги, карточки вместо таблицы (услуги), календарь 2 колонки на `< sm`.
 
-### Следующая сессия
+### Следующая сессия — B3
 
-1. **Деплой B2:** server + admin (миграция 014)
-2. Настроить кастрацию: вт/чт, 10 мест, 12–13 / забор 17:00 (открыть «Кастрация кота» — общий `cat_surgery`)
-3. **B3:** `booking_requests`, резерв, антиспам PRD-03a
+1. `booking_requests` + резерв при `pending`
+2. **PRD-03a** антиспам (лимит заявок на TG-user / день / услугу)
+3. Admin «Заявки»
+
+### Правило для AI (admin UI)
+
+При любых новых экранах admin — **обязательно** `< sm`: карточки вместо таблиц, IconButton «Добавить», `useMediaQuery`, диалоги `fullScreen`, вкладки `variant="scrollable"`. Эталон: `GroomingScreen`, `BookingScheduleScreen`.
 
 ### Backlog
 
-- Антиспам слотов — B3
-- Очередь на освободившийся слот — позже
+- Очередь на освободившийся слот
 - PRD-05 баннер
+- UI-02 NavGrid deferred
 
 ---
 
 ## Фаза 5
-
-| Этап | Статус |
-|---|---|
-| B1 | ✅ prod |
-| B2 | код → деплой |
-| B3 | заявки |
-| B4 | бот |
-| C1 | Mini App |
 
 [phase-5-appointments.md](../phase-5-appointments.md) · [booking-for-clinic.html](../booking-for-clinic.html)

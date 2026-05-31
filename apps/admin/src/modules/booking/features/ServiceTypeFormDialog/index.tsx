@@ -13,6 +13,8 @@ import {
   Stack,
   Switch,
   TextField,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import type { BookingServiceType, BookingServiceTypeInput } from '../../../../data/source/booking';
 
@@ -65,6 +67,7 @@ function toInput(values: FormValues): BookingServiceTypeInput {
 }
 
 export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmit }: Props) {
+  const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: valibotResolver(schema),
     defaultValues: {
@@ -119,7 +122,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
   }, [open, initial, reset]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>{initial ? 'Редактировать услугу' : 'Новая услуга'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
