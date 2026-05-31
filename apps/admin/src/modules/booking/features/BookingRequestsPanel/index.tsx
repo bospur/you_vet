@@ -8,7 +8,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
   MenuItem,
+  Select,
   Tab,
   Tabs,
   TextField,
@@ -88,20 +91,31 @@ export function BookingRequestsPanel() {
         ))}
       </Tabs>
 
-      <TextField
-        select
-        label="Услуга"
+      <FormControl
         size="small"
-        value={serviceFilter}
-        onChange={(e) => setServiceFilter(e.target.value === '' ? '' : Number(e.target.value))}
-        sx={{ mb: 2, maxWidth: isMobile ? '100%' : 320 }}
-        fullWidth={isMobile}
+        sx={{
+          mb: 2,
+          width: isMobile ? '100%' : 320,
+          minWidth: isMobile ? undefined : 280,
+          display: 'block',
+        }}
       >
-        <MenuItem value="">Все услуги</MenuItem>
-        {services.map((s) => (
-          <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
-        ))}
-      </TextField>
+        <InputLabel id="booking-requests-service-filter">Услуга</InputLabel>
+        <Select<string>
+          labelId="booking-requests-service-filter"
+          label="Услуга"
+          value={serviceFilter === '' ? '' : String(serviceFilter)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setServiceFilter(v === '' ? '' : Number(v));
+          }}
+        >
+          <MenuItem value="">Все услуги</MenuItem>
+          {services.map((s) => (
+            <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
