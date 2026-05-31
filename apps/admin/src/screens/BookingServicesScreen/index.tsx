@@ -86,10 +86,10 @@ export function BookingServicesScreen() {
   return (
     <Layout title="Запись — Услуги">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, gap: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>Услуги для записи</Typography>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={600}>Услуги для записи</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Каталог процедур, которые клиент сможет выбрать в приложении. Расписание и заявки — на следующих шагах.
+            Каталог процедур для Mini App. Расписание — в соседнем пункте меню.
           </Typography>
         </Box>
         {isMobile ? (

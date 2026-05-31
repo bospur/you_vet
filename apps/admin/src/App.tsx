@@ -49,6 +49,9 @@ const DashboardScreen = lazy(() => import('./screens/DashboardScreen').then((m) 
 const BookingServicesScreen = lazy(() =>
   import('./screens/BookingServicesScreen').then((m) => ({ default: m.BookingServicesScreen })),
 );
+const BookingScheduleScreen = lazy(() =>
+  import('./screens/BookingScheduleScreen').then((m) => ({ default: m.BookingScheduleScreen })),
+);
 
 const router = createBrowserRouter([
   { path: '/login', element: <Suspense fallback={<Loader />}><LoginScreen /></Suspense> },
@@ -61,6 +64,10 @@ const router = createBrowserRouter([
           {
             path: '/booking/services',
             element: <Suspense fallback={<Loader />}><BookingServicesScreen /></Suspense>,
+          },
+          {
+            path: '/booking/schedule',
+            element: <Suspense fallback={<Loader />}><BookingScheduleScreen /></Suspense>,
           },
         ],
       },

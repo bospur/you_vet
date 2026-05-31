@@ -21,32 +21,31 @@ SaaS для ветклиник: **Telegram Mini App** (клиенты) + **ве�
 
 ```
 apps/server/     Go API + bot
-apps/admin/      React 19 + MUI v7
+apps/admin/      React 19 + MUI v7 (mobile-first < sm)
 apps/app/        React 18 + Telegram UI
 packages/types/  @you-vet/types
 ```
 
-Turborepo + npm workspaces. `turbo` закреплён `2.8.21`.
+## Текущая работа — Фаза 5 запись
 
-## Модель деплоя
+| Этап | Содержание | Статус |
+|---|---|---|
+| B1 | Услуги, роль `manager` | ✅ prod |
+| B2 | Расписание, ёмкость, календарь 2 нед. | ✅ prod / код |
+| B3 | Заявки + резерв + антиспам | следующий |
+| B4 | Уведомления в чат врачей | |
+| C1 | Mini App | |
 
-Один VPS = одна клиника (`CLINIC_SLUG`). БД multi-tenant ready.
-
-## Текущая работа
-
-| Тема | Статус |
-|---|---|
-| **Фаза 5 — запись** | Спека v2 утверждена → старт **B1** (admin услуги + manager) |
-| Каталог | УЗИ, операции кошек (общий лимит), рентген |
+Каталог: УЗИ ×3, кастрация/стерилизация (`cat_surgery`), рентген.
 
 ## Git
 
-- Основная ветка: `dev` (деплой по push)
-- Активная ветка: `work-F-5`
-- В `dev` — только через PR
+- `dev` — деплой по push
+- `work-F-5` — активная ветка записи
 
 ## Ключевые документы
 
-- [phase-5-appointments.md](../phase-5-appointments.md) — **план Фазы 5 v2**
-- [roles.md](../roles.md) — роль `manager`
-- [context/](./) — handoff для AI
+- [phase-5-appointments.md](../phase-5-appointments.md)
+- [booking-for-clinic.html](../booking-for-clinic.html) — для директора
+- [roles.md](../roles.md)
+- [context/](./)

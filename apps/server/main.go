@@ -201,6 +201,19 @@ func main() {
 	http.HandleFunc("PUT /api/admin/booking/service-types/{id}", bookingAuth(bookingHandler.UpdateServiceType))
 	http.HandleFunc("DELETE /api/admin/booking/service-types/{id}", bookingAuth(bookingHandler.DeleteServiceType))
 
+	http.HandleFunc("GET /api/admin/booking/settings", bookingAuth(bookingHandler.GetBookingSettings))
+	http.HandleFunc("PATCH /api/admin/booking/settings", adminAuth(bookingHandler.UpdateBookingSettings))
+	http.HandleFunc("GET /api/admin/booking/availability", bookingAuth(bookingHandler.GetAvailability))
+	http.HandleFunc("GET /api/admin/booking/weekly-rules", bookingAuth(bookingHandler.GetWeeklyRules))
+	http.HandleFunc("PUT /api/admin/booking/weekly-rules", bookingAuth(bookingHandler.UpsertWeeklyRule))
+	http.HandleFunc("DELETE /api/admin/booking/weekly-rules", bookingAuth(bookingHandler.DeleteWeeklyRule))
+	http.HandleFunc("GET /api/admin/booking/windows", bookingAuth(bookingHandler.GetWindows))
+	http.HandleFunc("POST /api/admin/booking/windows", bookingAuth(bookingHandler.CreateWindow))
+	http.HandleFunc("DELETE /api/admin/booking/windows/{id}", bookingAuth(bookingHandler.DeleteWindow))
+	http.HandleFunc("PUT /api/admin/booking/day-overrides", bookingAuth(bookingHandler.UpsertDayOverride))
+	http.HandleFunc("DELETE /api/admin/booking/day-overrides", bookingAuth(bookingHandler.DeleteDayOverride))
+	http.HandleFunc("PUT /api/admin/booking/day-staff", bookingAuth(bookingHandler.UpsertDayStaff))
+
 	publicURL := os.Getenv("PUBLIC_URL")
 	if publicURL == "" {
 		publicURL = "https://api.snzbeachvolleyball25.ru"

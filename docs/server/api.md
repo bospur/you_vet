@@ -164,6 +164,21 @@ Admin SPA отправляет запросы с `credentials: include`. JWT д�
 
 При первой миграции 013 для каждой клиники создаётся стартовый каталог (6 услуг) и `booking_settings`.
 
+### Запись — расписание (B2)
+
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/api/admin/booking/settings` | `horizon_weeks`, `staff_chat_id` |
+| PATCH | `/api/admin/booking/settings` | `horizon_weeks` (1–8), только admin |
+| GET | `/api/admin/booking/availability?service_type_id=` | Ёмкость по дням (2 нед.) |
+| GET/PUT/DELETE | `/api/admin/booking/weekly-rules?service_type_id=` | Шаблон недели |
+| GET/POST | `/api/admin/booking/windows?service_type_id=` | Разовые окна |
+| DELETE | `/api/admin/booking/windows/{id}` | |
+| PUT/DELETE | `/api/admin/booking/day-overrides?service_type_id=` | Правка дня / сброс |
+| PUT | `/api/admin/booking/day-staff?service_type_id=` | Врач дня |
+
+Услуги с `capacity_group` (напр. `cat_surgery`) делят шаблон и лимит на день.
+
 ---
 
 ### Статистика (M0)

@@ -38,7 +38,8 @@ const NAV_ITEMS = [
   { label: 'Врачи', to: '/doctors', icon: <MedicalServicesIcon />, roles: ['admin', 'editor'] },
   { label: 'Расписание', to: '/schedule', icon: <CalendarMonthIcon />, roles: ['admin', 'editor'] },
   { label: 'Груминг', to: '/grooming', icon: <ContentCutIcon />, roles: ['admin', 'editor', 'groomer'] },
-  { label: 'Запись', to: '/booking/services', icon: <EventAvailableIcon />, roles: ['admin', 'manager'] },
+  { label: 'Запись · услуги', to: '/booking/services', icon: <EventAvailableIcon />, roles: ['admin', 'manager'] },
+  { label: 'Запись · расписание', to: '/booking/schedule', icon: <CalendarMonthIcon />, roles: ['admin', 'manager'] },
   { label: 'Пользователи', to: '/users', icon: <PeopleIcon />, roles: ['admin'] },
 ];
 
