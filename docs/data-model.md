@@ -112,7 +112,8 @@ booking_service_types
 booking_weekly_rules · booking_availability_windows · booking_day_overrides
 booking_day_staff (миграция 014)
 booking_requests (миграция 015): service_type_id, requested_date, slot_time,
-  client_name, client_phone, pet_name, telegram_user_id, status, staff_note, reject_reason
+  client_name, client_phone, pet_name, telegram_user_id, status (pending|confirmed|…),
+  staff_note, reject_reason, rules_ack
 ```
 
 ## Форматы полей

@@ -31,12 +31,14 @@ packages/types/  @you-vet/types
 | Этап | Содержание | Статус |
 |---|---|---|
 | B1 | Услуги, роль `manager` | ✅ prod |
-| B2 | Расписание, ёмкость, календарь 2 нед. | ✅ prod / код |
-| B3 | Заявки + резерв + антиспам | ✅ код |
-| B4 | Уведомления в чат врачей | ✅ код |
+| B2 | Расписание, ёмкость, календарь | ✅ prod |
+| B3 | Заявки + резерв + антиспам | 🟡 код → деплой |
+| B4 | Бот: `/link_staff`, уведомления | 🟡 код → деплой |
 | C1 | Mini App | следующий |
 
-Каталог: УЗИ ×3, кастрация/стерилизация (`cat_surgery`), рентген.
+Admin: **`/booking`** (вкладки: услуги, расписание, заявки, настройки).
+
+Миграции: **013** услуги · **014** расписание · **015** заявки.
 
 ## Git
 
@@ -46,6 +48,6 @@ packages/types/  @you-vet/types
 ## Ключевые документы
 
 - [phase-5-appointments.md](../phase-5-appointments.md)
-- [booking-for-clinic.html](../booking-for-clinic.html) — для директора
+- [booking-for-clinic.html](../booking-for-clinic.html)
 - [roles.md](../roles.md)
 - [context/](./)

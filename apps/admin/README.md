@@ -41,7 +41,7 @@ npm run dev
 | `admin` | Полный доступ + «Обзор» (статистика Mini App), default `/dashboard` |
 | `editor` | Контент без публикации |
 | `groomer` | Только `/grooming` (редирект в UI) |
-| `manager` | Только `/booking/*` (запись на приём) |
+| `manager` | Только `/booking` (запись на приём) |
 
 > RBAC на бэкенде — см. [docs/roles.md](../../docs/roles.md)
 
@@ -57,7 +57,7 @@ Breakpoint: MUI `theme.breakpoints.down('sm')`.
 | Вкладки | `variant="scrollable"` + короткие подписи на mobile |
 | Сетки | `gridTemplateColumns: repeat(2, 1fr)` на календаре и т.п. |
 
-Эталоны: `GroomingScreen`, `BookingServicesScreen`, `BookingScheduleScreen`.
+Эталоны: `GroomingScreen`, `BookingScreen` (`/booking`).
 
 ## Функциональность
 
@@ -67,7 +67,7 @@ Breakpoint: MUI `theme.breakpoints.down('sm')`.
 - [x] CRUD: Животные, категории, статьи (TipTap, draft/published)
 - [x] CRUD: Врачи (фото, статусы), расписание + исключения
 - [x] Груминг: породы, шаблон недели, календарь записей
-- [x] Запись (B1): услуги для записи (`/booking/services`)
+- [x] **Запись** (`/booking`): услуги, расписание (шаблон + календарь), заявки, настройки чата (B1–B4)
 - [x] О клинике: лого, баннер, контакты
 - [x] Пользователи (только admin)
 - [x] Обзор: уникальные посетители Mini App (сегодня / 7 / 30 / всего, только admin)
