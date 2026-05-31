@@ -54,6 +54,7 @@
 ## Backlog (зафиксировать, не v1)
 
 - **Очередь на освободившийся слот:** при отказе/отмене — уведомить следующего по времени ожидания, что место свободно; возможность сдвига времени.
+- **Защита от спама / monopolizing слотов:** один `telegram_user_id` (и/или телефон) не может занять все места на день/период — лимит активных заявок на пользователя, на услугу, на дату; rate limit на POST; опционально капча/ cooldown. Реализовать в **B3** (заявки) или отдельным подпунктом перед C1.
 - Клиентский UI: возраст питомца, разбор `rules`, выбор `fixed_times` vs «день + окно сдачи».
 
 ---
@@ -144,16 +145,17 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ### B1 — Справочник + роль manager
 
-- [ ] Миграция `013_booking` (таблицы услуг + settings)
-- [ ] Роль `manager` в users + middleware
-- [ ] Admin: CRUD услуг
-- [ ] Docs: `roles.md`, `data-model.md`
+- [x] Миграция `013_booking` (таблицы услуг + settings)
+- [x] Роль `manager` в users + middleware
+- [x] Admin: CRUD услуг
+- [x] Docs: `roles.md`, `data-model.md`
 
 ### B2 — Расписание и ёмкость
 
-- [ ] Weekly rules + windows + `capacity_group` для кошек-операций
-- [ ] Admin: шаблон, разовые окна, календарь занятости
-- [ ] GET availability (2 недели)
+- [x] Миграция `014_booking_schedule`
+- [x] Weekly rules + windows + overrides + day_staff API
+- [x] GET availability (горизонт из settings)
+- [x] Admin: `/booking/schedule` (шаблон, окна, календарь)
 
 ### B3 — Заявки
 

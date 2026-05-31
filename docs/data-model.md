@@ -108,6 +108,9 @@ booking_service_types
   species_filter (any|cats_only), capacity_group (напр. cat_surgery)
   default_duration_min, booking_mode (instant|pending_request)
   instructions_client, rules JSONB, is_active, sort_order
+
+booking_weekly_rules · booking_availability_windows · booking_day_overrides
+booking_day_staff (миграция 014)
 ```
 
 ## Форматы полей
