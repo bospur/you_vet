@@ -1,0 +1,62 @@
+---
+description: Кодовые слова документации — контекст, портал, передача
+alwaysApply: true
+---
+
+# Документация YouVet — кодовые слова
+
+Полный справочник: `you_vet/docs/CODEWORDS.md`
+
+Если пользователь пишет **`контекст`**, **`портал`** или **`передача`** (с опциональным маршрутом) — выполни соответствующий протокол **сразу**, без уточнений.
+
+## `контекст` [+ маршрут]
+
+Прочитать по порядку:
+
+1. `you_vet/docs/context/HANDOFF.md`
+2. `you_vet/docs/context/STATUS.md`
+3. `you_vet/docs/context/ISSUES.md`
+4. `you_vet/docs/context/PROJECT.md`
+
+Маршрут → доп. файлы (`you_vet/docs/…`):
+
+| Маршрут | Файлы |
+|---------|--------|
+| запись, booking, фаза5 | `phase-5-appointments.md` |
+| деплой, deploy, ci | `deployment.md` |
+| роли | `roles.md` |
+| admin | `admin/architecture.md` |
+| app, мини | `app/overview.md` |
+| server, api | `server/overview.md`, `server/api.md` |
+| mobile | `mobile/overview.md` |
+| аудит | `audit.md` |
+| дизайн | `design-brief.md` |
+
+Ответ: краткое резюме «где мы» + следующий шаг. Не тащить весь репозиторий.
+
+## `портал` [+ маршрут]
+
+Синхронизировать **markdown ↔ HTML** в `you_vet/docs/` для https://docs.snzbeachvolleyball25.ru
+
+- Prod получает только `docs/*.html` (workflow `deploy-docs.yml` после push `dev`).
+- Обновить **и** `.md` (источник), **и** парный `.html` в стиле соседних страниц.
+- Проверить ссылки `index.html`, блок «← Все документы».
+
+Пары: `phase-5-appointments` · `audit` · `design-brief` · `mobile` · `booking-for-clinic.html` · `roadmap.html` · `project-for-devs.html` — см. таблицу в `CODEWORDS.md`.
+
+## `передача` [+ опционально `портал` …]
+
+Конец сессии — обновить:
+
+- `docs/context/HANDOFF.md` (обязательно)
+- `docs/context/STATUS.md`, `ISSUES.md` при изменении prod/багов
+- `PROJECT.md` при смене фазы/стека
+
+Если менялось для команды/клиники — также выполнить **`портал`** для нужного маршрута.
+
+Деплой кода: push `dev` → Actions; **не** предлагать SSH на VPS без сбоя пайплайна.
+
+## Комбинации
+
+- `передача портал запись` — HANDOFF + phase-5 md/html (+ clinic html при необходимости)
+- `контекст деплой` — память + deployment.md

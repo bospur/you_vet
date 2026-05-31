@@ -19,8 +19,11 @@ SaaS-платформа для ветеринарных клиник. Telegram M
 | [audit.md](./audit.md) | Технический аудит проекта |
 | [phase-5-appointments.md](./phase-5-appointments.md) | Фаза 5 — запись на приём (детальный план) |
 | [context/](./context/) | Контекст для AI-сессий (handoff) |
+| [CODEWORDS.md](./CODEWORDS.md) | **Кодовые слова:** `контекст` · `портал` · `передача` |
 
-### HTML-портал (деploy → docs.snzbeachvolleyball25.ru)
+### HTML-портал (deploy → docs.snzbeachvolleyball25.ru)
+
+> Обновление для людей: скажите AI **`портал`** (+ маршрут, напр. `портал запись`). См. [CODEWORDS.md](./CODEWORDS.md).
 
 | Страница | Аудитория |
 |---|---|

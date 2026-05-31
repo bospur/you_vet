@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-05-31
+> Последнее обновление: 2026-05-31 (вечер)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -64,8 +64,22 @@
 | ADM-01 | — | Все новые экраны admin: адаптация `< sm` | **правило** — `BookingScreen` 2026-05-31 |
 | ADM-02 | ⚪ | Форма создания заявки в admin (сейчас только API) | backlog |
 
+## Запись / API (фаза 5)
+
+| ID | Pri | Проблема | Статус |
+|---|---|---|---|
+| BOOK-01 | 🔴 | `loadScheduleData`: `d.name` вместо `doctors.full_name` → 500 календарь и POST заявки | **fixed в коде 2026-05-31** — ждёт Deploy server |
+| BOOK-02 | 🟡 | Admin: ложная подсказка «миграции 013–015» при любой 500 | **fixed 2026-05-31** — текст из API |
+| BOOK-03 | 🟡 | Admin: «Сохранить шаблон» без объяснения | **fixed 2026-05-31** — сравнение черновика + Alert |
+| BOOK-04 | ⚪ | Admin: селект «Услуга» на вкладке заявок сжат | **fixed 2026-05-31** — FormControl+Select |
+| INF-05 | 🟡 | CI lint падает, deploy всё равно идёт | **fixed 2026-05-31** — set-state-in-effect в BookingSchedulePanel |
+| INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../deployment.md) § Идеи |
+| INF-07 | ⚪ | Упрощённый error tracking (свой «мини-Sentry») | planned — fingerprint, booking/auth/upload |
+| INF-08 | ⚪ | Роль `superadmin` (разработчик платформы) | planned — отдельно от `admin` клиники |
+
 ## Следующие шаги
 
-1. **Деплой** B3–B4, проверка `/link_staff` и тестовой заявки
-2. **C1** Mini App
-3. PRD-04 — `analytics_events`
+1. **Deploy server** (BOOK-01) + smoke календарь/заявка/`/link_staff`
+2. **Deploy admin** (BOOK-02–04)
+3. **C1** Mini App
+4. PRD-04 — `analytics_events`
