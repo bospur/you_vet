@@ -32,16 +32,12 @@ Turborepo + npm workspaces. `turbo` закреплён `2.8.21`.
 
 Один VPS = одна клиника (`CLINIC_SLUG`). БД multi-tenant ready.
 
-## CI/CD
-
-Workflows только в `.github/workflows/` (корень).
-
 ## Текущая работа
 
 | Тема | Статус |
 |---|---|
-| Техдолг SEC-04/06, INF-03/04 | ✅ в коде, **ожидает деплой** |
-| **Фаза 5 — запись** | 📋 [phase-5-appointments.md](../phase-5-appointments.md) — спланировано, код не начат |
+| **Фаза 5 — запись** | Спека v2 утверждена → старт **B1** (admin услуги + manager) |
+| Каталог | УЗИ, операции кошек (общий лимит), рентген |
 
 ## Git
 
@@ -51,8 +47,6 @@ Workflows только в `.github/workflows/` (корень).
 
 ## Ключевые документы
 
-- [phase-5-appointments.md](../phase-5-appointments.md) — **план Фазы 5**
-- [registration-phase-survey.html](../registration-phase-survey.html) — анкета перед Ф5
-- [roadmap.html](../roadmap.html) · [mobile/overview.md](../mobile/overview.md)
-- [server/api.md](../server/api.md) · [roles.md](../roles.md)
+- [phase-5-appointments.md](../phase-5-appointments.md) — **план Фазы 5 v2**
+- [roles.md](../roles.md) — роль `manager`
 - [context/](./) — handoff для AI

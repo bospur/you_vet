@@ -1,195 +1,212 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
-> Статус: **спроектировано, разработка не начата** · Обновлено: 2026-05-31  
-> Связанные документы: [roadmap.html](./roadmap.html) · [registration-phase-survey.html](./registration-phase-survey.html) · [mobile/roadmap.md](./mobile/roadmap.md)
+> Статус: **утверждено, разработка с admin + API** · Обновлено: 2026-05-31  
+> Для клиники (простым языком): [booking-for-clinic.html](./booking-for-clinic.html)  
+> Связанные документы: [roadmap.html](./roadmap.html) · [roles.md](./roles.md) · [mobile/roadmap.md](./mobile/roadmap.md)
 
-## Суть
+## Суть (уточнено с клиникой)
 
-Клиент **оставляет заявку** (не автозапись). Клиника **видит очередь и реагирует**. Статус меняется → **бот уведомляет клиента** (и при необходимости врача).
+Узкий MVP: запись только на **фиксированный каталог процедур** (УЗИ ×3, кастрация/стерилизация кошек, рентген). Не «любой врач / любая дата».
 
-**MVP-каналы:**
+| Принцип | Решение |
+|---|---|
+| Каналы клиента v1 | **Mini App** (основной); бот — уведомления клиенту + посты в чат врачей |
+| Ёмкость | Слоты/места на день, гибко **по услуге** (шаблон недели + разовые окна) |
+| Подтверждение | **На услугу:** `instant` или `pending`; при pending место **резервируется**, статус «ожидает подтверждения» |
+| Горизонт | **2 недели** вперёд |
+| Операции кошек | **Общая ёмкость** на день для кастрации + стерилизации (напр. 10 мест) |
+| Ресурс | Кабинет/процедура; **врач дня** — опционально в admin |
+| Staff | Роль **`manager`** (Менеджер) + **один групповой чат врачей** для уведомлений бота |
+| Груминг | Отдельно, пересечения по времени **не проверяем** в v1 |
 
-| Кто | Канал | Зачем |
+**Не входит в v1:** полная запись «на любого врача», RuStore/mobile, автосдвиг очереди при отказе (см. backlog ниже).
+
+---
+
+## Каталог услуг (стартовый)
+
+| Категория | Услуги | Ограничение |
 |---|---|---|
-| Клиент | Telegram-бот + Mini App | Создать заявку, «мои заявки» |
-| Админ / регистратура | Admin «Заявки» | Очередь всех заявок, фильтры, действия |
-| Врач | Бот (staff mode) | Push о новой заявке, быстрые действия |
+| УЗИ | сердце, брюшная полость, мочевой пузырь | любое животное |
+| Операции | кастрация кота, стерилизация кошки | **только кошки**; **общий лимит** на день |
+| Рентген | рентген (одна услуга) | любое животное |
 
-**Не входит в MVP Фазы 5:** RuStore/mobile app, полноценный ЛК клиента, автоматическое бронирование слотов без участия клиники, отдельное приложение для врачей.
+Длительность в справочнике — **ориентир** (зависит от животного, седации). Логистика (сдача 12–13, забор после 17) — в полях услуги / правил расписания.
 
----
-
-## Принципы (зафиксированы)
-
-1. **Pending flow** — `pending → confirmed | rejected | rescheduled | cancelled_by_client`
-2. **API v1** для нового домена — существующие `/api/clinics/...` и `/api/admin/...` не ломаем
-3. **Идентификация клиента** — `telegram_user_id` (бот + Mini App initData); телефон — обязательное поле заявки
-4. **Staff ≠ карточка врача** — связь `doctors.id ↔ telegram_user_id` или отдельная таблица `staff_telegram_users`
-5. **Уведомления staff** — через бота (дешевле и быстрее, чем FCM/RuStore)
-6. **Детали UX** — уточняются по [анкете](./registration-phase-survey.html) в следующей сессии
-
----
-
-## Архитектура
-
-```
-Клиент (бот / Mini App)
-    → POST /api/v1/clinics/{slug}/appointment-requests
-    → telegram_users (уже есть)
-
-Admin / API
-    → GET/PATCH /api/v1/admin/appointment-requests
-    → смена статуса → bot SendMessage клиенту
-
-Staff-бот (whitelist TG id)
-    → «Новые заявки», inline: принять / отклонить / перенести
-    → уведомление при POST заявки (назначенному врачу или всем staff)
-```
-
----
-
-## Подфазы
-
-### 5.0 — Вход (до кода)
-
-- [ ] Получить ответы директора по анкете
-- [ ] Зафиксировать: обязательные поля, выбор врача, горизонт записи, отмена клиентом
-- [ ] Согласовать MVP scope (что режем, если сроки жмут)
-
-**Выход:** финальный UX-flow (1–2 страницы сценариев).
-
----
-
-### 5.1 — Backend + API v1 (~1 нед)
-
-**Миграция `013_appointment_requests` (черновик):**
-
-```sql
-appointment_requests (
-  id, clinic_id,
-  telegram_user_id BIGINT,          -- nullable если заявка только по телефону (позже)
-  doctor_id INT REFERENCES doctors, -- nullable = «любой свободный»
-  client_name, client_phone,
-  pet_name, pet_species, comment,
-  preferred_date DATE, preferred_time TIME,  -- пожелание, не гарантия слота
-  status VARCHAR,                   -- pending | confirmed | rejected | rescheduled | cancelled
-  staff_note TEXT,                  -- комментарий при отклонении/переносе
-  confirmed_at, handled_by_user_id,
-  created_at, updated_at
-)
-
-staff_telegram_users (
-  clinic_id, telegram_user_id, doctor_id NULL, role, -- doctor | admin_desk
-  UNIQUE (clinic_id, telegram_user_id)
-)
-```
-
-**API (новые роуты):**
-
-| Метод | URL | Auth | Описание |
-|---|---|---|---|
-| POST | `/api/v1/clinics/{slug}/appointment-requests` | initData | Создать заявку |
-| GET | `/api/v1/clinics/{slug}/appointment-requests/mine` | initData | Заявки текущего TG-пользователя |
-| GET | `/api/v1/admin/appointment-requests` | admin JWT | Список + фильтры (status, doctor, date) |
-| GET | `/api/v1/admin/appointment-requests/{id}` | admin JWT | Детали |
-| PATCH | `/api/v1/admin/appointment-requests/{id}` | admin JWT | Смена status, staff_note, doctor_id |
-| GET/POST/DELETE | `/api/v1/admin/staff-telegram` | admin | Whitelist staff для бота |
-
-**Правила:**
-
-- Tenant-scoping по `clinic_id` из JWT / slug
-- Rate limit на POST заявки
-- Валидация телефона (формат RU — уточнить в 5.0)
-
----
-
-### 5.2 — Клиент: бот (~1 нед)
-
-- [ ] Reply-кнопка «📅 Записаться» в главном меню
-- [ ] FSM: врач (или «любой») → дата/время → имя → телефон → питомец → комментарий → подтверждение
-- [ ] Команда `/my` или кнопка «Мои заявки» — список со статусами
-- [ ] Отмена клиентом (если анкета разрешит) → `cancelled`
-- [ ] После создания — сообщение «Заявка принята, ждите подтверждения»
-
----
-
-### 5.3 — Клиент: Mini App (~3–5 дней)
-
-- [ ] CTA «Записаться» на главной (после 5.2 или параллельно)
-- [ ] Экран формы — parity с ботом, те же API
-- [ ] Экран «Мои заявки»
-- [ ] Empty/error states
-
----
-
-### 5.4 — Staff: admin (~1 нед)
-
-- [ ] Раздел `/appointments` в admin (admin + editor; groomer — нет)
-- [ ] Таблица: дата создания, клиент, телефон, врач, пожелание, статус
-- [ ] Фильтры: pending / все / по врачу
-- [ ] Действия: подтвердить, отклонить (+ note), перенести (новая дата/время в staff_note или поля)
-- [ ] Настройка staff Telegram IDs (привязка к врачу опционально)
-
----
-
-### 5.5 — Staff: бот (~3–5 дней)
-
-- [ ] При `/start` — если `telegram_user_id` в whitelist → staff-клавиатура
-- [ ] «📥 Новые заявки» — список pending (с пагинацией)
-- [ ] Карточка заявки + inline: ✅ Принять · ❌ Отказать · 📅 Перенести
-- [ ] Push при новой заявке: «Новая заявка: Иван, кошка, завтра 10:00» → deep link в карточку
-- [ ] Уведомление клиенту при смене статуса из admin или из бота staff
-
----
-
-### 5.6 — Polish + деплой
-
-- [ ] Тесты: repository, status transitions, tenant isolation
-- [ ] Обновить `server/api.md`, `data-model.md`
-- [ ] Деплой server → admin → app → проверка prod
-- [ ] Инструкция для клиники: как добавить врачей в staff-бот
+**Правила (пример):** кот ≥8 лет → предупреждение «нужен осмотр и анализы» (`warn`, не блокирует в v1). JSON в `booking_service_types.rules`.
 
 ---
 
 ## Статусы заявки
 
-| Статус | Кто ставит | Клиент видит |
+| Статус | Ёмкость | Клиент видит |
 |---|---|---|
-| `pending` | автоматически | «Ожидает подтверждения» |
-| `confirmed` | staff/admin | «Подтверждено на …» |
-| `rejected` | staff/admin | «Отклонено» + причина (если есть) |
-| `rescheduled` | staff/admin | «Перенесено на …» |
-| `cancelled` | клиент или staff | «Отменено» |
+| `pending` | **Занимает место** | «Ожидает подтверждения» |
+| `confirmed` | Занимает | «Подтверждено на …» |
+| `rejected` | **Освобождает** | «Отклонено» + причина |
+| `cancelled` | Освобождает | «Отменено» |
+| `rescheduled` | Менеджер переносит | «Перенесено на …» |
+
+`booking_mode` на услуге: `instant` → при успехе сразу `confirmed`; `pending_request` → `pending` + резерв.
 
 ---
 
-## Зависимости и параллель
+## Backlog (зафиксировать, не v1)
+
+- **Очередь на освободившийся слот:** при отказе/отмене — уведомить следующего по времени ожидания, что место свободно; возможность сдвига времени.
+- Клиентский UI: возраст питомца, разбор `rules`, выбор `fixed_times` vs «день + окно сдачи».
+
+---
+
+## Роли
+
+| Роль (код) | UI | Запись |
+|---|---|---|
+| `admin` | Администратор | полный доступ + настройки чата |
+| `manager` | Менеджер | раздел «Запись», заявки, расписание ёмкости |
+| `editor` | Редактор | контент, **без** записи |
+| `groomer` | Грумер | только груминг |
+
+См. [roles.md](./roles.md).
+
+---
+
+## Уведомления
+
+1. **Групповой чат врачей** (один на клинику): бот — админ группы, `staff_chat_id` в настройках записи.
+2. События в чат: новая заявка, подтверждение, отмена, опционально «мало мест».
+3. **Клиенту в личку** от бота при смене статуса (`telegram_user_id`).
+
+Staff whitelist в личку бота — **не v1** (достаточно общего чата).
+
+---
+
+## Модель данных (миграция `013_booking`)
+
+### `booking_service_types`
+
+Справочник услуг: `name`, `category` (uzi|surgery|xray), `species_filter` (cats_only|any), `default_duration_min`, `booking_mode` (instant|pending_request), `instructions_client`, `rules` JSONB, `is_active`, `sort_order`.
+
+### `booking_weekly_rules`
+
+Шаблон по дням недели: `service_type_id`, `day_of_week`, `intake_from`/`intake_to`, `pickup_after`, `max_per_day`, `slot_mode` (day_capacity|fixed_times), `valid_from`/`valid_to`.
+
+Для **кастрации+стерилизации** — общий `capacity_group` = `cat_surgery` (один счётчик на день).
+
+### `booking_availability_windows`
+
+Разовые окна (УЗИ «плавает»): `date_from`, `date_to`, дни/даты, `max_per_day`, переопределение шаблона.
+
+### `booking_day_staff`
+
+`date`, `service_type_id`, `doctor_id` NULL — врач дня.
+
+### `booking_requests`
+
+Заявка: услуга, дата, `slot_time` (nullable), клиент/питомец, `telegram_user_id`, `status`, `staff_note`, `handled_by_user_id`, `rules_ack` JSONB.
+
+### `booking_settings` (на клинику)
+
+`horizon_weeks` (default 2), `staff_chat_id`, опционально defaults.
+
+---
+
+## Admin — раздел «Запись»
+
+| Экран | Путь (черновик) | Роли |
+|---|---|---|
+| Услуги | `/booking/services` | admin, manager |
+| Расписание (шаблон + окна) | `/booking/schedule` | admin, manager |
+| Календарь ёмкости | `/booking/calendar` | admin, manager |
+| Врач дня | в календаре или отдельно | admin, manager |
+| Заявки | `/booking/requests` | admin, manager |
+| Настройки (чат, горизонт) | `/booking/settings` | admin |
+
+Паттерн UI — как **Груминг**.
+
+---
+
+## API (черновик)
+
+Префикс **`/api/admin/booking/*`** — `admin`, `manager`.  
+Публично **`/api/v1/clinics/{slug}/booking/*`** — initData (Mini App).
+
+| Область | Примеры |
+|---|---|
+| Услуги | CRUD `service-types` |
+| Доступность | CRUD `weekly-rules`, `windows`, GET `availability?from&to` |
+| Заявки | GET/PATCH `requests`, POST public `requests` |
+| Настройки | GET/PATCH `settings`, POST `settings/link-chat` |
+
+---
+
+## Подфазы разработки
+
+### B1 — Справочник + роль manager
+
+- [ ] Миграция `013_booking` (таблицы услуг + settings)
+- [ ] Роль `manager` в users + middleware
+- [ ] Admin: CRUD услуг
+- [ ] Docs: `roles.md`, `data-model.md`
+
+### B2 — Расписание и ёмкость
+
+- [ ] Weekly rules + windows + `capacity_group` для кошек-операций
+- [ ] Admin: шаблон, разовые окна, календарь занятости
+- [ ] GET availability (2 недели)
+
+### B3 — Заявки
+
+- [ ] POST/PATCH requests, резерв при pending, освобождение при reject/cancel
+- [ ] Admin: очередь, confirm/reject
+
+### B4 — Бот: чат + клиент
+
+- [ ] Привязка `staff_chat_id`, посты в группу
+- [ ] Личные уведомления клиенту
+
+### C1 — Mini App
+
+- [ ] CTA «Записаться», выбор услуги → дата → форма
+- [ ] «Мои заявки», отображение pending vs confirmed
+
+### B5 — Polish
+
+- [ ] Тесты: capacity, pending reserve, tenant isolation
+- [ ] Деплой, инструкция для клиники (создать чат, добавить бота)
+
+---
+
+## Бот (текущее состояние)
+
+В prod Reply-меню («Животное», «Врачи», «Расписание») **ещё активно** + Menu Button «Открыть» → Mini App. Запись в боте не реализована. Для PRD-03 клиент — **Mini App**.
+
+---
+
+## Зависимости
 
 | ID | Связь |
 |---|---|
-| PRD-05 (баннер) | **Не блокирует** Фазу 5; можно после или параллельно |
-| PRD-06 (mobile) | M2 использует **ту же модель** `appointment_requests` |
-| M0 `telegram_users` | ✅ уже в prod — основа идентификации |
-| SEC-* / техдолг | ✅ закрыт 2026-05-31 (кроме UI-02) |
+| PRD-05 (баннер) | не блокирует |
+| PRD-06 (mobile) | та же модель заявок |
+| M0 `telegram_users` | ✅ в prod |
+| Груминг | отдельный домен |
 
 ---
 
 ## Оценка (1 разработчик)
 
-| Подфаза | Срок |
+| Этап | Срок |
 |---|---|
-| 5.0 анкета + UX | 2–3 дня (с клиникой) |
-| 5.1 backend | ~1 нед |
-| 5.2 бот клиент | ~1 нед |
-| 5.3 Mini App | ~3–5 дней |
-| 5.4 admin | ~1 нед |
-| 5.5 staff бот | ~3–5 дней |
-| **Итого MVP** | **~3–4 нед** после утверждения UX |
+| B1 | ~3–4 дня |
+| B2 | ~4–5 дней |
+| B3 | ~3–4 дня |
+| B4 | ~2–3 дня |
+| C1 | ~4–5 дней |
+| **Итого до MVP в prod** | **~3 нед** |
 
 ---
 
-## Следующая сессия
+## Следующий шаг
 
-1. Разобрать ответы анкеты (или пройти сценарии без анкеты — decision tree)
-2. Уточнить поля БД и FSM бота под реальный процесс клиники
-3. Начать **5.1** — миграция + POST/PATCH API
+**B1:** миграция `013` + API услуг + роль `manager` + admin «Услуги».

@@ -6,11 +6,11 @@
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | ✅ | |
-| Mini App | ✅ | Фаза 4 + polish — **в prod** |
-| Admin | ✅ | **в prod**; auth cookie — **ожидает деплой** (ветка work-F-5) |
+| Telegram-бот | ✅ | Reply-меню + Mini App button; запись не реализована |
+| Mini App | ✅ | Фаза 4 + polish |
+| Admin | ✅ | техдолг cookie — в prod |
 | API | ✅ | миграция 012 |
-| Docs portal | ✅ | План Ф5 — **ожидает деплой docs** |
+| Docs portal | ✅ | спека Ф5 v2 — обновить при деплое docs |
 | VPS | ✅ | SSH `vps` |
 
 ## Функциональность (MVP)
@@ -19,19 +19,19 @@
 |---|---|---|---|
 | Контент | ✅ | ✅ | ✅ |
 | M0: telegram_users + «Обзор» | ✅ | — | ✅ |
-| Запись на приём (PRD-03) | ❌ | ❌ | ❌ — **спланировано** |
+| Запись на приём (PRD-03) | 🚧 план B1 | ❌ | ❌ — **спека утверждена** |
 | Аналитика полная (PRD-04) | ❌ | ❌ | ❌ |
 
 ## Фокус
 
-1. Деплой техдолга (server + admin + docs)
-2. Анкета директору → UX 5.0
-3. **Фаза 5** — см. [phase-5-appointments.md](../phase-5-appointments.md)
+1. **B1** — `booking_service_types`, роль `manager`, admin «Услуги»
+2. B2–B3 — ёмкость и заявки
+3. C1 — Mini App
 
 ## Техдолг
 
-Закрыт (UI-02 NavGrid — deferred). Код на `work-F-5`, не в prod.
+Закрыт в prod (кроме UI-02 NavGrid — deferred).
 
 ## CI
 
-Go tests (middleware + upload) · `ci.yml` · path-based deploy на `dev`
+Go tests · `ci.yml` · path-based deploy на `dev`

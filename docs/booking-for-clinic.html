@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запись на приём — для клиники · YouVet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 16px;
+      color: #1a1a1a;
+      background: #f7f7f5;
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    .doc-back { margin-bottom: 20px; }
+    .doc-back a { color: #555; text-decoration: none; font-size: 14px; border-bottom: 1px solid #ddd; }
+    .header {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 24px;
+      border: 1px solid #e8e8e8;
+      margin-bottom: 24px;
+    }
+    .header h1 { font-size: 24px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+    .header .lead { font-size: 15px; color: #444; }
+    .header .date { font-size: 13px; color: #888; margin-top: 12px; }
+    .block {
+      background: #fff;
+      border-radius: 12px;
+      padding: 22px 24px;
+      border: 1px solid #e8e8e8;
+      margin-bottom: 16px;
+    }
+    .block h2 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1a1a1a;
+    }
+    .block p { margin-bottom: 10px; color: #333; }
+    .block p:last-child { margin-bottom: 0; }
+    .block ul, .block ol { padding-left: 20px; margin: 8px 0 12px; color: #333; }
+    .block li { margin-bottom: 6px; }
+    .highlight {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 15px;
+    }
+    .warn {
+      background: #fff8e1;
+      border-left: 4px solid #ffa000;
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 15px;
+    }
+    .later {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #555;
+      margin-top: 12px;
+    }
+    .services {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .service {
+      padding: 12px 14px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #eee;
+    }
+    .service strong { display: block; margin-bottom: 4px; }
+    .service span { font-size: 14px; color: #555; }
+    .steps { counter-reset: step; list-style: none; padding-left: 0; }
+    .steps li {
+      counter-increment: step;
+      padding-left: 36px;
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      width: 26px;
+      height: 26px;
+      background: #4caf50;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-top: 32px;
+    }
+    .footer-note a { color: #4caf50; }
+    @media print {
+      body { background: #fff; }
+      .block { break-inside: avoid; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+<p class="doc-back"><a href="index.html">← Все документы</a></p>
+
+<div class="header">
+  <h1>Запись на приём в приложении</h1>
+  <p class="lead">Кратко и по делу: что мы с вами решили, как это будет выглядеть для клиентов и для сотрудников клиники.</p>
+  <p class="date">Обновлено: 31 мая 2026</p>
+</div>
+
+<div class="block">
+  <h2>Главная мысль</h2>
+  <p>Сразу открыть запись «на всё и ко всем врачам» — пока <strong>нельзя</strong>: слишком много нюансов (разные кабинеты, подготовка, седация, очереди).</p>
+  <p>Мы начинаем с <strong>понятного списка процедур</strong>, на которые вы реально готовы принимать запись через Telegram. Остальное — позже.</p>
+</div>
+
+<div class="block">
+  <h2>На что можно будет записаться (первый этап)</h2>
+  <div class="services">
+    <div class="service">
+      <strong>УЗИ</strong>
+      <span>сердце · брюшная полость · мочевой пузырь — для любых животных</span>
+    </div>
+    <div class="service">
+      <strong>Операции (только кошки)</strong>
+      <span>кастрация котов · стерилизация кошек</span>
+    </div>
+    <div class="service">
+      <strong>Рентген</strong>
+      <span>одна услуга «рентген» — для любых животных (время зависит от размера и нужна ли седация)</span>
+    </div>
+  </div>
+  <p style="margin-top:14px;font-size:14px;color:#666;">Груминг в приложении остаётся как сейчас — отдельно, это не смешиваем с записью на приём.</p>
+</div>
+
+<div class="block">
+  <h2>Как клиент будет записываться</h2>
+  <ul>
+    <li>Основной способ — <strong>мини-приложение в Telegram</strong> (кнопка «Открыть» у бота).</li>
+    <li>Клиент выбирает услугу → видит свободные <strong>дни</strong> (на ближайшие <strong>2 недели</strong>) → оставляет заявку с контактами и данными питомца.</li>
+    <li>Если место ещё не подтвердили — клиент видит статус вроде <strong>«ожидает подтверждения»</strong>, но место за ним уже <strong>зарезервировано</strong>, чтобы не набралось лишних записей на один день.</li>
+    <li>Когда регистратура или менеджер подтверждает — клиенту приходит сообщение от бота в личку.</li>
+  </ul>
+</div>
+
+<div class="block">
+  <h2>Пример: кастрация и стерилизация кошек</h2>
+  <p>Так мы зафиксировали ваш рабочий процесс:</p>
+  <ul>
+    <li>Запись, скорее всего, только в <strong>вторник и четверг</strong> (можно настроить и на весь месяц).</li>
+    <li>Всех приносят примерно <strong>с 12:00 до 13:00</strong>, забирают <strong>после 17:00</strong>.</li>
+    <li>В один день — <strong>не больше 10 кошек суммарно</strong> (и кастрации, и стерилизации вместе — один общий лимит на день).</li>
+  </ul>
+  <div class="warn">
+    <strong>Важное правило для клиента:</strong> если коту <strong>8 лет и больше</strong> — в приложении покажем напоминание, что нужны предварительный осмотр и анализы. Запись при этом не блокируем — регистратура свяжется и уточнит.
+  </div>
+</div>
+
+<div class="block">
+  <h2>УЗИ и рентген</h2>
+  <p>Здесь расписание <strong>гибче</strong>: не только «каждый вторник», а окна на конкретные даты (как вы откроете в панели). Длительность приёма в справочнике — ориентир: на практике крупную собаку могут сначала успокоить, потом снимок — это учитывает персонал при подтверждении.</p>
+  <p>На день можно указать, <strong>какой врач ведёт</strong> процедуру (необязательно, но удобно для команды).</p>
+</div>
+
+<div class="block">
+  <h2>Что будет у клиники в панели управления</h2>
+  <p>В веб-панели для персонала появится раздел <strong>«Запись»</strong>:</p>
+  <ol>
+    <li><strong>Услуги</strong> — список процедур, тексты для клиентов, нужно ли подтверждение вручную или сразу «записан».</li>
+    <li><strong>Расписание</strong> — на какие дни открыта запись, сколько мест в день, особые окна (например только вт/чт для операций).</li>
+    <li><strong>Заявки</strong> — очередь: подтвердить, отклонить, оставить комментарий.</li>
+  </ol>
+  <div class="highlight">
+    Появится отдельная роль <strong>«Менеджер»</strong> — сотрудник, который ведёт только запись (без доступа к статьям и врачам). Администратор по-прежнему видит всё.
+  </div>
+</div>
+
+<div class="block">
+  <h2>Уведомления для врачей</h2>
+  <p>Рекомендуем завести <strong>один общий групповой чат в Telegram</strong> для врачей и добавить туда бота клиники.</p>
+  <p>Туда будут приходить сообщения: новая заявка, подтверждение, отмена — чтобы все видели без личных переписок с ботом.</p>
+  <p>Клиенты по-прежнему общаются с ботом <strong>в личке</strong> (статусы своей записи).</p>
+</div>
+
+<div class="block">
+  <h2>Что делаем по шагам (без технических деталей)</h2>
+  <ol class="steps">
+    <li><strong>Сначала</strong> — настройка в панели: услуги, дни, количество мест, роль «Менеджер».</li>
+    <li><strong>Потом</strong> — подключение чата врачей и уведомлений.</li>
+    <li><strong>Затем</strong> — кнопка «Записаться» в мини-приложении для клиентов.</li>
+  </ol>
+</div>
+
+<div class="block">
+  <h2>Что понадобится от вас чуть позже</h2>
+  <ul>
+    <li>Создать групповой чат врачей и добавить бота <strong>@VPract_bot</strong> (нужны права администратора у бота в группе).</li>
+    <li>Назначить одного или нескольких сотрудников с ролью <strong>Менеджер</strong> (логин выдаёт администратор панели).</li>
+    <li>Проверить тексты для клиентов по каждой услуге (сдача/забор, подготовка к УЗИ и т.д.) — поможем внести в панель.</li>
+  </ul>
+</div>
+
+<div class="block">
+  <h2>Что пока не делаем (но помним на будущее)</h2>
+  <div class="later">
+    <ul style="margin:0;padding-left:18px;">
+      <li>Запись к любому врачу на любой приём.</li>
+      <li>Автоматическая «очередь»: если кто-то отказался — следующему в списке само приходит «освободилось место» (запланировали, но не в первой версии).</li>
+      <li>Сложная запись через меню самого бота (клиенты идут через мини-приложение).</li>
+    </ul>
+  </div>
+</div>
+
+<div class="block">
+  <h2>Если появятся вопросы</h2>
+  <p>Эту страницу можно отправить коллегам как памятку. Если что-то в процессе клиники изменится (дни операций, лимит 10 кошек, новые услуги) — напишите нам, подстроим настройки в панели.</p>
+</div>
+
+<p class="footer-note">
+  YouVet · <a href="index.html">другие документы</a><br>
+  <span style="font-size:12px;color:#aaa;">Технический план для разработчиков: <a href="phase-5-appointments.html">Фаза 5</a></span>
+</p>
+
+</div>
+</body>
+</html>
