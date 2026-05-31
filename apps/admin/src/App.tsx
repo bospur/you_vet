@@ -9,7 +9,7 @@ import { Loader } from './shared/ui/Loader';
 function ContentRoute() {
   const { user } = useAuth();
   if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
-  if (user?.role === 'manager') return <Navigate to="/booking/services" replace />;
+  if (user?.role === 'manager') return <Navigate to="/booking" replace />;
   return <Outlet />;
 }
 
@@ -23,21 +23,14 @@ function BookingRoute() {
 
 function GroomingRoute() {
   const { user } = useAuth();
-  if (user?.role === 'manager') return <Navigate to="/booking/services" replace />;
-  return <Outlet />;
-}
-
-/** Настройки записи — только admin */
-function BookingSettingsRoute() {
-  const { user } = useAuth();
-  if (user?.role !== 'admin') return <Navigate to="/booking/services" replace />;
+  if (user?.role === 'manager') return <Navigate to="/booking" replace />;
   return <Outlet />;
 }
 
 function DefaultRedirect() {
   const { user } = useAuth();
   if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
-  if (user?.role === 'manager') return <Navigate to="/booking/services" replace />;
+  if (user?.role === 'manager') return <Navigate to="/booking" replace />;
   if (user?.role === 'admin') return <Navigate to="/dashboard" replace />;
   return <Navigate to="/animals" replace />;
 }
@@ -53,17 +46,8 @@ const ScheduleScreen = lazy(() => import('./screens/ScheduleScreen').then((m) =>
 const GroomingScreen = lazy(() => import('./screens/GroomingScreen').then((m) => ({ default: m.GroomingScreen })));
 const ClinicInfoScreen = lazy(() => import('./screens/ClinicInfoScreen').then((m) => ({ default: m.ClinicInfoScreen })));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen').then((m) => ({ default: m.DashboardScreen })));
-const BookingServicesScreen = lazy(() =>
-  import('./screens/BookingServicesScreen').then((m) => ({ default: m.BookingServicesScreen })),
-);
-const BookingScheduleScreen = lazy(() =>
-  import('./screens/BookingScheduleScreen').then((m) => ({ default: m.BookingScheduleScreen })),
-);
-const BookingRequestsScreen = lazy(() =>
-  import('./screens/BookingRequestsScreen').then((m) => ({ default: m.BookingRequestsScreen })),
-);
-const BookingSettingsScreen = lazy(() =>
-  import('./screens/BookingSettingsScreen').then((m) => ({ default: m.BookingSettingsScreen })),
+const BookingScreen = lazy(() =>
+  import('./screens/BookingScreen').then((m) => ({ default: m.BookingScreen })),
 );
 
 const router = createBrowserRouter([
@@ -75,26 +59,13 @@ const router = createBrowserRouter([
         element: <BookingRoute />,
         children: [
           {
-            path: '/booking/services',
-            element: <Suspense fallback={<Loader />}><BookingServicesScreen /></Suspense>,
+            path: '/booking',
+            element: <Suspense fallback={<Loader />}><BookingScreen /></Suspense>,
           },
-          {
-            path: '/booking/schedule',
-            element: <Suspense fallback={<Loader />}><BookingScheduleScreen /></Suspense>,
-          },
-          {
-            path: '/booking/requests',
-            element: <Suspense fallback={<Loader />}><BookingRequestsScreen /></Suspense>,
-          },
-        ],
-      },
-      {
-        element: <BookingSettingsRoute />,
-        children: [
-          {
-            path: '/booking/settings',
-            element: <Suspense fallback={<Loader />}><BookingSettingsScreen /></Suspense>,
-          },
+          { path: '/booking/services', element: <Navigate to="/booking?tab=services" replace /> },
+          { path: '/booking/schedule', element: <Navigate to="/booking?tab=schedule" replace /> },
+          { path: '/booking/requests', element: <Navigate to="/booking?tab=requests" replace /> },
+          { path: '/booking/settings', element: <Navigate to="/booking?tab=settings" replace /> },
         ],
       },
       {

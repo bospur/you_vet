@@ -1,16 +1,16 @@
 # Текущий статус проекта
 
-> Последнее обновление: 2026-05-31
+> Последнее обновление: 2026-05-31 · **ожидает деплой** B3–B4 + UX
 
-## Prod
+## Prod (до деплоя)
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | ✅ | Reply-меню + Mini App; запись не реализована |
-| Mini App | ✅ | Фаза 4 + polish |
-| Admin | ✅ | Запись B1+B2 (миграции 013–014) |
-| API | ✅ | booking API |
-| Docs portal | ✅ | booking-for-clinic.html |
+| Telegram-бот | ✅ | + `/link_staff` после деплоя B4 |
+| Mini App | ✅ | Запись — C1 |
+| Admin | 🟡 | B1+B2 prod; B3–B4 + `/booking` в коде |
+| API | 🟡 | booking до 015 + notifications в коде |
+| Docs portal | 🟡 | markdown обновлён; HTML частично |
 | VPS | ✅ | SSH `vps` |
 
 ## Функциональность (MVP)
@@ -21,21 +21,25 @@
 | M0: telegram_users + «Обзор» | ✅ | — | ✅ |
 | Запись B1 услуги + manager | ✅ | ❌ | ✅ |
 | Запись B2 расписание / ёмкость | ✅ | ❌ | ✅ |
-| Запись B3 заявки | ✅ | ❌ | ✅ |
+| Запись B3 заявки + антиспам | 🟡 код | ❌ | 🟡 код |
+| Запись B4 бот + staff-чат | 🟡 код | ❌ | 🟡 код |
 | Аналитика полная (PRD-04) | ❌ | ❌ | ❌ |
 
-## Admin — мобильная адаптация
+## Admin — «Запись»
 
-Все экраны admin, включая **Запись** (`/booking/*`), следуют общему правилу: breakpoint `sm`, таблицы → карточки, `fullScreen` диалоги, scrollable tabs. См. [../apps/admin/README.md](../apps/admin/README.md).
+Единый экран **`/booking`**: вкладки Услуги · Расписание · Заявки · Настройки (admin).
+
+Mobile: breakpoint `sm`, карточки, `fullScreen` диалоги, scrollable tabs.
 
 ## Фокус
 
-1. **C1** — Mini App запись + «Мои заявки»
-2. B5 — тесты, polish
+1. **Деплой** B3–B4 + проверка канала и заявки
+2. **C1** — Mini App запись
+3. B5 — тесты, polish
 
 ## Техдолг
 
-UI-02 NavGrid — deferred.
+UI-02 NavGrid — deferred. Admin: форма создания заявки — backlog.
 
 ## CI
 

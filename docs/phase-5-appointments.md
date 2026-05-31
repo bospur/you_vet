@@ -114,23 +114,29 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ## Admin — раздел «Запись»
 
-| Экран | Путь (черновик) | Роли |
-|---|---|---|
-| Услуги | `/booking/services` | admin, manager |
-| Расписание (шаблон + окна) | `/booking/schedule` | admin, manager |
-| Календарь ёмкости | `/booking/calendar` | admin, manager |
-| Врач дня | в календаре или отдельно | admin, manager |
-| Заявки | `/booking/requests` | admin, manager |
-| Настройки (чат, горизонт) | `/booking/settings` | admin |
+**Один экран** `/booking` (внутренние вкладки). Старые пути редиректят на `?tab=`.
 
-Паттерн UI — как **Груминг**.
+| Вкладка | Query | Роли | Содержание |
+|---|---|---|---|
+| Услуги | `?tab=services` | admin, manager | CRUD каталога |
+| Расписание | `?tab=schedule` | admin, manager | Шаблон недели (**«Сохранить шаблон»**), разовые окна, календарь ёмкости |
+| Заявки | `?tab=requests` | admin, manager | Очередь, confirm/reject/cancel |
+| Настройки | `?tab=settings` | admin | `/link_staff`, Chat ID, горизонт (нед.) — в расписании |
+
+Паттерн UI — как **Груминг**; mobile `< sm`.
+
+### Бот — привязка чата
+
+1. Бот @VPract_bot — админ группы/канала
+2. Сообщение в чат: `/link_staff`
+3. Admin → Запись → Настройки → «Обновить статус»
 
 ---
 
-## API (черновик)
+## API
 
-Префикс **`/api/admin/booking/*`** — `admin`, `manager`.  
-Публично **`/api/v1/clinics/{slug}/booking/*`** — initData (Mini App).
+Префикс **`/api/admin/booking/*`** — `admin`, `manager` (настройки PATCH/link-chat — только `admin`).  
+Публично **`/api/clinics/{slug}/booking/*`** — initData (Mini App).
 
 | Область | Примеры |
 |---|---|
@@ -155,7 +161,7 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 - [x] Миграция `014_booking_schedule`
 - [x] Weekly rules + windows + overrides + day_staff API
 - [x] GET availability (горизонт из settings)
-- [x] Admin: `/booking/schedule` (шаблон, окна, календарь) + mobile `< sm`
+- [x] Admin: вкладка «Расписание» в `/booking` (шаблон + окна + календарь) + mobile `< sm`
 
 ### B3 — Заявки
 
@@ -163,7 +169,7 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 - [x] POST/PATCH requests, резерв при pending, освобождение при reject/cancel
 - [x] GET availability учитывает booked_slots
 - [x] PRD-03a антиспам (1 заявка / user+услуга+день, max 3 / user+день)
-- [x] Admin: `/booking/requests` — очередь, confirm/reject
+- [x] Admin: вкладка «Заявки» в `/booking`
 - [x] Public POST `/api/clinics/{slug}/booking/requests` (для C1)
 
 ### B4 — Бот: чат + клиент
@@ -180,13 +186,15 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 ### B5 — Polish
 
 - [ ] Тесты: capacity, pending reserve, tenant isolation
-- [ ] Деплой, инструкция для клиники (создать чат, добавить бота)
+- [x] Admin UX: единый `/booking`, кнопка «Сохранить шаблон»
+- [ ] Форма создания заявки в admin
+- [ ] Инструкция для клиники (HTML-портал sync)
 
 ---
 
 ## Бот (текущее состояние)
 
-В prod Reply-меню («Животное», «Врачи», «Расписание») **ещё активно** + Menu Button «Открыть» → Mini App. Запись в боте не реализована. Для PRD-03 клиент — **Mini App**.
+В prod Reply-меню + Menu Button «Открыть» → Mini App. Команда **`/link_staff`** — привязка чата врачей для записи. Запись клиента — **Mini App** (C1).
 
 ---
 

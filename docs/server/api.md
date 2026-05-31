@@ -169,7 +169,7 @@ Admin SPA отправляет запросы с `credentials: include`. JWT д�
 | Метод | URL | Описание |
 |---|---|---|
 | GET | `/api/admin/booking/settings` | `horizon_weeks`, `staff_chat_id` |
-| PATCH | `/api/admin/booking/settings` | `horizon_weeks` (1–8), только admin |
+| PATCH | `/api/admin/booking/settings` | `horizon_weeks` (1–8), `staff_chat_id`, `clear_staff_chat` — только admin |
 | GET | `/api/admin/booking/availability?service_type_id=` | Ёмкость по дням (2 нед.) |
 | GET/PUT/DELETE | `/api/admin/booking/weekly-rules?service_type_id=` | Шаблон недели |
 | GET/POST | `/api/admin/booking/windows?service_type_id=` | Разовые окна |
@@ -178,6 +178,34 @@ Admin SPA отправляет запросы с `credentials: include`. JWT д�
 | PUT | `/api/admin/booking/day-staff?service_type_id=` | Врач дня |
 
 Услуги с `capacity_group` (напр. `cat_surgery`) делят шаблон и лимит на день.
+
+### Запись — заявки (B3)
+
+Роли: `admin`, `manager`.
+
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/api/admin/booking/requests` | Список (`?status`, `?service_type_id`, `?from`, `?to`) |
+| POST | `/api/admin/booking/requests` | Создать (ручная заявка) |
+| PATCH | `/api/admin/booking/requests/{id}` | confirm / reject / cancel / перенос |
+
+Публично (Mini App, initData):
+
+| Метод | URL | Описание |
+|---|---|---|
+| POST | `/api/clinics/{slug}/booking/requests` | Заявка клиента |
+
+Статусы: `pending` (резерв), `confirmed`, `rejected`, `cancelled`, `rescheduled`.  
+Антиспам: max 1 активная заявка на user/телефон + услуга + день; max 3 на user/телефон + день.
+
+### Запись — настройки и бот (B4)
+
+| Метод | URL | Описание | Роль |
+|---|---|---|---|
+| PATCH | `/api/admin/booking/settings` | `horizon_weeks`, `staff_chat_id`, `clear_staff_chat` | admin |
+| POST | `/api/admin/booking/settings/link-chat` | Привязка чата (`chat_id` опционально) | admin |
+
+Бот: **`/link_staff`** в группе/канале сохраняет `staff_chat_id`. Уведомления staff + клиенту при смене заявки.
 
 ---
 

@@ -43,7 +43,7 @@
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
-| PRD-03 | ⚪ | Запись на приём | **in progress (B4)** — B1+B2+B3 в коде; [phase-5-appointments.md](../phase-5-appointments.md) |
+| PRD-03 | ⚪ | Запись на приём | **in progress (C1)** — B1–B4 в коде, деплой; [phase-5-appointments.md](../phase-5-appointments.md) |
 | PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
@@ -61,10 +61,11 @@
 
 | ID | Pri | Правило | Статус |
 |---|---|---|---|
-| ADM-01 | — | Все новые экраны admin: адаптация `< sm` (карточки, fullScreen dialog, scrollable tabs) | **правило** — Запись проверено 2026-05-31 |
+| ADM-01 | — | Все новые экраны admin: адаптация `< sm` | **правило** — `BookingScreen` 2026-05-31 |
+| ADM-02 | ⚪ | Форма создания заявки в admin (сейчас только API) | backlog |
 
 ## Следующие шаги
 
-1. **B4** бот: чат врачей + уведомления клиенту
-2. C1 Mini App
+1. **Деплой** B3–B4, проверка `/link_staff` и тестовой заявки
+2. **C1** Mini App
 3. PRD-04 — `analytics_events`

@@ -27,4 +27,4 @@
 
 ## Admin — мобильная вёрстка
 
-При работе с `apps/admin`: breakpoint MUI `sm`, таблицы → карточки на телефоне, диалоги `fullScreen`, вкладки `scrollable`. Не забывать для **каждого** нового экрана (в т.ч. `/booking/*`).
+При работе с `apps/admin`: breakpoint MUI `sm`, таблицы → карточки на телефоне, диалоги `fullScreen`, вкладки `scrollable`. Эталон: **`/booking`** (`BookingScreen`), `GroomingScreen`.
