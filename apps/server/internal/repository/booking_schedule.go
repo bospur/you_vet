@@ -696,7 +696,7 @@ func (r *BookingRepository) loadScheduleData(clinicID, serviceTypeID int, from, 
 	}
 
 	staffRows, err := r.db.Query(`
-		SELECT bs.id, bs.clinic_id, bs.service_type_id, bs.date::text, bs.doctor_id, d.name
+		SELECT bs.id, bs.clinic_id, bs.service_type_id, bs.date::text, bs.doctor_id, d.full_name
 		FROM booking_day_staff bs
 		LEFT JOIN doctors d ON d.id = bs.doctor_id
 		WHERE bs.clinic_id = $1 AND bs.service_type_id = $2 AND bs.date >= $3::date AND bs.date <= $4::date
