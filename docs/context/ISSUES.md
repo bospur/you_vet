@@ -43,7 +43,7 @@
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
-| PRD-03 | ⚪ | Запись на приём | **in progress (B3)** — B1+B2 в prod; [phase-5-appointments.md](../phase-5-appointments.md) |
+| PRD-03 | ⚪ | Запись на приём | **in progress (B4)** — B1+B2+B3 в коде; [phase-5-appointments.md](../phase-5-appointments.md) |
 | PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
 | PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
@@ -55,7 +55,7 @@
 
 | ID | Pri | Задача | Когда |
 |---|---|---|---|
-| PRD-03a | 🟠 | Антиспам: лимит заявок на `telegram_user_id` / телефон, чтобы один клиент не занял все слоты дня | B3 (заявки) |
+| PRD-03a | 🟠 | Антиспам: лимит заявок на `telegram_user_id` / телефон | **fixed 2026-05-31** — B3 |
 
 ## Admin UI
 
@@ -65,6 +65,6 @@
 
 ## Следующие шаги
 
-1. **B3** заявки + антиспам PRD-03a
+1. **B4** бот: чат врачей + уведомления клиенту
 2. C1 Mini App
 3. PRD-04 — `analytics_events`

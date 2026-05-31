@@ -150,6 +150,11 @@ func initDataValidationEnabled() bool {
 	return os.Getenv("TELEGRAM_INITDATA_SKIP") != "1"
 }
 
+// InitDataFromRequest возвращает строку initData из заголовка Mini App.
+func InitDataFromRequest(r *http.Request) string {
+	return initDataFromRequest(r)
+}
+
 func initDataFromRequest(r *http.Request) string {
 	if v := r.Header.Get(telegramInitDataHeader); v != "" {
 		return v

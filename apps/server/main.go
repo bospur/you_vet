@@ -89,9 +89,30 @@ func main() {
 	adminHandler := handler.NewAdminHandler(animalRepo, articleRepo, userRepo, jwtSecret)
 	doctorHandler := handler.NewDoctorHandler(doctorRepo, uploadsDir)
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
-	bookingHandler := handler.NewBookingHandler(bookingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
 	statsHandler := handler.NewStatsHandler(telegramUserRepo)
+
+	clinicID, err := bookingRepo.GetClinicIDBySlug(clinicSlug)
+	if err != nil {
+		log.Fatalf("клиника %q не найдена: %v", clinicSlug, err)
+	}
+
+	publicURL := os.Getenv("PUBLIC_URL")
+	if publicURL == "" {
+		publicURL = "https://api.snzbeachvolleyball25.ru"
+	}
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "https://app.snzbeachvolleyball25.ru"
+	}
+
+	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo)
+	if err != nil {
+		log.Fatalf("ошибка инициализации бота: %v", err)
+	}
+	go tgBot.Start()
+
+	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
@@ -104,6 +125,7 @@ func main() {
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/breeds", miniApp(groomingHandler.GetPublicBreeds))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/schedule", miniApp(groomingHandler.GetPublicSchedule))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/clinic-info", miniApp(clinicInfoHandler.GetPublicClinicInfo))
+	http.HandleFunc("POST /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.CreatePublicRequest))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
@@ -203,6 +225,7 @@ func main() {
 
 	http.HandleFunc("GET /api/admin/booking/settings", bookingAuth(bookingHandler.GetBookingSettings))
 	http.HandleFunc("PATCH /api/admin/booking/settings", adminAuth(bookingHandler.UpdateBookingSettings))
+	http.HandleFunc("POST /api/admin/booking/settings/link-chat", adminAuth(bookingHandler.LinkStaffChat))
 	http.HandleFunc("GET /api/admin/booking/availability", bookingAuth(bookingHandler.GetAvailability))
 	http.HandleFunc("GET /api/admin/booking/weekly-rules", bookingAuth(bookingHandler.GetWeeklyRules))
 	http.HandleFunc("PUT /api/admin/booking/weekly-rules", bookingAuth(bookingHandler.UpsertWeeklyRule))
@@ -214,21 +237,9 @@ func main() {
 	http.HandleFunc("DELETE /api/admin/booking/day-overrides", bookingAuth(bookingHandler.DeleteDayOverride))
 	http.HandleFunc("PUT /api/admin/booking/day-staff", bookingAuth(bookingHandler.UpsertDayStaff))
 
-	publicURL := os.Getenv("PUBLIC_URL")
-	if publicURL == "" {
-		publicURL = "https://api.snzbeachvolleyball25.ru"
-	}
-	appURL := os.Getenv("APP_URL")
-	if appURL == "" {
-		appURL = "https://app.snzbeachvolleyball25.ru"
-	}
-
-	// Telegram бот
-	tgBot, err := bot.New(botToken, clinicSlug, publicURL, appURL, animalRepo, articleRepo, doctorRepo)
-	if err != nil {
-		log.Fatalf("ошибка инициализации бота: %v", err)
-	}
-	go tgBot.Start()
+	http.HandleFunc("GET /api/admin/booking/requests", bookingAuth(bookingHandler.GetRequests))
+	http.HandleFunc("POST /api/admin/booking/requests", bookingAuth(bookingHandler.CreateRequest))
+	http.HandleFunc("PATCH /api/admin/booking/requests/{id}", bookingAuth(bookingHandler.UpdateRequest))
 
 	log.Println("server started :8080")
 	if err := http.ListenAndServe(":8080", middleware.CORS(http.DefaultServeMux)); err != nil {

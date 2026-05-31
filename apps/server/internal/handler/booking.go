@@ -15,10 +15,11 @@ import (
 // BookingHandler — эндпоинты записи на приём (B1: услуги)
 type BookingHandler struct {
 	bookingRepo *repository.BookingRepository
+	notifier    BookingNotifier
 }
 
-func NewBookingHandler(bookingRepo *repository.BookingRepository) *BookingHandler {
-	return &BookingHandler{bookingRepo: bookingRepo}
+func NewBookingHandler(bookingRepo *repository.BookingRepository, notifier BookingNotifier) *BookingHandler {
+	return &BookingHandler{bookingRepo: bookingRepo, notifier: notifier}
 }
 
 func validBookingCategory(c string) bool {
@@ -167,19 +168,69 @@ func (h *BookingHandler) GetBookingSettings(w http.ResponseWriter, r *http.Reque
 func (h *BookingHandler) UpdateBookingSettings(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r)
 	var body struct {
-		HorizonWeeks *int `json:"horizon_weeks"`
+		HorizonWeeks *int   `json:"horizon_weeks"`
+		StaffChatID  *int64 `json:"staff_chat_id"`
+		ClearStaffChat *bool `json:"clear_staff_chat"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
 		return
 	}
-	if body.HorizonWeeks == nil || *body.HorizonWeeks < 1 || *body.HorizonWeeks > 8 {
-		http.Error(w, "horizon_weeks должен быть от 1 до 8", http.StatusBadRequest)
+	if body.HorizonWeeks == nil && body.StaffChatID == nil && (body.ClearStaffChat == nil || !*body.ClearStaffChat) {
+		http.Error(w, "нет полей для обновления", http.StatusBadRequest)
 		return
 	}
-	s, err := h.bookingRepo.UpdateHorizonWeeks(claims.ClinicID, *body.HorizonWeeks)
+
+	var s *repository.BookingSettings
+	var err error
+
+	if body.HorizonWeeks != nil {
+		if *body.HorizonWeeks < 1 || *body.HorizonWeeks > 8 {
+			http.Error(w, "horizon_weeks должен быть от 1 до 8", http.StatusBadRequest)
+			return
+		}
+		s, err = h.bookingRepo.UpdateHorizonWeeks(claims.ClinicID, *body.HorizonWeeks)
+	}
+	if body.ClearStaffChat != nil && *body.ClearStaffChat {
+		s, err = h.bookingRepo.UpdateStaffChatID(claims.ClinicID, nil)
+	}
+	if body.StaffChatID != nil {
+		s, err = h.bookingRepo.UpdateStaffChatID(claims.ClinicID, body.StaffChatID)
+	}
+	if s == nil && err == nil {
+		s, err = h.bookingRepo.GetSettings(claims.ClinicID)
+	}
 	if err != nil {
 		log.Printf("ошибка обновления настроек записи: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, s)
+}
+
+// LinkStaffChat — POST /api/admin/booking/settings/link-chat
+func (h *BookingHandler) LinkStaffChat(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	var body struct {
+		ChatID *int64 `json:"chat_id"`
+	}
+	if r.Body != nil && r.ContentLength != 0 {
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+			return
+		}
+	}
+
+	if body.ChatID == nil {
+		writeJSON(w, http.StatusOK, map[string]string{
+			"instruction": "Добавьте бота в групповой чат или канал и отправьте там команду /link_staff",
+		})
+		return
+	}
+
+	s, err := h.bookingRepo.UpdateStaffChatID(claims.ClinicID, body.ChatID)
+	if err != nil {
+		log.Printf("ошибка привязки чата: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
@@ -430,4 +481,187 @@ func (h *BookingHandler) UpsertDayStaff(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	writeJSON(w, http.StatusOK, s)
+}
+
+func bookingRequestError(w http.ResponseWriter, err error) bool {
+	if err == nil {
+		return false
+	}
+	switch {
+	case errors.Is(err, repository.ErrBookingNotFound):
+		http.Error(w, "не найдено", http.StatusNotFound)
+	case errors.Is(err, repository.ErrBookingCapacityFull):
+		http.Error(w, "нет свободных мест на эту дату", http.StatusConflict)
+	case errors.Is(err, repository.ErrBookingAntispam):
+		http.Error(w, "превышен лимит заявок", http.StatusTooManyRequests)
+	case errors.Is(err, repository.ErrBookingInvalidDate):
+		http.Error(w, "дата недоступна для записи", http.StatusBadRequest)
+	case errors.Is(err, repository.ErrBookingInvalidStatus):
+		http.Error(w, "недопустимый переход статуса", http.StatusBadRequest)
+	case errors.Is(err, repository.ErrBookingServiceInactive):
+		http.Error(w, "услуга недоступна", http.StatusBadRequest)
+	default:
+		return false
+	}
+	return true
+}
+
+// GetRequests — GET /api/admin/booking/requests
+func (h *BookingHandler) GetRequests(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	f := repository.BookingRequestFilters{
+		Status: r.URL.Query().Get("status"),
+		From:   r.URL.Query().Get("from"),
+		To:     r.URL.Query().Get("to"),
+	}
+	if v := r.URL.Query().Get("service_type_id"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			f.ServiceTypeID = id
+		}
+	}
+
+	list, err := h.bookingRepo.ListRequests(claims.ClinicID, f)
+	if err != nil {
+		log.Printf("ошибка списка заявок: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if list == nil {
+		list = []repository.BookingRequest{}
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+// CreateRequest — POST /api/admin/booking/requests
+func (h *BookingHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	var input repository.BookingRequestInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(input.ClientName) == "" || strings.TrimSpace(input.PetName) == "" {
+		http.Error(w, "имя клиента и кличка обязательны", http.StatusBadRequest)
+		return
+	}
+	if input.ServiceTypeID <= 0 || input.RequestedDate == "" {
+		http.Error(w, "service_type_id и requested_date обязательны", http.StatusBadRequest)
+		return
+	}
+
+	req, err := h.bookingRepo.CreateRequest(claims.ClinicID, input)
+	if err != nil {
+		if bookingRequestError(w, err) {
+			return
+		}
+		log.Printf("ошибка создания заявки: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if h.notifier != nil {
+		go h.notifier.NotifyBookingRequestCreated(claims.ClinicID, *req)
+	}
+	writeJSON(w, http.StatusCreated, req)
+}
+
+// UpdateRequest — PATCH /api/admin/booking/requests/{id}
+func (h *BookingHandler) UpdateRequest(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	id := r.PathValue("id")
+
+	var patch repository.BookingRequestPatch
+	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	if patch.Status == nil && patch.RequestedDate == nil && patch.StaffNote == nil {
+		http.Error(w, "нет полей для обновления", http.StatusBadRequest)
+		return
+	}
+	if patch.Status != nil {
+		switch *patch.Status {
+		case "confirmed", "rejected", "cancelled", "rescheduled":
+		default:
+			http.Error(w, "недопустимый статус", http.StatusBadRequest)
+			return
+		}
+	}
+
+	existing, err := h.bookingRepo.GetRequestByID(claims.ClinicID, id)
+	if err != nil {
+		log.Printf("ошибка чтения заявки: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if existing == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+
+	req, err := h.bookingRepo.UpdateRequest(claims.ClinicID, claims.UserID, id, patch)
+	if err != nil {
+		if bookingRequestError(w, err) {
+			return
+		}
+		log.Printf("ошибка обновления заявки: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if h.notifier != nil {
+		prevStatus := existing.Status
+		go h.notifier.NotifyBookingRequestUpdated(claims.ClinicID, *req, prevStatus)
+	}
+	writeJSON(w, http.StatusOK, req)
+}
+
+// CreatePublicRequest — POST /api/clinics/{clinicSlug}/booking/requests
+func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Request) {
+	clinicSlug := r.PathValue("clinicSlug")
+	if clinicSlug == "" {
+		http.Error(w, "clinic slug обязателен", http.StatusBadRequest)
+		return
+	}
+
+	clinicID, err := h.bookingRepo.GetClinicIDBySlug(clinicSlug)
+	if err != nil {
+		if errors.Is(err, repository.ErrBookingNotFound) {
+			http.Error(w, "клиника не найдена", http.StatusNotFound)
+			return
+		}
+		log.Printf("ошибка clinic slug: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	var input repository.BookingRequestInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(input.ClientName) == "" || strings.TrimSpace(input.PetName) == "" {
+		http.Error(w, "имя клиента и кличка обязательны", http.StatusBadRequest)
+		return
+	}
+	if input.ServiceTypeID <= 0 || input.RequestedDate == "" {
+		http.Error(w, "service_type_id и requested_date обязательны", http.StatusBadRequest)
+		return
+	}
+
+	if visit, ok := middleware.ParseInitDataUser(middleware.InitDataFromRequest(r)); ok {
+		input.TelegramUserID = &visit.TelegramUserID
+	}
+
+	req, err := h.bookingRepo.CreateRequest(clinicID, input)
+	if err != nil {
+		if bookingRequestError(w, err) {
+			return
+		}
+		log.Printf("ошибка публичной заявки: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if h.notifier != nil {
+		go h.notifier.NotifyBookingRequestCreated(clinicID, *req)
+	}
+	writeJSON(w, http.StatusCreated, req)
 }

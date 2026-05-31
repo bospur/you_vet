@@ -112,6 +112,28 @@ export async function updateBookingHorizon(horizon_weeks: number): Promise<Booki
   return data;
 }
 
+export async function updateBookingStaffChat(staff_chat_id: number | null): Promise<BookingSettings> {
+  const { data } = await axiosInstance.patch<BookingSettings>('/api/admin/booking/settings', {
+    staff_chat_id,
+  });
+  return data;
+}
+
+export async function clearBookingStaffChat(): Promise<BookingSettings> {
+  const { data } = await axiosInstance.patch<BookingSettings>('/api/admin/booking/settings', {
+    clear_staff_chat: true,
+  });
+  return data;
+}
+
+export async function linkBookingStaffChat(chat_id?: number): Promise<BookingSettings | { instruction: string }> {
+  const { data } = await axiosInstance.post<BookingSettings | { instruction: string }>(
+    '/api/admin/booking/settings/link-chat',
+    chat_id != null ? { chat_id } : {},
+  );
+  return data;
+}
+
 export async function getBookingWeeklyRules(serviceTypeId: number): Promise<BookingWeeklyRule[]> {
   const { data } = await axiosInstance.get<BookingWeeklyRule[]>(
     `/api/admin/booking/weekly-rules?${q(serviceTypeId)}`,
@@ -180,4 +202,74 @@ export async function upsertBookingDayOverride(
 
 export async function deleteBookingDayOverride(serviceTypeId: number, date: string): Promise<void> {
   await axiosInstance.delete(`/api/admin/booking/day-overrides?${q(serviceTypeId)}&date=${date}`);
+}
+
+export interface BookingRequest {
+  id: number;
+  clinic_id: number;
+  service_type_id: number;
+  service_name?: string;
+  requested_date: string;
+  slot_time: string | null;
+  client_name: string;
+  client_phone: string;
+  pet_name: string;
+  pet_species: string | null;
+  pet_age_years: number | null;
+  telegram_user_id: number | null;
+  status: 'pending' | 'confirmed' | 'rejected' | 'cancelled' | 'rescheduled';
+  staff_note: string | null;
+  reject_reason: string | null;
+  handled_by_user_id: number | null;
+  rules_ack: unknown;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BookingRequestInput = {
+  service_type_id: number;
+  requested_date: string;
+  slot_time?: string | null;
+  client_name: string;
+  client_phone: string;
+  pet_name: string;
+  pet_species?: string | null;
+  pet_age_years?: number | null;
+  rules_ack?: unknown;
+};
+
+export type BookingRequestPatch = {
+  status?: BookingRequest['status'];
+  staff_note?: string | null;
+  reject_reason?: string | null;
+  requested_date?: string;
+  slot_time?: string | null;
+};
+
+export async function getBookingRequests(params?: {
+  status?: string;
+  service_type_id?: number;
+  from?: string;
+  to?: string;
+}): Promise<BookingRequest[]> {
+  const search = new URLSearchParams();
+  if (params?.status) search.set('status', params.status);
+  if (params?.service_type_id) search.set('service_type_id', String(params.service_type_id));
+  if (params?.from) search.set('from', params.from);
+  if (params?.to) search.set('to', params.to);
+  const qs = search.toString();
+  const { data } = await axiosInstance.get<BookingRequest[]>(
+    `/api/admin/booking/requests${qs ? `?${qs}` : ''}`,
+  );
+  return data;
+}
+
+export async function createBookingRequest(input: BookingRequestInput): Promise<BookingRequest> {
+  const { data } = await axiosInstance.post<BookingRequest>('/api/admin/booking/requests', input);
+  return data;
+}
+
+export async function updateBookingRequest(id: number, patch: BookingRequestPatch): Promise<BookingRequest> {
+  const { data } = await axiosInstance.patch<BookingRequest>(`/api/admin/booking/requests/${id}`, patch);
+  return data;
 }

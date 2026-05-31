@@ -22,6 +22,8 @@ import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import SettingsIcon from '@mui/icons-material/Settings';
 import InfoIcon from '@mui/icons-material/Info';
 import InsightsIcon from '@mui/icons-material/Insights';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -40,6 +42,8 @@ const NAV_ITEMS = [
   { label: 'Груминг', to: '/grooming', icon: <ContentCutIcon />, roles: ['admin', 'editor', 'groomer'] },
   { label: 'Запись · услуги', to: '/booking/services', icon: <EventAvailableIcon />, roles: ['admin', 'manager'] },
   { label: 'Запись · расписание', to: '/booking/schedule', icon: <CalendarMonthIcon />, roles: ['admin', 'manager'] },
+  { label: 'Запись · заявки', to: '/booking/requests', icon: <AssignmentIcon />, roles: ['admin', 'manager'] },
+  { label: 'Запись · настройки', to: '/booking/settings', icon: <SettingsIcon />, roles: ['admin'] },
   { label: 'Пользователи', to: '/users', icon: <PeopleIcon />, roles: ['admin'] },
 ];
 
