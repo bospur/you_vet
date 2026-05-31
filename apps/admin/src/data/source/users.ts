@@ -3,13 +3,13 @@ import axiosInstance from './axiosInstance';
 export interface User {
   id: number;
   login: string;
-  role: 'admin' | 'editor' | 'groomer';
+  role: 'admin' | 'editor' | 'groomer' | 'manager';
 }
 
 export interface CreateUserInput {
   login: string;
   password: string;
-  role: 'admin' | 'editor' | 'groomer';
+  role: 'admin' | 'editor' | 'groomer' | 'manager';
 }
 
 export async function getUsers(): Promise<User[]> {

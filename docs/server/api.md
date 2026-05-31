@@ -151,6 +151,21 @@ Admin SPA отправляет запросы с `credentials: include`. JWT д�
 
 ---
 
+### Запись на приём (B1)
+
+Роли: `admin`, `manager`.
+
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/api/admin/booking/service-types` | Список услуг |
+| POST | `/api/admin/booking/service-types` | Создать |
+| PUT | `/api/admin/booking/service-types/{id}` | Обновить |
+| DELETE | `/api/admin/booking/service-types/{id}` | Удалить |
+
+При первой миграции 013 для каждой клиники создаётся стартовый каталог (6 услуг) и `booking_settings`.
+
+---
+
 ### Статистика (M0)
 
 | Метод | URL | Описание | Роль |
