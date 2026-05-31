@@ -2,34 +2,35 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-05-30 (M0 polish + admin «Обзор»)
+## Сессия 2026-05-30 (доку + подготовка к Фазе 5)
 
-**Ветка:** `work-doc-up` → push в origin, затем PR в `dev`
+**Ветка:** `dev` · prod проверен пользователем — всё работает
 
 ### Сделано
 
-**Mini App:**
-- [x] Haptic, «Сегодня в клинике», skeleton/fallback «Рекомендуем», spinner вместо CatPreloader
-- [x] Тёмная тема TG: `data-tg-theme` + токены `--vet-*` на всех экранах
-- [x] Sticky «Позвонить» — **убран** (фидбек); звонок: «О нас» + иконка в хедере
+**Документация:**
+- [x] Анкета для директора: `docs/registration-phase-survey.html` — 17 вопросов, простой язык
+- [x] Ссылка «Сбор данных для фазы записи» на всех страницах HTML-портала + раздел на index
+- [x] Синхронизация context (STATUS, HANDOFF, ISSUES), roadmap (M0 → prod), project-for-devs
 
-**M0 аналитика (в `dev` после PR #35 + эта ветка):**
-- [x] `012_telegram_users`, upsert из initData
-- [x] `GET /api/admin/stats/summary` + `GET /api/admin/stats/users`
-- [x] Admin «Обзор»: карточки + **таблица посетителей** (имя, @username, ID, first/last_seen)
-- [x] Fix 404: admin вызывал `/stats/summary` → `/api/admin/stats/summary`
+**Mini App — «О нас» (по фидбеку заказчика):**
+- [x] Убрана картинка кота, файл `cat.png` удалён
+- [x] Описание (слоган) по центру; контакты и основная инфа без изменений
+- [x] Логотип из админки — проверен, ок
 
-**Документация:** context, roadmap.html, api.md, user-guide, README
+**Техдолг:**
+- [x] UI-04 — кот в «О нас» → **fixed**
+- [ ] UI-05 — прочие UI-правки от заказчика (уточнить список)
 
 ### Следующая сессия
 
-1. **Merge + деплой** `work-doc-up` → `dev` → проверить «Обзор» в prod
-2. **Фаза 5** — запись на приём (PRD-03)
-3. M0 шаг 2 — `analytics_events` (по необходимости)
+1. Передать директору анкету → получить ответы
+2. **Фаза 5** — проектирование + backend заявок (PRD-03)
+3. Деплой docs + app (кот убран) после merge
 
 ---
 
-## M0 — что в коде
+## M0 — что в prod
 
 | API / UI | Статус |
 |---|---|
@@ -52,4 +53,4 @@
 ## Заметки
 
 - Featured → draft сбрасывает featured
-- Таблица «Обзор» пустая до визитов Mini App после деплоя server+012
+- Анкета: https://docs.snzbeachvolleyball25.ru/registration-phase-survey.html

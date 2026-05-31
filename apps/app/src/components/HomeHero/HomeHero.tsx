@@ -1,5 +1,4 @@
 import type { ClinicInfo } from '../../api';
-import catImg from '../../assets/home/cat.png';
 import styles from './HomeHero.module.css';
 
 const DEFAULT_SLOGAN = 'Мы работаем для вас и ваших питомцев!';
@@ -93,10 +92,7 @@ export function HomeHero({ info, expanded, onToggleExpanded }: HomeHeroProps) {
             </div>
           )}
 
-          <div className={styles.sloganRow}>
-            <img src={catImg} alt="" className={styles.cat} />
-            <p className={styles.slogan}>{slogan}</p>
-          </div>
+          <p className={styles.slogan}>{slogan}</p>
         </div>
       </div>
     </section>

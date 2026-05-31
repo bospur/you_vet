@@ -104,28 +104,11 @@
   opacity: 0.7;
 }
 
-.sloganRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-  padding-bottom: 8px;
-}
-
-.cat {
-  flex-shrink: 0;
-  width: 34px;
-  height: 72px;
-  object-fit: contain;
-  object-position: left center;
-}
-
 .slogan {
-  flex: 1;
-  margin: 0;
+  margin: 12px 0 8px;
   font-size: 17px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.35;
   color: var(--vet-green-slogan);
-  text-align: right;
+  text-align: center;
 }

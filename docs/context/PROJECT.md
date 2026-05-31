@@ -58,3 +58,4 @@ packages/cat/    @you-vet/cat (legacy; Mini App не использует с 202
 - [mobile/overview.md](../mobile/overview.md) — мобильное приложение (Capacitor, research)
 - [server/api.md](../server/api.md) — API reference
 - [roles.md](../roles.md) — роли (с фактическим состоянием RBAC на бэкенде)
+- [registration-phase-survey.html](../registration-phase-survey.html) — анкета для клиники перед Фазой 5 (запись)
