@@ -390,6 +390,7 @@ func (r *BookingRepository) validateRequestDate(
 	if !open {
 		return nil, daySchedule{}, ErrBookingInvalidDate
 	}
+	applyTimeSlotsScheduleStyle(svc.ScheduleStyle, &sched)
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -431,7 +432,11 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 	defer tx.Rollback()
 
 	var slotTimeArg *string
-	if sched.slotMode == "fixed_times" {
+	slotMode := sched.slotMode
+	if svc.ScheduleStyle == "time_slots" {
+		slotMode = "fixed_times"
+	}
+	if slotMode == "fixed_times" {
 		if input.SlotTime == nil || strings.TrimSpace(*input.SlotTime) == "" {
 			return nil, errors.New("укажите время приёма")
 		}
@@ -636,6 +641,9 @@ func (r *BookingRepository) UpdateRequest(clinicID, userID int, id string, patch
 	if patch.Status != nil && *patch.Status == "rejected" && (patch.RejectReason == nil || strings.TrimSpace(*patch.RejectReason) == "") {
 		reason := "Отклонено клиникой"
 		patch.RejectReason = &reason
+	}
+	if patch.Status != nil && *patch.Status == "confirmed" && patch.StaffNote != nil && strings.TrimSpace(*patch.StaffNote) == "" {
+		patch.StaffNote = nil
 	}
 
 	row := r.db.QueryRow(`

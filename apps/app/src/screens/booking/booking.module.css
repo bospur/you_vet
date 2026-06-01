@@ -32,6 +32,24 @@
   padding: 24px 0;
 }
 
+.formError {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #b71c1c;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+}
+
+.ageWarn {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #b8860b;
+}
+
 .card {
   background: var(--vet-accent-soft);
   border-radius: 14px;

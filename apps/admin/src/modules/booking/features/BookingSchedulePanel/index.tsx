@@ -23,6 +23,7 @@ import {
   useTheme,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { NumericTextField } from '../../../../shared/ui/NumericTextField';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import { useNotification } from '../../../../shared/ui/Notification/NotificationContext';
@@ -367,14 +368,16 @@ export function BookingSchedulePanel() {
                             gap={1}
                             sx={{ width: isMobile ? '100%' : 'auto' }}
                           >
-                            <TextField
+                            <NumericTextField
                               label="Мест"
-                              type="number"
                               size="small"
                               value={rule.max_per_day}
-                              onChange={(e) => updateDraftDay(day, { max_per_day: Number(e.target.value) })}
+                              onValueChange={(n) =>
+                                updateDraftDay(day, { max_per_day: n === '' ? 1 : n })
+                              }
                               sx={{ width: isMobile ? '100%' : 80 }}
-                              inputProps={{ min: 1 }}
+                              min={1}
+                              allowEmpty={false}
                             />
                             {showsIntakeWindow(scheduleStyle) && (
                               <>
