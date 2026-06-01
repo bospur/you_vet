@@ -1,17 +1,29 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Avatar, Box, Chip, CircularProgress, FormControl,
+  Avatar, Box, Button, Chip, CircularProgress, FormControl,
   InputLabel, MenuItem, Paper, Select, Stack,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Typography, useMediaQuery, useTheme,
 } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
+import DownloadIcon from '@mui/icons-material/Download';
 import { Layout } from '../../shared/ui/Layout';
-import { getDoctors, getSettings, updateSettings } from '../../data/source/doctors';
+import { getDoctors, getSettings, getSchedulePeriod, updateSettings } from '../../data/source/doctors';
 import { useNotification } from '../../shared/ui/Notification/NotificationContext';
 import { useAuth } from '../../shared/config/AuthContext';
-import type { DoctorScheduleSlot } from '../../modules/doctors/domain/types';
-import { getDoctorSchedule, getExceptions } from '../../data/source/doctors';
 import { useNavigate } from 'react-router-dom';
+import {
+  formatScheduleDate,
+  generateDatesFromToday,
+  isoDateLocal,
+} from '../../modules/doctors/domain/scheduleDates';
+import { buildScheduleMatrix, formatTimeRange } from '../../modules/doctors/domain/scheduleMatrix';
+import {
+  buildWeeklyScheduleHtml,
+  downloadWeeklyScheduleHtml,
+  printWeeklyScheduleHtml,
+} from '../../modules/doctors/domain/weeklyScheduleExport';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -23,27 +35,7 @@ const PERIOD_OPTIONS = [
   { value: 5, label: 'Месяц' },
 ];
 
-// Генерируем даты на период (для превью в админке)
-function generateDates(weeks: number): Date[] {
-  const days = weeks === 5 ? 31 : weeks * 7;
-  const result: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < days; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    result.push(d);
-  }
-  return result;
-}
-
-function formatDate(d: Date): string {
-  return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
-}
-
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
+const MANAGER_WEEKS = 1;
 
 export function ScheduleScreen() {
   const { notify } = useNotification();
@@ -51,38 +43,34 @@ export function ScheduleScreen() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const canEdit = !isManager;
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
 
   const { data: doctors = [], isLoading: doctorsLoading } = useQuery({
     queryKey: ['doctors'],
     queryFn: getDoctors,
+    enabled: canEdit,
   });
 
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ['clinic-settings'],
     queryFn: getSettings,
+    enabled: !isManager,
   });
 
-  // Загружаем расписание для всех опубликованных врачей
-  const publishedDoctors = doctors.filter((d) => d.status === 'published');
+  const weeks = isManager ? MANAGER_WEEKS : (settings?.schedule_display_weeks ?? 2);
+  const dates = useMemo(() => generateDatesFromToday(weeks), [weeks]);
+  const from = isoDateLocal(dates[0]);
+  const to = isoDateLocal(dates[dates.length - 1]);
 
-  const schedulesQueries = useQuery({
-    queryKey: ['all-schedules', publishedDoctors.map((d) => d.id)],
-    queryFn: async () => {
-      const results = await Promise.all(
-        publishedDoctors.map(async (d) => ({
-          doctorId: d.id,
-          slots: await getDoctorSchedule(d.id),
-          exceptions: await getExceptions(d.id),
-        })),
-      );
-      return results;
-    },
-    enabled: publishedDoctors.length > 0,
+  const { data: scheduleResponse, isLoading: scheduleLoading } = useQuery({
+    queryKey: ['admin-schedule', from, to],
+    queryFn: () => getSchedulePeriod(from, to),
   });
 
   const settingsMutation = useMutation({
-    mutationFn: (weeks: number) => updateSettings(weeks),
+    mutationFn: (value: number) => updateSettings(value),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clinic-settings'] });
       notify('Настройки сохранены', 'success');
@@ -90,58 +78,90 @@ export function ScheduleScreen() {
     onError: () => notify('Ошибка сохранения настроек', 'error'),
   });
 
-  const isLoading = doctorsLoading || settingsLoading || schedulesQueries.isLoading;
-  const weeks = settings?.schedule_display_weeks ?? 2;
+  const matrix = useMemo(
+    () => buildScheduleMatrix(dates, scheduleResponse?.entries ?? []),
+    [dates, scheduleResponse?.entries],
+  );
 
-  // Строим матрицу расписания
-  const dates = generateDates(weeks);
-  const scheduleData = schedulesQueries.data ?? [];
+  const visibleMatrix = matrix.filter((row) => row.working.length > 0);
 
-  // Для каждой даты собираем кто работает
-  const matrix = dates.map((date) => {
-    const dow = date.getDay();
-    const iso = isoDate(date);
+  const weeklyExportDates = useMemo(() => generateDatesFromToday(1), []);
+  const weeklyFrom = isoDateLocal(weeklyExportDates[0]);
+  const weeklyTo = isoDateLocal(weeklyExportDates[weeklyExportDates.length - 1]);
 
-    const working = publishedDoctors.flatMap((doc) => {
-      const entry = scheduleData.find((s) => s.doctorId === doc.id);
-      if (!entry) return [];
+  const { data: weeklySchedule } = useQuery({
+    queryKey: ['admin-schedule-weekly-export', weeklyFrom, weeklyTo],
+    queryFn: () => getSchedulePeriod(weeklyFrom, weeklyTo),
+    staleTime: 1000 * 60 * 5,
+  });
 
-      // Проверяем исключение
-      const exception = entry.exceptions.find((e) => e.date === iso);
-      if (exception) {
-        if (exception.is_day_off) return [];
-        if (exception.time_from && exception.time_to) {
-          return [{ doc, time_from: exception.time_from, time_to: exception.time_to }];
-        }
-      }
+  const weeklyRows = useMemo(
+    () => buildScheduleMatrix(weeklyExportDates, weeklySchedule?.entries ?? []),
+    [weeklyExportDates, weeklySchedule?.entries],
+  );
 
-      // Базовый слот по дню недели
-      const slots = entry.slots.filter((s: DoctorScheduleSlot) => s.day_of_week === dow);
-      return slots.map((s: DoctorScheduleSlot) => ({ doc, time_from: s.time_from, time_to: s.time_to }));
-    });
+  const handleExport = (mode: 'print' | 'download') => {
+    const html = buildWeeklyScheduleHtml(weeklyRows, weeklyFrom, weeklyTo);
+    if (mode === 'print') {
+      printWeeklyScheduleHtml(html);
+    } else {
+      downloadWeeklyScheduleHtml(html, weeklyFrom, weeklyTo);
+      notify('Файл скачан', 'success');
+    }
+  };
 
-    return { date, working };
-  }).filter((row) => row.working.length > 0);
+  const isLoading = scheduleLoading || (canEdit && (doctorsLoading || settingsLoading));
+
+  const openDoctor = (doctorId: number) => {
+    if (canEdit) navigate(`/doctors/${doctorId}/edit`);
+  };
 
   return (
     <Layout title="Расписание">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h5" fontWeight={600}>Расписание</Typography>
-        {isAdmin && (
-          <FormControl size="small" sx={{ minWidth: isMobile ? '100%' : 160 }}>
-            <InputLabel>Период отображения</InputLabel>
-            <Select
-              label="Период отображения"
-              value={weeks}
-              disabled={settingsMutation.isPending}
-              onChange={(e) => settingsMutation.mutate(Number(e.target.value))}
-            >
-              {PERIOD_OPTIONS.map((o) => (
-                <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>Расписание врачей</Typography>
+          {isManager && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              На ближайшую неделю · для печати на кассе
+            </Typography>
+          )}
+        </Box>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ alignItems: 'center' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<DownloadIcon />}
+            onClick={() => handleExport('download')}
+            disabled={!weeklySchedule}
+          >
+            Скачать неделю
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<PrintIcon />}
+            onClick={() => handleExport('print')}
+            disabled={!weeklySchedule}
+          >
+            Печать
+          </Button>
+          {isAdmin && (
+            <FormControl size="small" sx={{ minWidth: isMobile ? '100%' : 160 }}>
+              <InputLabel>Период отображения</InputLabel>
+              <Select
+                label="Период отображения"
+                value={weeks}
+                disabled={settingsMutation.isPending}
+                onChange={(e) => settingsMutation.mutate(Number(e.target.value))}
+              >
+                {PERIOD_OPTIONS.map((o) => (
+                  <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        </Stack>
       </Box>
 
       {isLoading && (
@@ -150,35 +170,44 @@ export function ScheduleScreen() {
         </Box>
       )}
 
-      {!isLoading && publishedDoctors.length === 0 && (
+      {!isLoading && visibleMatrix.length === 0 && (
         <Typography color="text.secondary">
-          Нет опубликованных врачей. <span
-            style={{ color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
-            onClick={() => navigate('/doctors')}
-          >Перейти к врачам</span>
+          {canEdit ? (
+            <>
+              Расписание не заполнено. Добавьте слоты в{' '}
+              <span
+                style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                onClick={() => navigate('/doctors')}
+              >
+                карточках врачей
+              </span>
+              .
+            </>
+          ) : (
+            'Расписание на эту неделю пока не заполнено.'
+          )}
         </Typography>
       )}
 
-      {!isLoading && publishedDoctors.length > 0 && matrix.length === 0 && (
-        <Typography color="text.secondary">
-          Расписание не заполнено. Добавьте слоты в карточках врачей.
-        </Typography>
-      )}
-
-      {!isLoading && matrix.length > 0 && (
+      {!isLoading && visibleMatrix.length > 0 && (
         isMobile ? (
           <Stack spacing={1.5}>
-            {matrix.map(({ date, working }) => (
-              <Paper key={isoDate(date)} sx={{ p: 2 }}>
+            {visibleMatrix.map(({ date, dateObj, working }) => (
+              <Paper key={date} sx={{ p: 2 }}>
                 <Typography variant="body2" fontWeight={600} color="text.secondary" mb={1}>
-                  {formatDate(date)}
+                  {formatScheduleDate(dateObj)}
                 </Typography>
                 <Stack spacing={1}>
-                  {working.map(({ doc, time_from, time_to }, i) => (
+                  {working.map((doc) => (
                     <Box
-                      key={i}
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}
-                      onClick={() => navigate(`/doctors/${doc.id}/edit`)}
+                      key={`${doc.doctor_id}-${doc.time_from}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        cursor: canEdit ? 'pointer' : 'default',
+                      }}
+                      onClick={() => openDoctor(doc.doctor_id)}
                     >
                       <Avatar
                         src={doc.photo_url ? `${BASE_URL}${doc.photo_url}` : undefined}
@@ -189,7 +218,8 @@ export function ScheduleScreen() {
                       <Box>
                         <Typography variant="body2" fontWeight={500}>{doc.full_name}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {time_from.slice(0, 5)} – {time_to.slice(0, 5)}
+                          {doc.specialty ? `${doc.specialty} · ` : ''}
+                          {formatTimeRange(doc.time_from, doc.time_to)}
                         </Typography>
                       </Box>
                     </Box>
@@ -208,23 +238,24 @@ export function ScheduleScreen() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {matrix.map(({ date, working }) => (
-                  <TableRow key={isoDate(date)} hover>
+                {visibleMatrix.map(({ date, dateObj, working }) => (
+                  <TableRow key={date} hover={canEdit}>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={500}>{formatDate(date)}</Typography>
+                      <Typography variant="body2" fontWeight={500}>{formatScheduleDate(dateObj)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Stack direction="row" flexWrap="wrap" gap={1}>
-                        {working.map(({ doc, time_from, time_to }, i) => (
+                        {working.map((doc) => (
                           <Box
-                            key={i}
+                            key={`${doc.doctor_id}-${doc.time_from}`}
                             sx={{
                               display: 'flex', alignItems: 'center', gap: 1,
                               border: '1px solid', borderColor: 'divider',
                               borderRadius: 2, px: 1.5, py: 0.5,
-                              cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' },
+                              cursor: canEdit ? 'pointer' : 'default',
+                              ...(canEdit ? { '&:hover': { bgcolor: 'action.hover' } } : {}),
                             }}
-                            onClick={() => navigate(`/doctors/${doc.id}/edit`)}
+                            onClick={() => openDoctor(doc.doctor_id)}
                           >
                             <Avatar
                               src={doc.photo_url ? `${BASE_URL}${doc.photo_url}` : undefined}
@@ -235,7 +266,8 @@ export function ScheduleScreen() {
                             <Box>
                               <Typography variant="body2" lineHeight={1.2}>{doc.full_name}</Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {time_from.slice(0, 5)} – {time_to.slice(0, 5)}
+                                {doc.specialty ? `${doc.specialty} · ` : ''}
+                                {formatTimeRange(doc.time_from, doc.time_to)}
                               </Typography>
                             </Box>
                           </Box>
@@ -250,7 +282,7 @@ export function ScheduleScreen() {
         )
       )}
 
-      {!isLoading && (
+      {!isLoading && canEdit && doctors.length > 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="subtitle2" mb={1}>Все врачи</Typography>
           <Stack direction="row" flexWrap="wrap" gap={1}>

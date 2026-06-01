@@ -100,6 +100,19 @@ export async function getSettings(): Promise<ClinicSettings> {
   return data;
 }
 
+export interface AdminScheduleResponse {
+  from: string;
+  to: string;
+  entries: ScheduleEntry[];
+}
+
+export async function getSchedulePeriod(from: string, to: string): Promise<AdminScheduleResponse> {
+  const { data } = await axiosInstance.get<AdminScheduleResponse>('/api/admin/schedule', {
+    params: { from, to },
+  });
+  return data;
+}
+
 export async function updateSettings(weeks: number): Promise<ClinicSettings> {
   const { data } = await axiosInstance.patch<ClinicSettings>('/api/admin/settings', {
     schedule_display_weeks: weeks,

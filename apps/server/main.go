@@ -148,6 +148,9 @@ func main() {
 	bookingAuth := func(h http.HandlerFunc) http.HandlerFunc {
 		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin", "manager"))
 	}
+	scheduleReadAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin", "editor", "manager"))
+	}
 	adminAuth := func(h http.HandlerFunc) http.HandlerFunc {
 		return middleware.Auth(jwtSecret, middleware.RequireRole(h, "admin"))
 	}
@@ -194,8 +197,10 @@ func main() {
 	http.HandleFunc("PUT /api/admin/doctors/{id}/schedule/exceptions", contentAuth(doctorHandler.UpsertException))
 	http.HandleFunc("DELETE /api/admin/doctors/{id}/schedule/exceptions/{exceptionId}", contentAuth(doctorHandler.DeleteException))
 
+	http.HandleFunc("GET /api/admin/schedule", scheduleReadAuth(doctorHandler.GetAdminSchedule))
+
 	// Settings
-	http.HandleFunc("GET /api/admin/settings", contentAuth(doctorHandler.GetSettings))
+	http.HandleFunc("GET /api/admin/settings", scheduleReadAuth(doctorHandler.GetSettings))
 	http.HandleFunc("PATCH /api/admin/settings", adminAuth(doctorHandler.UpdateSettings))
 
 	// Clinic info
