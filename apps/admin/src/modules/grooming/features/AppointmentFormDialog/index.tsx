@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { GroomingBreed } from '../../domain/types';
+import { breedServiceLabel, formatPriceRange } from '../../domain/formatPrice';
 
 const schema = v.object({
   breed_id: v.pipe(v.number(), v.minValue(1, 'Выберите породу')),
@@ -47,6 +48,9 @@ export function AppointmentFormDialog({ open, date, prefillTime, breeds, loading
 
   const selectedBreedId = useWatch({ control, name: 'breed_id' });
   const selectedBreed = breeds.find((b) => b.id === selectedBreedId);
+  const multiService = breeds.some(
+    (b) => b.breed === selectedBreed?.breed && b.id !== selectedBreed?.id,
+  );
 
   useEffect(() => {
     if (open) {
@@ -81,18 +85,24 @@ export function AppointmentFormDialog({ open, date, prefillTime, breeds, loading
                 helperText={errors.breed_id?.message}
                 onChange={(e) => field.onChange(Number(e.target.value))}
               >
-                <MenuItem value={0} disabled>Выберите породу</MenuItem>
-                {breeds.map((b) => (
-                  <MenuItem key={b.id} value={b.id}>
-                    {b.breed} · {b.duration} мин{b.price != null ? ` · ${b.price} ₽` : ''}
-                  </MenuItem>
-                ))}
+                <MenuItem value={0} disabled>Выберите услугу</MenuItem>
+                {breeds.map((b) => {
+                  const showType = breeds.filter((x) => x.breed === b.breed).length > 1;
+                  return (
+                    <MenuItem key={b.id} value={b.id}>
+                      {breedServiceLabel(b, showType)} · {b.duration} мин
+                      {' · '}
+                      {formatPriceRange(b.price_from, b.price_to)}
+                    </MenuItem>
+                  );
+                })}
               </TextField>
             )}
           />
           {selectedBreed && (
             <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
-              Время стрижки: {selectedBreed.duration} мин
+              {multiService ? `${selectedBreed.service_name}: ` : ''}
+              {selectedBreed.duration} мин · {formatPriceRange(selectedBreed.price_from, selectedBreed.price_to)}
               {selectedBreed.description ? ` · ${selectedBreed.description}` : ''}
             </Typography>
           )}
@@ -105,7 +115,7 @@ export function AppointmentFormDialog({ open, date, prefillTime, breeds, loading
                 label="Начало приёма"
                 type="time"
                 fullWidth
-                inputProps={{ step: 300 }}
+                slotProps={{ htmlInput: { step: 300, className: 'yv-no-spin' } }}
                 error={!!errors.start_time}
                 helperText={errors.start_time?.message}
               />

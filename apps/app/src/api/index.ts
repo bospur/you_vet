@@ -70,8 +70,10 @@ export const fetchSchedule = () =>
 export interface GroomingBreed {
   id: number;
   breed: string;
+  service_name: string;
   duration: number;
-  price: number | null;
+  price_from: number | null;
+  price_to: number | null;
   description: string | null;
 }
 

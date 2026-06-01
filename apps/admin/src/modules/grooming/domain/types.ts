@@ -1,6 +1,7 @@
 export type {
   GroomingBreed,
-  GroomingBreedInput,
+  GroomingBreedGroupInput,
+  GroomingBreedServiceInput,
   GroomingTemplateSlot,
   GroomingTemplateInput,
   GroomingAppointment,
@@ -11,9 +12,21 @@ export type {
 export const DAY_NAMES_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 export const DAY_NAMES_FULL = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
-export interface GroomingBreedFormValues {
-  breed: string;
+export interface GroomingServiceFormValues {
+  service_name: string;
   duration: number;
-  price: string; // строка для инпута, конвертим при отправке
+  price_from: string;
+  price_to: string;
+}
+
+export interface GroomingBreedGroupFormValues {
+  breed: string;
   description: string;
+  services: GroomingServiceFormValues[];
+}
+
+export interface GroomingBreedGroup {
+  breed: string;
+  description: string | null;
+  services: import('@you-vet/types').GroomingBreed[];
 }

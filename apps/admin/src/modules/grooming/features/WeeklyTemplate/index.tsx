@@ -67,7 +67,7 @@ function TemplateRow({
             value={slot.time_from.slice(0, 5)}
             onChange={(e) => onTimeChange(dayOfWeek, 'time_from', e.target.value)}
             disabled={saving}
-            inputProps={{ step: 300 }}
+            slotProps={{ htmlInput: { step: 300, className: 'yv-no-spin' } }}
             sx={{ width: 130 }}
           />
           <Typography color="text.secondary">—</Typography>
@@ -78,7 +78,7 @@ function TemplateRow({
             value={slot.time_to.slice(0, 5)}
             onChange={(e) => onTimeChange(dayOfWeek, 'time_to', e.target.value)}
             disabled={saving}
-            inputProps={{ step: 300 }}
+            slotProps={{ htmlInput: { step: 300, className: 'yv-no-spin' } }}
             sx={{ width: 130 }}
           />
         </Stack>

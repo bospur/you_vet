@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 // ErrGroomingConflict возвращается при пересечении записей по времени
@@ -16,22 +17,33 @@ var ErrGroomingOutOfHours = errors.New("запись за пределами р�
 
 // ── Модели ────────────────────────────────────────────────────────────────────
 
-// GroomingBreed — порода/услуга из коллекции грумера
+// GroomingBreed — порода + тип услуги груминга
 type GroomingBreed struct {
 	ID          int      `json:"id"`
 	ClinicID    int      `json:"clinic_id"`
 	Breed       string   `json:"breed"`
+	ServiceName string   `json:"service_name"`
 	Duration    int      `json:"duration"` // минуты
-	Price       *float64 `json:"price"`    // nil если не задана
+	PriceFrom   *float64 `json:"price_from"`
+	PriceTo     *float64 `json:"price_to"`
 	Description *string  `json:"description"`
 }
 
-// GroomingBreedInput — данные для создания/обновления породы
-type GroomingBreedInput struct {
-	Breed       string   `json:"breed"`
+// GroomingBreedServiceInput — один тип услуги в группе породы
+type GroomingBreedServiceInput struct {
+	ID          *int     `json:"id,omitempty"`
+	ServiceName string   `json:"service_name"`
 	Duration    int      `json:"duration"`
-	Price       *float64 `json:"price"`
-	Description *string  `json:"description"`
+	PriceFrom   *float64 `json:"price_from"`
+	PriceTo     *float64 `json:"price_to"`
+}
+
+// GroomingBreedGroupInput — порода с несколькими типами услуг
+type GroomingBreedGroupInput struct {
+	Breed         string                    `json:"breed"`
+	Description   *string                   `json:"description"`
+	Services      []GroomingBreedServiceInput `json:"services"`
+	OriginalBreed *string                   `json:"original_breed,omitempty"`
 }
 
 // GroomingTemplateSlot — один рабочий день в шаблоне недели
@@ -55,9 +67,11 @@ type GroomingAppointment struct {
 	ID         int      `json:"id"`
 	ClinicID   int      `json:"clinic_id"`
 	BreedID    int      `json:"breed_id"`
-	Breed      string   `json:"breed"`    // из JOIN с grooming_breeds
-	Duration   int      `json:"duration"` // из JOIN
-	Price      *float64 `json:"price"`    // из JOIN
+	Breed       string   `json:"breed"`
+	ServiceName string   `json:"service_name"`
+	Duration    int      `json:"duration"`
+	PriceFrom   *float64 `json:"price_from"`
+	PriceTo     *float64 `json:"price_to"`
 	Date       string   `json:"date"`
 	PetName    string   `json:"pet_name"`
 	OwnerPhone string   `json:"owner_phone"`
@@ -85,11 +99,27 @@ func NewGroomingRepository(db *sql.DB) *GroomingRepository {
 
 // ── Породы ────────────────────────────────────────────────────────────────────
 
+const groomingBreedSelect = `
+	SELECT id, clinic_id, breed, service_name, duration, price_from, price_to, description
+	FROM grooming_breeds
+`
+
+func scanGroomingBreed(row interface{ Scan(dest ...any) error }) (*GroomingBreed, error) {
+	var b GroomingBreed
+	err := row.Scan(
+		&b.ID, &b.ClinicID, &b.Breed, &b.ServiceName, &b.Duration,
+		&b.PriceFrom, &b.PriceTo, &b.Description,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
+
 func (r *GroomingRepository) GetAllBreeds(clinicID int) ([]GroomingBreed, error) {
-	rows, err := r.db.Query(`
-		SELECT id, clinic_id, breed, duration, price, description
-		FROM grooming_breeds WHERE clinic_id = $1
-		ORDER BY breed
+	rows, err := r.db.Query(groomingBreedSelect+`
+		WHERE clinic_id = $1
+		ORDER BY breed, service_name, id
 	`, clinicID)
 	if err != nil {
 		return nil, err
@@ -98,60 +128,102 @@ func (r *GroomingRepository) GetAllBreeds(clinicID int) ([]GroomingBreed, error)
 
 	var breeds []GroomingBreed
 	for rows.Next() {
-		var b GroomingBreed
-		if err := rows.Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description); err != nil {
+		b, err := scanGroomingBreed(rows)
+		if err != nil {
 			return nil, err
 		}
-		breeds = append(breeds, b)
+		breeds = append(breeds, *b)
 	}
-	return breeds, nil
+	return breeds, rows.Err()
 }
 
 func (r *GroomingRepository) GetBreedByID(id string) (*GroomingBreed, error) {
-	var b GroomingBreed
-	err := r.db.QueryRow(`
-		SELECT id, clinic_id, breed, duration, price, description
-		FROM grooming_breeds WHERE id = $1
-	`, id).Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description)
+	row := r.db.QueryRow(groomingBreedSelect+` WHERE id = $1`, id)
+	b, err := scanGroomingBreed(row)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	if err != nil {
-		return nil, err
-	}
-	return &b, nil
+	return b, err
 }
 
-func (r *GroomingRepository) CreateBreed(clinicID int, input GroomingBreedInput) (*GroomingBreed, error) {
-	var b GroomingBreed
-	err := r.db.QueryRow(`
-		INSERT INTO grooming_breeds (clinic_id, breed, duration, price, description)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, clinic_id, breed, duration, price, description
-	`, clinicID, input.Breed, input.Duration, input.Price, input.Description).
-		Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description)
-	if err != nil {
-		return nil, err
-	}
-	return &b, nil
-}
-
-func (r *GroomingRepository) UpdateBreed(clinicID int, id string, input GroomingBreedInput) (*GroomingBreed, error) {
-	var b GroomingBreed
-	err := r.db.QueryRow(`
-		UPDATE grooming_breeds
-		SET breed=$1, duration=$2, price=$3, description=$4, updated_at=NOW()
-		WHERE id=$5 AND clinic_id=$6
-		RETURNING id, clinic_id, breed, duration, price, description
-	`, input.Breed, input.Duration, input.Price, input.Description, id, clinicID).
-		Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description)
-	if err == sql.ErrNoRows {
+func normalizePriceRange(from, to *float64) (*float64, *float64) {
+	if from == nil && to == nil {
 		return nil, nil
 	}
+	if from != nil && to != nil && *to < *from {
+		from, to = to, from
+	}
+	return from, to
+}
+
+// SaveBreedGroup заменяет все услуги породы (создание или редактирование группы).
+func (r *GroomingRepository) SaveBreedGroup(clinicID int, input GroomingBreedGroupInput) ([]GroomingBreed, error) {
+	breed := strings.TrimSpace(input.Breed)
+	if breed == "" {
+		return nil, errors.New("порода обязательна")
+	}
+	if len(input.Services) == 0 {
+		return nil, errors.New("нужен хотя бы один тип услуги")
+	}
+
+	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	return &b, nil
+	defer tx.Rollback()
+
+	deleteName := breed
+	if input.OriginalBreed != nil && strings.TrimSpace(*input.OriginalBreed) != "" {
+		deleteName = strings.TrimSpace(*input.OriginalBreed)
+	}
+	if _, err := tx.Exec(
+		`DELETE FROM grooming_breeds WHERE clinic_id = $1 AND breed = $2`,
+		clinicID, deleteName,
+	); err != nil {
+		return nil, err
+	}
+
+	var out []GroomingBreed
+	desc := input.Description
+	for _, svc := range input.Services {
+		name := strings.TrimSpace(svc.ServiceName)
+		if name == "" {
+			name = "Стрижка"
+		}
+		if svc.Duration <= 0 {
+			return nil, errors.New("продолжительность должна быть больше 0")
+		}
+		pf, pt := normalizePriceRange(svc.PriceFrom, svc.PriceTo)
+
+		row := tx.QueryRow(`
+			INSERT INTO grooming_breeds (clinic_id, breed, service_name, duration, price_from, price_to, description)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			RETURNING id, clinic_id, breed, service_name, duration, price_from, price_to, description
+		`, clinicID, breed, name, svc.Duration, pf, pt, desc)
+
+		b, err := scanGroomingBreed(row)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *b)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *GroomingRepository) DeleteBreedGroup(clinicID int, breedName string) error {
+	breedName = strings.TrimSpace(breedName)
+	if breedName == "" {
+		return errors.New("порода обязательна")
+	}
+	_, err := r.db.Exec(
+		`DELETE FROM grooming_breeds WHERE clinic_id = $1 AND breed = $2`,
+		clinicID, breedName,
+	)
+	return err
 }
 
 func (r *GroomingRepository) DeleteBreed(clinicID int, id string) error {
@@ -215,7 +287,7 @@ func (r *GroomingRepository) GetAppointmentsByMonth(clinicID int, month string) 
 	rows, err := r.db.Query(`
 		SELECT
 			a.id, a.clinic_id, a.breed_id,
-			b.breed, b.duration, b.price,
+			b.breed, b.service_name, b.duration, b.price_from, b.price_to,
 			a.date::text, a.pet_name, a.owner_phone,
 			a.start_time::text, a.end_time::text
 		FROM grooming_appointments a
@@ -234,7 +306,7 @@ func (r *GroomingRepository) GetAppointmentsByMonth(clinicID int, month string) 
 		var a GroomingAppointment
 		if err := rows.Scan(
 			&a.ID, &a.ClinicID, &a.BreedID,
-			&a.Breed, &a.Duration, &a.Price,
+			&a.Breed, &a.ServiceName, &a.Duration, &a.PriceFrom, &a.PriceTo,
 			&a.Date, &a.PetName, &a.OwnerPhone,
 			&a.StartTime, &a.EndTime,
 		); err != nil {
@@ -333,8 +405,9 @@ func (r *GroomingRepository) CreateAppointment(clinicID int, input GroomingAppoi
 
 	// Дополняем breed-поля из уже известных данных
 	err = r.db.QueryRow(
-		`SELECT breed, duration, price FROM grooming_breeds WHERE id=$1`, input.BreedID,
-	).Scan(&a.Breed, &a.Duration, &a.Price)
+		`SELECT breed, service_name, duration, price_from, price_to FROM grooming_breeds WHERE id=$1`,
+		input.BreedID,
+	).Scan(&a.Breed, &a.ServiceName, &a.Duration, &a.PriceFrom, &a.PriceTo)
 	if err != nil {
 		return nil, err
 	}
@@ -355,11 +428,11 @@ func (r *GroomingRepository) DeleteAppointment(id string, clinicID int) error {
 // GetAllBreedsBySlug возвращает породы/услуги для мини-приложения по slug клиники
 func (r *GroomingRepository) GetAllBreedsBySlug(clinicSlug string) ([]GroomingBreed, error) {
 	rows, err := r.db.Query(`
-		SELECT gb.id, gb.clinic_id, gb.breed, gb.duration, gb.price, gb.description
+		SELECT gb.id, gb.clinic_id, gb.breed, gb.service_name, gb.duration, gb.price_from, gb.price_to, gb.description
 		FROM grooming_breeds gb
 		JOIN clinics c ON c.id = gb.clinic_id
 		WHERE c.slug = $1
-		ORDER BY gb.breed
+		ORDER BY gb.breed, gb.service_name, gb.id
 	`, clinicSlug)
 	if err != nil {
 		return nil, err
@@ -368,13 +441,13 @@ func (r *GroomingRepository) GetAllBreedsBySlug(clinicSlug string) ([]GroomingBr
 
 	var breeds []GroomingBreed
 	for rows.Next() {
-		var b GroomingBreed
-		if err := rows.Scan(&b.ID, &b.ClinicID, &b.Breed, &b.Duration, &b.Price, &b.Description); err != nil {
+		b, err := scanGroomingBreed(rows)
+		if err != nil {
 			return nil, err
 		}
-		breeds = append(breeds, b)
+		breeds = append(breeds, *b)
 	}
-	return breeds, nil
+	return breeds, rows.Err()
 }
 
 // GetTemplateBySlug возвращает шаблон рабочей недели по slug клиники
