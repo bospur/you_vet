@@ -16,7 +16,13 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { NumericTextField } from '../../../../shared/ui/NumericTextField';
 import type { BookingServiceType, BookingServiceTypeInput } from '../../../../data/source/booking';
+import {
+  buildBookingRules,
+  parseBookingRules,
+  rulesToFormFields,
+} from '../../domain/bookingRules';
 import {
   SCHEDULE_STYLE_LABELS,
   type ScheduleStyle,
@@ -32,6 +38,12 @@ const schema = v.object({
   schedule_style: v.picklist(['day_capacity', 'dropoff', 'time_slots']),
   seed_max_per_day: v.optional(v.pipe(v.number(), v.minValue(1))),
   instructions_client: v.string(),
+  pet_age_collect: v.boolean(),
+  pet_age_required: v.boolean(),
+  pet_age_warn_years: v.pipe(v.number(), v.minValue(0)),
+  pet_age_warn_message: v.string(),
+  confirm_default: v.string(),
+  reject_default: v.string(),
   is_active: v.boolean(),
   sort_order: v.number(),
 });
@@ -46,6 +58,12 @@ type FormValues = {
   schedule_style: ScheduleStyle;
   seed_max_per_day?: number;
   instructions_client: string;
+  pet_age_collect: boolean;
+  pet_age_required: boolean;
+  pet_age_warn_years: number;
+  pet_age_warn_message: string;
+  confirm_default: string;
+  reject_default: string;
   is_active: boolean;
   sort_order: number;
 };
@@ -71,7 +89,14 @@ function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput
     schedule_style: values.schedule_style,
     seed_max_per_day: isCreate && seed && seed > 0 ? seed : undefined,
     instructions_client: values.instructions_client.trim() || null,
-    rules: [],
+    rules: buildBookingRules({
+      petAgeCollect: values.pet_age_collect,
+      petAgeRequired: values.pet_age_required,
+      petAgeWarnYears: values.pet_age_warn_years,
+      petAgeWarnMessage: values.pet_age_warn_message,
+      confirmDefault: values.confirm_default,
+      rejectDefault: values.reject_default,
+    }),
     is_active: values.is_active,
     sort_order: values.sort_order,
   };
@@ -91,6 +116,12 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
       schedule_style: 'day_capacity',
       seed_max_per_day: undefined,
       instructions_client: '',
+      pet_age_collect: false,
+      pet_age_required: false,
+      pet_age_warn_years: 8,
+      pet_age_warn_message: rulesToFormFields({}).petAgeWarnMessage,
+      confirm_default: rulesToFormFields({}).confirmDefault,
+      reject_default: rulesToFormFields({}).rejectDefault,
       is_active: true,
       sort_order: 0,
     },
@@ -98,19 +129,27 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
 
   const category = useWatch({ control, name: 'category' });
   const capacityGroup = useWatch({ control, name: 'capacity_group' });
+  const petAgeCollect = useWatch({ control, name: 'pet_age_collect' });
 
   useEffect(() => {
     if (category === 'surgery') {
       if (!capacityGroup) setValue('capacity_group', 'cat_surgery');
       setValue('schedule_style', 'dropoff');
-      if (!initial) setValue('seed_max_per_day', 10);
-    } else if (category === 'uzi') {
+      if (!initial) {
+        setValue('seed_max_per_day', 10);
+        setValue('pet_age_collect', true);
+        setValue('pet_age_required', true);
+      }
+    } else if (category === 'uzi' && !initial) {
       setValue('schedule_style', 'day_capacity');
+      setValue('pet_age_collect', false);
+      setValue('pet_age_required', false);
     }
   }, [category, capacityGroup, setValue, initial]);
 
   useEffect(() => {
     if (open) {
+      const ruleFields = rulesToFormFields(parseBookingRules(initial?.rules));
       reset(
         initial
           ? {
@@ -123,6 +162,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               schedule_style: initial.schedule_style,
               seed_max_per_day: undefined,
               instructions_client: initial.instructions_client ?? '',
+              ...ruleFields,
               is_active: initial.is_active,
               sort_order: initial.sort_order,
             }
@@ -136,6 +176,9 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               schedule_style: 'day_capacity',
               seed_max_per_day: undefined,
               instructions_client: '',
+              ...ruleFields,
+              pet_age_collect: false,
+              pet_age_required: false,
               is_active: true,
               sort_order: 0,
             },
@@ -192,14 +235,12 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               name="seed_max_per_day"
               control={control}
               render={({ field }) => (
-                <TextField
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                <NumericTextField
                   value={field.value ?? ''}
-                  type="number"
+                  onValueChange={(n) => field.onChange(n === '' ? undefined : n)}
                   label="Мест в день (шаблон Пн–Сб)"
                   fullWidth
-                  inputProps={{ min: 1 }}
+                  min={1}
                   helperText={
                     capacityGroup
                       ? `Общий лимит для группы «${capacityGroup}» — настраивается в «Расписание»`
@@ -225,13 +266,12 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
             name="default_duration_min"
             control={control}
             render={({ field }) => (
-              <TextField
-                {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                type="number"
+              <NumericTextField
+                value={field.value}
+                onValueChange={field.onChange}
                 label="Длительность (мин), ориентир"
                 fullWidth
-                inputProps={{ min: 1 }}
+                min={1}
                 error={!!errors.default_duration_min}
                 helperText={errors.default_duration_min?.message}
               />
@@ -265,11 +305,88 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
             name="sort_order"
             control={control}
             render={({ field }) => (
+              <NumericTextField
+                value={field.value}
+                onValueChange={field.onChange}
+                label="Порядок в списке"
+                fullWidth
+                allowEmpty={false}
+              />
+            )}
+          />
+          <Controller
+            name="pet_age_collect"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch checked={field.value} onChange={field.onChange} />}
+                label="Спрашивать возраст питомца в Mini App"
+              />
+            )}
+          />
+          {petAgeCollect && (
+            <>
+              <Controller
+                name="pet_age_required"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={<Switch checked={field.value} onChange={field.onChange} />}
+                    label="Возраст обязателен"
+                  />
+                )}
+              />
+              <Controller
+                name="pet_age_warn_years"
+                control={control}
+                render={({ field }) => (
+                  <NumericTextField
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    label="Предупреждение от (лет)"
+                    fullWidth
+                    min={0}
+                    allowEmpty={false}
+                  />
+                )}
+              />
+              <Controller
+                name="pet_age_warn_message"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Текст предупреждения о возрасте"
+                    multiline
+                    rows={2}
+                    fullWidth
+                  />
+                )}
+              />
+            </>
+          )}
+          <Controller
+            name="confirm_default"
+            control={control}
+            render={({ field }) => (
               <TextField
                 {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                type="number"
-                label="Порядок в списке"
+                label="Сообщение клиенту при подтверждении (по умолчанию)"
+                multiline
+                rows={2}
+                fullWidth
+              />
+            )}
+          />
+          <Controller
+            name="reject_default"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Сообщение клиенту при отклонении (по умолчанию)"
+                multiline
+                rows={2}
                 fullWidth
               />
             )}

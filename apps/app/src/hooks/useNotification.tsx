@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { Snackbar } from '@telegram-apps/telegram-ui';
+import styles from './useNotification.module.css';
 
 type NotificationType = 'error' | 'success' | 'info';
 
@@ -20,19 +20,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const notify = useCallback((message: string, type: NotificationType = 'info') => {
     setNotification({ message, type });
+    window.setTimeout(() => setNotification(null), 4000);
   }, []);
+
+  const typeClass =
+    notification?.type === 'error'
+      ? styles.error
+      : notification?.type === 'success'
+        ? styles.success
+        : styles.info;
 
   return (
     <NotificationContext.Provider value={{ notify }}>
       {children}
       {notification && (
-        <Snackbar
-          onClose={() => setNotification(null)}
-          duration={3000}
-          description={notification.message}
-        >
-          {notification.type === 'error' ? '❌' : notification.type === 'success' ? '✅' : 'ℹ️'}
-        </Snackbar>
+        <div className={`${styles.toast} ${typeClass}`} role="alert">
+          {notification.message}
+        </div>
       )}
     </NotificationContext.Provider>
   );

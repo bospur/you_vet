@@ -131,7 +131,11 @@ func clientRequestMessage(req repository.BookingRequest) string {
 	case "pending":
 		body.WriteString("\nМы свяжемся с вами после проверки заявки.")
 	case "confirmed":
-		body.WriteString("\nЖдём вас в клинике в указанный день.")
+		if req.StaffNote != nil && strings.TrimSpace(*req.StaffNote) != "" {
+			body.WriteString(fmt.Sprintf("\n%s", escapeHTML(strings.TrimSpace(*req.StaffNote))))
+		} else {
+			body.WriteString("\nЖдём вас в клинике в указанный день.")
+		}
 	case "rejected":
 		if req.RejectReason != nil && *req.RejectReason != "" {
 			body.WriteString(fmt.Sprintf("\nПричина: %s", escapeHTML(*req.RejectReason)))

@@ -1,7 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import {
   createBookingRequest,
   fetchBookingServiceTypes,
@@ -9,6 +8,14 @@ import {
 import { Preloader } from '../../components/Preloader/Preloader';
 import { useNotification } from '../../hooks/useNotification';
 import { formatBookingDate } from '../../domain/booking/labels';
+import {
+  getPetAgeWarning,
+  isPetAgeRequired,
+  parseBookingRules,
+  shouldCollectPetAge,
+} from '../../domain/booking/rules';
+import { getApiErrorMessage } from '../../utils/apiError';
+import { formatRuPhone, phoneDigitsOnly, phoneToApi } from '../../utils/phoneMask';
 import styles from './booking.module.css';
 
 export default function BookingFormScreen() {
@@ -24,6 +31,7 @@ export default function BookingFormScreen() {
   const [clientPhone, setClientPhone] = useState('');
   const [petName, setPetName] = useState('');
   const [petAge, setPetAge] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const servicesQuery = useQuery({
     queryKey: ['booking-service-types'],
@@ -31,20 +39,25 @@ export default function BookingFormScreen() {
   });
 
   const service = servicesQuery.data?.find((s) => s.id === serviceTypeId);
+  const rules = useMemo(() => parseBookingRules(service?.rules), [service?.rules]);
+  const collectAge = shouldCollectPetAge(rules);
+  const ageRequired = isPetAgeRequired(rules);
+
+  const parsedAge = petAge.trim() === '' ? undefined : Number(petAge);
+  const ageWarning = getPetAgeWarning(rules, parsedAge);
 
   const mutation = useMutation({
     mutationFn: createBookingRequest,
     onSuccess: () => {
+      setFormError(null);
       void queryClient.invalidateQueries({ queryKey: ['booking-requests'] });
       void queryClient.invalidateQueries({ queryKey: ['booking-availability', serviceTypeId] });
       notify('Заявка отправлена', 'success');
       navigate('/booking/requests', { replace: true });
     },
     onError: (err: unknown) => {
-      let message = 'Не удалось отправить заявку';
-      if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
-        message = err.response.data;
-      }
+      const message = getApiErrorMessage(err, 'Не удалось отправить заявку');
+      setFormError(message);
       notify(message, 'error');
     },
   });
@@ -82,15 +95,23 @@ export default function BookingFormScreen() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const age = petAge.trim() ? Number(petAge) : undefined;
+    setFormError(null);
+
+    if (collectAge && ageRequired && (petAge.trim() === '' || Number.isNaN(parsedAge))) {
+      const msg = 'Укажите возраст питомца';
+      setFormError(msg);
+      notify(msg, 'error');
+      return;
+    }
+
     mutation.mutate({
       service_type_id: serviceTypeId,
       requested_date: date,
       ...(slotTime ? { slot_time: slotTime } : {}),
       client_name: clientName.trim(),
-      client_phone: clientPhone.trim(),
+      client_phone: phoneToApi(clientPhone),
       pet_name: petName.trim(),
-      ...(age !== undefined && !Number.isNaN(age) ? { pet_age_years: age } : {}),
+      ...(parsedAge !== undefined && !Number.isNaN(parsedAge) ? { pet_age_years: parsedAge } : {}),
     });
   };
 
@@ -98,11 +119,15 @@ export default function BookingFormScreen() {
     clientName.trim().length > 0 &&
     petName.trim().length > 0 &&
     (!needsTime || Boolean(slotTime)) &&
+    (!collectAge || !ageRequired || (petAge.trim() !== '' && !Number.isNaN(parsedAge!))) &&
     !mutation.isPending;
 
   return (
     <div className={styles.wrapper}>
       <p className={styles.header}>Заявка</p>
+
+      {formError && <p className={styles.formError}>{formError}</p>}
+
       <div className={`${styles.card} ${styles.cardStatic}`}>
         <span className={styles.cardTitle}>{service.name}</span>
         <span className={styles.cardMeta}>
@@ -127,10 +152,11 @@ export default function BookingFormScreen() {
           <input
             className={styles.input}
             type="tel"
-            value={clientPhone}
-            onChange={(e) => setClientPhone(e.target.value)}
-            placeholder="+7..."
+            value={formatRuPhone(clientPhone)}
+            onChange={(e) => setClientPhone(phoneDigitsOnly(e.target.value))}
+            placeholder="+7 (999) 123-45-67"
             autoComplete="tel"
+            inputMode="tel"
           />
         </label>
         <label className={styles.field}>
@@ -142,18 +168,26 @@ export default function BookingFormScreen() {
             required
           />
         </label>
-        <label className={styles.field}>
-          <span className={styles.label}>Возраст питомца (лет)</span>
-          <input
-            className={styles.input}
-            type="number"
-            min={0}
-            max={30}
-            value={petAge}
-            onChange={(e) => setPetAge(e.target.value)}
-            inputMode="numeric"
-          />
-        </label>
+        {collectAge && (
+          <label className={styles.field}>
+            <span className={styles.label}>
+              Возраст питомца (лет){ageRequired ? ' *' : ''}
+            </span>
+            <input
+              className={styles.input}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={petAge}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+                setPetAge(v);
+              }}
+              required={ageRequired}
+            />
+            {ageWarning && <p className={styles.ageWarn}>{ageWarning}</p>}
+          </label>
+        )}
         <button type="submit" className={styles.submit} disabled={!canSubmit}>
           {mutation.isPending ? 'Отправка…' : 'Отправить заявку'}
         </button>

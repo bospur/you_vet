@@ -26,6 +26,7 @@ import {
   updateBookingRequest,
   type BookingRequest,
 } from '../../../../data/source/booking';
+import { getConfirmDefault, getRejectDefault } from '../../domain/bookingRules';
 import { RequestsCards, RequestsTable } from '../RequestsTable';
 
 const STATUS_TABS = [
@@ -45,6 +46,8 @@ export function BookingRequestsPanel() {
   const [serviceFilter, setServiceFilter] = useState<number | ''>('');
   const [rejectTarget, setRejectTarget] = useState<BookingRequest | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [confirmTarget, setConfirmTarget] = useState<BookingRequest | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
   const [actionId, setActionId] = useState<number | null>(null);
 
   const serviceTypeId = typeof serviceFilter === 'number' ? serviceFilter : undefined;
@@ -60,6 +63,19 @@ export function BookingRequestsPanel() {
       getBookingRequests({ status: statusFilter || undefined, service_type_id: serviceTypeId }),
   });
 
+  const serviceRules = (req: BookingRequest) =>
+    services.find((s) => s.id === req.service_type_id)?.rules;
+
+  const openConfirm = (row: BookingRequest) => {
+    setConfirmTarget(row);
+    setConfirmMessage(getConfirmDefault(serviceRules(row)));
+  };
+
+  const openReject = (row: BookingRequest) => {
+    setRejectTarget(row);
+    setRejectReason(getRejectDefault(serviceRules(row)));
+  };
+
   const patchMutation = useMutation({
     mutationFn: ({ id, patch }: { id: number; patch: Parameters<typeof updateBookingRequest>[1] }) =>
       updateBookingRequest(id, patch),
@@ -68,6 +84,8 @@ export function BookingRequestsPanel() {
       qc.invalidateQueries({ queryKey: ['booking-availability'] });
       setRejectTarget(null);
       setRejectReason('');
+      setConfirmTarget(null);
+      setConfirmMessage('');
       setActionId(null);
       notify('Сохранено', 'success');
     },
@@ -123,21 +141,56 @@ export function BookingRequestsPanel() {
         isMobile ? (
           <RequestsCards
             data={requests}
-            onConfirm={(row) => { setActionId(row.id); patchMutation.mutate({ id: row.id, patch: { status: 'confirmed' } }); }}
-            onReject={setRejectTarget}
+            onConfirm={openConfirm}
+            onReject={openReject}
             onCancel={(row) => { setActionId(row.id); patchMutation.mutate({ id: row.id, patch: { status: 'cancelled' } }); }}
             loadingId={actionId}
           />
         ) : (
           <RequestsTable
             data={requests}
-            onConfirm={(row) => { setActionId(row.id); patchMutation.mutate({ id: row.id, patch: { status: 'confirmed' } }); }}
-            onReject={setRejectTarget}
+            onConfirm={openConfirm}
+            onReject={openReject}
             onCancel={(row) => { setActionId(row.id); patchMutation.mutate({ id: row.id, patch: { status: 'cancelled' } }); }}
             loadingId={actionId}
           />
         )
       )}
+
+      <Dialog open={!!confirmTarget} onClose={() => setConfirmTarget(null)} fullScreen={isMobile} fullWidth maxWidth="sm">
+        <DialogTitle>Подтвердить заявку</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Сообщение клиенту в Telegram"
+            value={confirmMessage}
+            onChange={(e) => setConfirmMessage(e.target.value)}
+            multiline
+            minRows={3}
+            fullWidth
+            margin="normal"
+            helperText="Если оставить пустым — подставится текст по умолчанию для этой услуги"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmTarget(null)}>Отмена</Button>
+          <Button
+            color="success"
+            variant="contained"
+            disabled={patchMutation.isPending || !confirmTarget}
+            onClick={() => {
+              if (!confirmTarget) return;
+              const msg = confirmMessage.trim() || getConfirmDefault(serviceRules(confirmTarget));
+              setActionId(confirmTarget.id);
+              patchMutation.mutate({
+                id: confirmTarget.id,
+                patch: { status: 'confirmed', staff_note: msg },
+              });
+            }}
+          >
+            Подтвердить
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={!!rejectTarget} onClose={() => setRejectTarget(null)} fullScreen={isMobile} fullWidth maxWidth="sm">
         <DialogTitle>Отклонить заявку</DialogTitle>
@@ -147,9 +200,10 @@ export function BookingRequestsPanel() {
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             multiline
-            minRows={2}
+            minRows={3}
             fullWidth
             margin="normal"
+            helperText="Если оставить пустым — подставится текст по умолчанию для этой услуги"
           />
         </DialogContent>
         <DialogActions>
@@ -158,10 +212,15 @@ export function BookingRequestsPanel() {
             color="error"
             variant="contained"
             disabled={patchMutation.isPending || !rejectTarget}
-            onClick={() => rejectTarget && patchMutation.mutate({
-              id: rejectTarget.id,
-              patch: { status: 'rejected', reject_reason: rejectReason.trim() || 'Отклонено клиникой' },
-            })}
+            onClick={() => {
+              if (!rejectTarget) return;
+              const msg = rejectReason.trim() || getRejectDefault(serviceRules(rejectTarget));
+              setActionId(rejectTarget.id);
+              patchMutation.mutate({
+                id: rejectTarget.id,
+                patch: { status: 'rejected', reject_reason: msg },
+              });
+            }}
           >
             Отклонить
           </Button>
