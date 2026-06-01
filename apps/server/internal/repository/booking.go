@@ -19,6 +19,7 @@ type BookingServiceType struct {
 	CapacityGroup      *string         `json:"capacity_group"`
 	DefaultDurationMin int             `json:"default_duration_min"`
 	BookingMode        string          `json:"booking_mode"`
+	ScheduleStyle      string          `json:"schedule_style"`
 	InstructionsClient *string         `json:"instructions_client"`
 	Rules              json.RawMessage `json:"rules"`
 	IsActive           bool            `json:"is_active"`
@@ -33,6 +34,8 @@ type BookingServiceTypeInput struct {
 	CapacityGroup      *string         `json:"capacity_group"`
 	DefaultDurationMin int             `json:"default_duration_min"`
 	BookingMode        string          `json:"booking_mode"`
+	ScheduleStyle      string          `json:"schedule_style"`
+	SeedMaxPerDay      *int            `json:"seed_max_per_day"`
 	InstructionsClient *string         `json:"instructions_client"`
 	Rules              json.RawMessage `json:"rules"`
 	IsActive           bool            `json:"is_active"`
@@ -55,7 +58,7 @@ func scanBookingServiceType(row interface {
 	var rules []byte
 	err := row.Scan(
 		&s.ID, &s.ClinicID, &s.Name, &s.Category, &s.SpeciesFilter, &s.CapacityGroup,
-		&s.DefaultDurationMin, &s.BookingMode, &s.InstructionsClient,
+		&s.DefaultDurationMin, &s.BookingMode, &s.ScheduleStyle, &s.InstructionsClient,
 		&rules, &s.IsActive, &s.SortOrder,
 	)
 	if err != nil {
@@ -71,7 +74,7 @@ func scanBookingServiceType(row interface {
 
 const bookingServiceSelect = `
 	SELECT id, clinic_id, name, category, species_filter, capacity_group,
-	       default_duration_min, booking_mode, instructions_client, rules,
+	       default_duration_min, booking_mode, schedule_style, instructions_client, rules,
 	       is_active, sort_order
 	FROM booking_service_types
 `
@@ -137,23 +140,45 @@ func normalizeRules(rules json.RawMessage) json.RawMessage {
 	return rules
 }
 
+func normalizeScheduleStyle(style, category string) string {
+	switch style {
+	case "day_capacity", "dropoff", "time_slots":
+		return style
+	}
+	if category == "surgery" {
+		return "dropoff"
+	}
+	return "day_capacity"
+}
+
 func (r *BookingRepository) CreateServiceType(clinicID int, input BookingServiceTypeInput) (*BookingServiceType, error) {
+	style := normalizeScheduleStyle(input.ScheduleStyle, input.Category)
 	row := r.db.QueryRow(`
 		INSERT INTO booking_service_types (
 			clinic_id, name, category, species_filter, capacity_group,
-			default_duration_min, booking_mode, instructions_client, rules,
+			default_duration_min, booking_mode, schedule_style, instructions_client, rules,
 			is_active, sort_order
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id, clinic_id, name, category, species_filter, capacity_group,
-		          default_duration_min, booking_mode, instructions_client, rules,
+		          default_duration_min, booking_mode, schedule_style, instructions_client, rules,
 		          is_active, sort_order
 	`, clinicID, input.Name, input.Category, input.SpeciesFilter, input.CapacityGroup,
-		input.DefaultDurationMin, input.BookingMode, input.InstructionsClient,
+		input.DefaultDurationMin, input.BookingMode, style, input.InstructionsClient,
 		normalizeRules(input.Rules), input.IsActive, input.SortOrder)
-	return scanBookingServiceType(row)
+	svc, err := scanBookingServiceType(row)
+	if err != nil {
+		return nil, err
+	}
+	if input.SeedMaxPerDay != nil && *input.SeedMaxPerDay > 0 {
+		if err := r.SeedWeeklyFromService(clinicID, svc.ID, *input.SeedMaxPerDay); err != nil {
+			return svc, err
+		}
+	}
+	return svc, nil
 }
 
 func (r *BookingRepository) UpdateServiceType(clinicID int, id string, input BookingServiceTypeInput) (*BookingServiceType, error) {
+	style := normalizeScheduleStyle(input.ScheduleStyle, input.Category)
 	row := r.db.QueryRow(`
 		UPDATE booking_service_types SET
 			name = $3,
@@ -162,17 +187,18 @@ func (r *BookingRepository) UpdateServiceType(clinicID int, id string, input Boo
 			capacity_group = $6,
 			default_duration_min = $7,
 			booking_mode = $8,
-			instructions_client = $9,
-			rules = $10,
-			is_active = $11,
-			sort_order = $12,
+			schedule_style = $9,
+			instructions_client = $10,
+			rules = $11,
+			is_active = $12,
+			sort_order = $13,
 			updated_at = NOW()
 		WHERE id = $1 AND clinic_id = $2
 		RETURNING id, clinic_id, name, category, species_filter, capacity_group,
-		          default_duration_min, booking_mode, instructions_client, rules,
+		          default_duration_min, booking_mode, schedule_style, instructions_client, rules,
 		          is_active, sort_order
 	`, id, clinicID, input.Name, input.Category, input.SpeciesFilter, input.CapacityGroup,
-		input.DefaultDurationMin, input.BookingMode, input.InstructionsClient,
+		input.DefaultDurationMin, input.BookingMode, style, input.InstructionsClient,
 		normalizeRules(input.Rules), input.IsActive, input.SortOrder)
 	s, err := scanBookingServiceType(row)
 	if err == sql.ErrNoRows {

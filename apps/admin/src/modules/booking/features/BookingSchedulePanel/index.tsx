@@ -53,6 +53,11 @@ import {
   weeklyDraftsEqual,
   weeklyDraftSyncKey,
 } from '../../domain/weeklyDraft';
+import {
+  scheduleStyleToSlotMode,
+  showsDropoffFields,
+  showsIntakeWindow,
+} from '../../domain/scheduleStyle';
 
 function formatDateRu(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -87,6 +92,7 @@ export function BookingSchedulePanel() {
 
   const activeServices = services.filter((s) => s.is_active);
   const selected = activeServices.find((s) => s.id === serviceId);
+  const scheduleStyle = selected?.schedule_style ?? 'day_capacity';
   const sid = typeof serviceId === 'number' ? serviceId : 0;
 
   const { data: settings } = useQuery({
@@ -100,10 +106,10 @@ export function BookingSchedulePanel() {
     enabled: sid > 0,
   });
 
-  const weeklyBaseline = useMemo(
-    () => (sid > 0 && !weeklyLoading ? weeklyDraftFromRules(weekly) : emptyWeeklyDraft()),
-    [sid, weekly, weeklyLoading],
-  );
+  const weeklyBaseline =
+    sid > 0 && !weeklyLoading
+      ? weeklyDraftFromRules(weekly)
+      : emptyWeeklyDraft(scheduleStyleToSlotMode(scheduleStyle));
 
   const nextWeeklySyncKey = sid > 0 && !weeklyLoading ? weeklyDraftSyncKey(sid, weekly) : '';
   if (nextWeeklySyncKey !== weeklySyncKey) {
@@ -152,12 +158,16 @@ export function BookingSchedulePanel() {
         const d = weeklyDraft[day];
         const hadRule = weekly.some((r) => r.day_of_week === day);
         if (d.enabled) {
+          const pickup = showsDropoffFields(scheduleStyle) ? d.pickup_after : null;
+          const intakeFrom = showsIntakeWindow(scheduleStyle) ? d.intake_from : null;
+          const intakeTo = showsIntakeWindow(scheduleStyle) ? d.intake_to : null;
           await upsertBookingWeeklyRule(sid, {
             day_of_week: day,
             max_per_day: d.max_per_day,
-            intake_from: d.intake_from,
-            intake_to: d.intake_to,
-            pickup_after: d.pickup_after,
+            slot_mode: d.slot_mode,
+            intake_from: intakeFrom,
+            intake_to: intakeTo,
+            pickup_after: pickup,
           });
         } else if (hadRule) {
           await deleteBookingWeeklyRule(sid, day);
@@ -211,7 +221,8 @@ export function BookingSchedulePanel() {
   const handleServiceChange = (nextId: number | '') => {
     setServiceId(nextId);
     setWeeklySyncKey('');
-    setWeeklyDraft(emptyWeeklyDraft());
+    const svc = activeServices.find((s) => s.id === nextId);
+    setWeeklyDraft(emptyWeeklyDraft(scheduleStyleToSlotMode(svc?.schedule_style ?? 'day_capacity')));
   };
 
   const displayHorizon = horizonDraft ?? settings?.horizon_weeks ?? 2;
@@ -320,6 +331,8 @@ export function BookingSchedulePanel() {
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Включите дни приёма, укажите количество мест и нажмите «Сохранить шаблон».
+                {scheduleStyle === 'day_capacity' && ' Для этой услуги время сдачи/забора не показывается клиенту.'}
+                {scheduleStyle === 'time_slots' && ' Клиент выбирает свободный слот времени.'}
               </Typography>
               {weeklyLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
@@ -363,33 +376,39 @@ export function BookingSchedulePanel() {
                               sx={{ width: isMobile ? '100%' : 80 }}
                               inputProps={{ min: 1 }}
                             />
-                            <TextField
-                              label="С"
-                              type="time"
-                              size="small"
-                              fullWidth={isMobile}
-                              value={rule.intake_from}
-                              onChange={(e) => updateDraftDay(day, { intake_from: e.target.value })}
-                              sx={{ width: isMobile ? '100%' : 120 }}
-                            />
-                            <TextField
-                              label="До"
-                              type="time"
-                              size="small"
-                              fullWidth={isMobile}
-                              value={rule.intake_to}
-                              onChange={(e) => updateDraftDay(day, { intake_to: e.target.value })}
-                              sx={{ width: isMobile ? '100%' : 120 }}
-                            />
-                            <TextField
-                              label="Забор после"
-                              type="time"
-                              size="small"
-                              fullWidth={isMobile}
-                              value={rule.pickup_after}
-                              onChange={(e) => updateDraftDay(day, { pickup_after: e.target.value })}
-                              sx={{ width: isMobile ? '100%' : 130 }}
-                            />
+                            {showsIntakeWindow(scheduleStyle) && (
+                              <>
+                                <TextField
+                                  label={scheduleStyle === 'time_slots' ? 'С' : 'Сдача с'}
+                                  type="time"
+                                  size="small"
+                                  fullWidth={isMobile}
+                                  value={rule.intake_from}
+                                  onChange={(e) => updateDraftDay(day, { intake_from: e.target.value })}
+                                  sx={{ width: isMobile ? '100%' : 120 }}
+                                />
+                                <TextField
+                                  label={scheduleStyle === 'time_slots' ? 'До' : 'Сдача до'}
+                                  type="time"
+                                  size="small"
+                                  fullWidth={isMobile}
+                                  value={rule.intake_to}
+                                  onChange={(e) => updateDraftDay(day, { intake_to: e.target.value })}
+                                  sx={{ width: isMobile ? '100%' : 120 }}
+                                />
+                              </>
+                            )}
+                            {showsDropoffFields(scheduleStyle) && (
+                              <TextField
+                                label="Забор после"
+                                type="time"
+                                size="small"
+                                fullWidth={isMobile}
+                                value={rule.pickup_after}
+                                onChange={(e) => updateDraftDay(day, { pickup_after: e.target.value })}
+                                sx={{ width: isMobile ? '100%' : 130 }}
+                              />
+                            )}
                           </Stack>
                         )}
                       </Stack>

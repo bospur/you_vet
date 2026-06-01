@@ -39,6 +39,15 @@ func validBookingMode(m string) bool {
 	return m == "instant" || m == "pending_request"
 }
 
+func validScheduleStyle(s string) bool {
+	switch s {
+	case "day_capacity", "dropoff", "time_slots", "":
+		return true
+	default:
+		return false
+	}
+}
+
 func validateServiceTypeInput(input *repository.BookingServiceTypeInput) string {
 	if strings.TrimSpace(input.Name) == "" {
 		return "название обязательно"
@@ -52,8 +61,14 @@ func validateServiceTypeInput(input *repository.BookingServiceTypeInput) string 
 	if !validBookingMode(input.BookingMode) {
 		return "недопустимый режим записи"
 	}
+	if !validScheduleStyle(input.ScheduleStyle) {
+		return "недопустимый стиль расписания"
+	}
 	if input.DefaultDurationMin <= 0 {
 		return "длительность должна быть больше 0"
+	}
+	if input.SeedMaxPerDay != nil && *input.SeedMaxPerDay < 1 {
+		return "мест в день должно быть больше 0"
 	}
 	return ""
 }
@@ -622,6 +637,7 @@ type PublicBookingServiceType struct {
 	SpeciesFilter      string          `json:"species_filter"`
 	DefaultDurationMin int             `json:"default_duration_min"`
 	BookingMode        string          `json:"booking_mode"`
+	ScheduleStyle      string          `json:"schedule_style"`
 	InstructionsClient *string         `json:"instructions_client"`
 	Rules              json.RawMessage `json:"rules"`
 	SortOrder          int             `json:"sort_order"`
@@ -667,6 +683,7 @@ func toPublicServiceType(s repository.BookingServiceType) PublicBookingServiceTy
 		SpeciesFilter:      s.SpeciesFilter,
 		DefaultDurationMin: s.DefaultDurationMin,
 		BookingMode:        s.BookingMode,
+		ScheduleStyle:      s.ScheduleStyle,
 		InstructionsClient: s.InstructionsClient,
 		Rules:              s.Rules,
 		SortOrder:          s.SortOrder,

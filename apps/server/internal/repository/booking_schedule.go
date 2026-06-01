@@ -106,17 +106,27 @@ type BookingDayStaffInput struct {
 
 // BookingAvailabilityDay — ёмкость на дату
 type BookingAvailabilityDay struct {
-	Date        string  `json:"date"`
-	IsOpen      bool    `json:"is_open"`
-	MaxSlots    int     `json:"max_slots"`
-	BookedSlots int     `json:"booked_slots"`
-	Remaining   int     `json:"remaining"`
-	IntakeFrom  *string `json:"intake_from"`
-	IntakeTo    *string `json:"intake_to"`
-	PickupAfter *string `json:"pickup_after"`
-	Source      string  `json:"source"`
-	DoctorID    *int    `json:"doctor_id"`
-	DoctorName  *string `json:"doctor_name"`
+	Date        string             `json:"date"`
+	IsOpen      bool               `json:"is_open"`
+	MaxSlots    int                `json:"max_slots"`
+	BookedSlots int                `json:"booked_slots"`
+	Remaining   int                `json:"remaining"`
+	IntakeFrom  *string            `json:"intake_from"`
+	IntakeTo    *string            `json:"intake_to"`
+	PickupAfter *string            `json:"pickup_after"`
+	SlotMode    string             `json:"slot_mode"`
+	TimeSlots   []BookingTimeSlot  `json:"time_slots,omitempty"`
+	Source      string             `json:"source"`
+	DoctorID    *int               `json:"doctor_id"`
+	DoctorName  *string            `json:"doctor_name"`
+}
+
+// BookingTimeSlot — слот времени (fixed_times)
+type BookingTimeSlot struct {
+	Time        string `json:"time"`
+	BookedSlots int    `json:"booked_slots"`
+	MaxSlots    int    `json:"max_slots"`
+	Remaining   int    `json:"remaining"`
 }
 
 // BookingAvailabilityResponse — GET availability
@@ -139,6 +149,7 @@ type daySchedule struct {
 	intakeFrom  *string
 	intakeTo    *string
 	pickupAfter *string
+	slotMode    string
 	source      string
 }
 
@@ -740,13 +751,14 @@ func resolveDaySchedule(
 	dow := pgDOW(d)
 	for _, w := range windows {
 		if windowMatchesDay(w, d) {
-			return daySchedule{
-				max:         w.MaxPerDay,
-				intakeFrom:  w.IntakeFrom,
-				intakeTo:    w.IntakeTo,
-				pickupAfter: w.PickupAfter,
-				source:      "window",
-			}, true
+		return daySchedule{
+			max:         w.MaxPerDay,
+			intakeFrom:  w.IntakeFrom,
+			intakeTo:    w.IntakeTo,
+			pickupAfter: w.PickupAfter,
+			slotMode:    "day_capacity",
+			source:      "window",
+		}, true
 		}
 	}
 
@@ -762,6 +774,7 @@ func resolveDaySchedule(
 			intakeFrom:  rule.IntakeFrom,
 			intakeTo:    rule.IntakeTo,
 			pickupAfter: rule.PickupAfter,
+			slotMode:    rule.SlotMode,
 			source:      "weekly",
 		}, true
 	}
@@ -814,6 +827,11 @@ func (r *BookingRepository) GetAvailability(clinicID, serviceTypeID int, fromStr
 		return nil, err
 	}
 
+	slotBooked, err := r.loadBookedSlotCounts(clinicID, serviceTypeID, from.Format("2006-01-02"), to.Format("2006-01-02"))
+	if err != nil {
+		return nil, err
+	}
+
 	var days []BookingAvailabilityDay
 	for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
 		dateKey := d.Format("2006-01-02")
@@ -823,24 +841,49 @@ func (r *BookingRepository) GetAvailability(clinicID, serviceTypeID int, fromStr
 		}
 		sched, open := resolveDaySchedule(d, weekly, windows, ov)
 		booked := bookedCounts[dateKey]
+		slotMode := sched.slotMode
+		if slotMode == "" {
+			slotMode = "day_capacity"
+		}
 		day := BookingAvailabilityDay{
 			Date:        dateKey,
 			IsOpen:      open,
 			BookedSlots: booked,
 			Source:      "closed",
+			SlotMode:    slotMode,
 		}
 		if open {
-			day.MaxSlots = sched.max
-			day.Remaining = sched.max - booked
-			if day.Remaining < 0 {
-				day.Remaining = 0
-			}
 			day.IntakeFrom = sched.intakeFrom
 			day.IntakeTo = sched.intakeTo
 			day.PickupAfter = sched.pickupAfter
 			day.Source = sched.source
 			if ov != nil && ov.MaxPerDay != nil && !ov.IsClosed {
 				day.Source = "override"
+			}
+
+			if svc.ScheduleStyle == "day_capacity" {
+				day.IntakeFrom = nil
+				day.IntakeTo = nil
+				day.PickupAfter = nil
+			}
+
+			if slotMode == "fixed_times" {
+				day.TimeSlots = buildTimeSlotsForDay(sched, svc.DefaultDurationMin, slotBooked[dateKey])
+				openSlots := 0
+				for _, s := range day.TimeSlots {
+					if s.Remaining > 0 {
+						openSlots++
+					}
+				}
+				day.MaxSlots = len(day.TimeSlots)
+				day.Remaining = openSlots
+				day.BookedSlots = booked
+			} else {
+				day.MaxSlots = sched.max
+				day.Remaining = sched.max - booked
+				if day.Remaining < 0 {
+					day.Remaining = 0
+				}
 			}
 		}
 		if st, ok := staffMap[dateKey]; ok {

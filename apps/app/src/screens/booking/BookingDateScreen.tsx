@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchBookingAvailability, fetchBookingServiceTypes } from '../../api';
+import { fetchBookingAvailability, fetchBookingServiceTypes, type BookingAvailabilityDay } from '../../api';
 import { Preloader } from '../../components/Preloader/Preloader';
 import { useNotification } from '../../hooks/useNotification';
 import { formatBookingDate } from '../../domain/booking/labels';
@@ -20,6 +20,7 @@ export default function BookingDateScreen() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const serviceTypeId = Number(serviceId);
   const notify = useNotification();
+  const [pickDay, setPickDay] = useState<BookingAvailabilityDay | null>(null);
 
   const servicesQuery = useQuery({
     queryKey: ['booking-service-types'],
@@ -40,6 +41,11 @@ export default function BookingDateScreen() {
     if (isError) notify('Не удалось загрузить доступные даты.', 'error');
   }, [isError, notify]);
 
+  const goToForm = (date: string, time?: string) => {
+    const q = time ? `?time=${encodeURIComponent(time)}` : '';
+    navigate(`/booking/new/${serviceTypeId}/date/${date}${q}`);
+  };
+
   if (isLoading) return <Preloader />;
 
   if (!service) {
@@ -48,6 +54,34 @@ export default function BookingDateScreen() {
         <p className={styles.empty}>Услуга не найдена</p>
         <button type="button" className={styles.back} onClick={() => navigate('/booking/new')}>
           ‹ Назад
+        </button>
+      </div>
+    );
+  }
+
+  if (pickDay) {
+    const slots = (pickDay.time_slots ?? []).filter((s) => s.remaining > 0);
+    return (
+      <div className={styles.wrapper}>
+        <p className={styles.header}>{service.name}</p>
+        <p className={styles.cardMeta}>{formatBookingDate(pickDay.date)}</p>
+        <p className={styles.sectionTitle}>Выберите время</p>
+        {slots.length === 0 ? (
+          <p className={styles.empty}>Нет свободного времени</p>
+        ) : (
+          slots.map((slot) => (
+            <button
+              key={slot.time}
+              type="button"
+              className={styles.dayRow}
+              onClick={() => goToForm(pickDay.date, slot.time)}
+            >
+              <span className={styles.cardTitle}>{slot.time.slice(0, 5)}</span>
+            </button>
+          ))
+        )}
+        <button type="button" className={styles.back} onClick={() => setPickDay(null)}>
+          ‹ К выбору даты
         </button>
       </div>
     );
@@ -69,21 +103,28 @@ export default function BookingDateScreen() {
         openDays.map((day) => {
           const timeHint = formatTimeRange(day.intake_from, day.intake_to);
           const pickupHint = day.pickup_after ? `Забор после ${day.pickup_after.slice(0, 5)}` : null;
+          const hasSlots = day.slot_mode === 'fixed_times' && (day.time_slots?.length ?? 0) > 0;
+          const placesLabel = hasSlots
+            ? `${day.remaining} ${day.remaining === 1 ? 'слот' : day.remaining < 5 ? 'слота' : 'слотов'}`
+            : `${day.remaining} ${day.remaining === 1 ? 'место' : day.remaining < 5 ? 'места' : 'мест'}`;
+
           return (
             <button
               key={day.date}
               type="button"
               className={styles.dayRow}
-              onClick={() => navigate(`/booking/new/${serviceTypeId}/date/${day.date}`)}
+              onClick={() => {
+                if (hasSlots) setPickDay(day);
+                else goToForm(day.date);
+              }}
             >
               <div className={styles.cardTop}>
                 <span className={styles.cardTitle}>{formatBookingDate(day.date)}</span>
-                <span className={styles.remaining}>
-                  {day.remaining} {day.remaining === 1 ? 'место' : day.remaining < 5 ? 'места' : 'мест'}
-                </span>
+                <span className={styles.remaining}>{placesLabel}</span>
               </div>
               {timeHint && <span className={styles.cardMeta}>{timeHint}</span>}
               {pickupHint && <span className={styles.cardMeta}>{pickupHint}</span>}
+              {hasSlots && <span className={styles.cardHint}>Нажмите, чтобы выбрать время</span>}
             </button>
           );
         })

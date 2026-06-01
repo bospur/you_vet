@@ -9,6 +9,7 @@ export interface BookingServiceType {
   capacity_group: string | null;
   default_duration_min: number;
   booking_mode: 'instant' | 'pending_request';
+  schedule_style: 'day_capacity' | 'dropoff' | 'time_slots';
   instructions_client: string | null;
   rules: unknown;
   is_active: boolean;
@@ -22,6 +23,8 @@ export type BookingServiceTypeInput = {
   capacity_group: string | null;
   default_duration_min: number;
   booking_mode: BookingServiceType['booking_mode'];
+  schedule_style: BookingServiceType['schedule_style'];
+  seed_max_per_day?: number | null;
   instructions_client: string | null;
   rules: unknown;
   is_active: boolean;
@@ -86,9 +89,18 @@ export interface BookingAvailabilityDay {
   intake_from: string | null;
   intake_to: string | null;
   pickup_after: string | null;
+  slot_mode: string;
+  time_slots?: BookingTimeSlot[];
   source: string;
   doctor_id: number | null;
   doctor_name: string | null;
+}
+
+export interface BookingTimeSlot {
+  time: string;
+  booked_slots: number;
+  max_slots: number;
+  remaining: number;
 }
 
 export interface BookingAvailability {
@@ -147,7 +159,7 @@ export async function upsertBookingWeeklyRule(
 ): Promise<BookingWeeklyRule> {
   const { data } = await axiosInstance.put<BookingWeeklyRule>(
     `/api/admin/booking/weekly-rules?${q(serviceTypeId)}`,
-    { slot_mode: 'day_capacity', ...body },
+    body,
   );
   return data;
 }

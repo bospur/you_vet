@@ -91,31 +91,27 @@ export function BookingRequestsPanel() {
         ))}
       </Tabs>
 
-      <FormControl
-        size="small"
-        sx={{
-          mb: 2,
-          width: isMobile ? '100%' : 320,
-          minWidth: isMobile ? undefined : 280,
-          display: 'block',
-        }}
-      >
-        <InputLabel id="booking-requests-service-filter">Услуга</InputLabel>
-        <Select<string>
-          labelId="booking-requests-service-filter"
-          label="Услуга"
-          value={serviceFilter === '' ? '' : String(serviceFilter)}
-          onChange={(e) => {
-            const v = e.target.value;
-            setServiceFilter(v === '' ? '' : Number(v));
-          }}
-        >
-          <MenuItem value="">Все услуги</MenuItem>
-          {services.map((s) => (
-            <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Box sx={{ mb: 2, width: '100%', maxWidth: 400 }}>
+        <FormControl fullWidth size="small" variant="outlined">
+          <InputLabel id="booking-requests-service-filter">Услуга</InputLabel>
+          <Select<string>
+            labelId="booking-requests-service-filter"
+            id="booking-requests-service-select"
+            label="Услуга"
+            value={serviceFilter === '' ? '' : String(serviceFilter)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setServiceFilter(v === '' ? '' : Number(v));
+            }}
+            MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
+          >
+            <MenuItem value="">Все услуги</MenuItem>
+            {services.map((s) => (
+              <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
       {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>

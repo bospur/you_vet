@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-05-31 (вечер)
+> Последнее обновление: 2026-06-01
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -72,7 +72,7 @@
 | BOOK-02 | 🟡 | Admin: ложная подсказка «миграции 013–015» при любой 500 | **fixed 2026-05-31** — текст из API |
 | BOOK-03 | 🟡 | Admin: «Сохранить шаблон» без объяснения | **fixed 2026-05-31** — сравнение черновика + Alert |
 | BOOK-04 | ⚪ | Admin: селект «Услуга» на вкладке заявок сжат | **fixed 2026-05-31** — FormControl+Select |
-| INF-05 | 🟡 | CI lint падает, deploy всё равно идёт | **fixed 2026-05-31** — set-state-in-effect в BookingSchedulePanel |
+| INF-05 | 🟡 | CI lint падает, deploy всё равно идёт | **fixed 2026-06-01** — React Hooks v7: `useWatch` вместо `watch`, `weeklyBaseline` без проблемного `useMemo`, TanStack `useReactTable` с точечным disable |
 | INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../deployment.md) § Идеи |
 | INF-07 | ⚪ | Упрощённый error tracking (свой «мини-Sentry») | planned — fingerprint, booking/auth/upload |
 | INF-08 | ⚪ | Роль `superadmin` (разработчик платформы) | planned — отдельно от `admin` клиники |
