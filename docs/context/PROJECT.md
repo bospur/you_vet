@@ -34,9 +34,9 @@ packages/types/  @you-vet/types
 | B2 | Расписание, ёмкость, календарь | 🟡 prod + фикс SQL `d.full_name` |
 | B3 | Заявки + резерв + антиспам | 🟡 deploy server после фикса |
 | B4 | Бот: `/link_staff`, уведомления | 🟡 |
-| C1 | Mini App | 🟡 в разработке на `dev` (см. phase-5); prod — после deploy app |
+| C1 | Mini App | 🟡 код на `dev`, prod после deploy app |
 
-Admin: **`/booking`**. Миграции **013–015**.
+Admin: **`/booking`**. Миграции **013–016** (`schedule_style`).
 
 ## Git
 

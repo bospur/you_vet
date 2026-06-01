@@ -9,14 +9,9 @@ import (
 	"time"
 )
 
-const (
-	bookingMaxActivePerUserServiceDate = 1
-	bookingMaxActivePerUserDay         = 3
-)
-
 var (
 	ErrBookingCapacityFull    = errors.New("нет свободных мест")
-	ErrBookingAntispam        = errors.New("превышен лимит заявок")
+	ErrBookingAntispam        = errors.New("превышен лимит заявок") // legacy
 	ErrBookingInvalidDate     = errors.New("дата недоступна для записи")
 	ErrBookingInvalidStatus   = errors.New("недопустимый переход статуса")
 	ErrBookingServiceInactive = errors.New("услуга недоступна")
@@ -281,69 +276,128 @@ func (r *BookingRepository) checkAntispam(
 	date string,
 	telegramUserID *int64,
 	clientPhone string,
+	petName string,
+	slotTime *string,
+	rules json.RawMessage,
+	scheduleStyle string,
 ) error {
+	maxPerService, maxPerDay := resolveBookingLimits(rules, scheduleStyle)
+	petKey := normalizePetName(petName)
 	phone := strings.TrimSpace(clientPhone)
 
+	checkIdentity := func(tgID *int64, ph string) error {
+		if petKey != "" {
+			var dupPet int
+			var err error
+			if tgID != nil {
+				err = tx.QueryRow(`
+					SELECT COUNT(*)
+					FROM booking_requests
+					WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
+					  AND telegram_user_id = $4 AND status IN ('pending', 'confirmed')
+					  AND LOWER(TRIM(pet_name)) = $5
+				`, clinicID, serviceTypeID, date, *tgID, petKey).Scan(&dupPet)
+			} else if ph != "" {
+				err = tx.QueryRow(`
+					SELECT COUNT(*)
+					FROM booking_requests
+					WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
+					  AND client_phone = $4 AND status IN ('pending', 'confirmed')
+					  AND LOWER(TRIM(pet_name)) = $5
+				`, clinicID, serviceTypeID, date, ph, petKey).Scan(&dupPet)
+			}
+			if err != nil {
+				return err
+			}
+			if dupPet > 0 {
+				return ErrBookingDuplicatePet
+			}
+		}
+
+		if scheduleStyle == "time_slots" && slotTime != nil && strings.TrimSpace(*slotTime) != "" {
+			slotKey := normalizeSlotKey(*slotTime)
+			var dupSlot int
+			var err error
+			if tgID != nil {
+				err = tx.QueryRow(`
+					SELECT COUNT(*)
+					FROM booking_requests
+					WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
+					  AND telegram_user_id = $4 AND status IN ('pending', 'confirmed')
+					  AND slot_time IS NOT NULL AND LEFT(slot_time::text, 5) = $5
+				`, clinicID, serviceTypeID, date, *tgID, slotKey).Scan(&dupSlot)
+			} else if ph != "" {
+				err = tx.QueryRow(`
+					SELECT COUNT(*)
+					FROM booking_requests
+					WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
+					  AND client_phone = $4 AND status IN ('pending', 'confirmed')
+					  AND slot_time IS NOT NULL AND LEFT(slot_time::text, 5) = $5
+				`, clinicID, serviceTypeID, date, ph, slotKey).Scan(&dupSlot)
+			}
+			if err != nil {
+				return err
+			}
+			if dupSlot > 0 {
+				return ErrBookingDuplicateSlot
+			}
+		}
+
+		var perService int
+		var err error
+		if tgID != nil {
+			err = tx.QueryRow(`
+				SELECT COUNT(*)
+				FROM booking_requests
+				WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
+				  AND telegram_user_id = $4 AND status IN ('pending', 'confirmed')
+			`, clinicID, serviceTypeID, date, *tgID).Scan(&perService)
+		} else if ph != "" {
+			err = tx.QueryRow(`
+				SELECT COUNT(*)
+				FROM booking_requests
+				WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
+				  AND client_phone = $4 AND status IN ('pending', 'confirmed')
+			`, clinicID, serviceTypeID, date, ph).Scan(&perService)
+		}
+		if err != nil {
+			return err
+		}
+		if perService >= maxPerService {
+			return ErrBookingLimitPerService
+		}
+
+		var perDay int
+		if tgID != nil {
+			err = tx.QueryRow(`
+				SELECT COUNT(*)
+				FROM booking_requests
+				WHERE clinic_id = $1 AND requested_date = $2::date
+				  AND telegram_user_id = $3 AND status IN ('pending', 'confirmed')
+			`, clinicID, date, *tgID).Scan(&perDay)
+		} else if ph != "" {
+			err = tx.QueryRow(`
+				SELECT COUNT(*)
+				FROM booking_requests
+				WHERE clinic_id = $1 AND requested_date = $2::date
+				  AND client_phone = $3 AND status IN ('pending', 'confirmed')
+			`, clinicID, date, ph).Scan(&perDay)
+		}
+		if err != nil {
+			return err
+		}
+		if perDay >= maxPerDay {
+			return ErrBookingLimitPerDay
+		}
+		return nil
+	}
+
 	if telegramUserID != nil {
-		var perService int
-		err := tx.QueryRow(`
-			SELECT COUNT(*)
-			FROM booking_requests
-			WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
-			  AND telegram_user_id = $4 AND status IN ('pending', 'confirmed')
-		`, clinicID, serviceTypeID, date, *telegramUserID).Scan(&perService)
-		if err != nil {
-			return err
-		}
-		if perService >= bookingMaxActivePerUserServiceDate {
-			return ErrBookingAntispam
-		}
-
-		var perDay int
-		err = tx.QueryRow(`
-			SELECT COUNT(*)
-			FROM booking_requests
-			WHERE clinic_id = $1 AND requested_date = $2::date
-			  AND telegram_user_id = $3 AND status IN ('pending', 'confirmed')
-		`, clinicID, date, *telegramUserID).Scan(&perDay)
-		if err != nil {
-			return err
-		}
-		if perDay >= bookingMaxActivePerUserDay {
-			return ErrBookingAntispam
-		}
+		return checkIdentity(telegramUserID, "")
 	}
-
 	if phone != "" {
-		var perService int
-		err := tx.QueryRow(`
-			SELECT COUNT(*)
-			FROM booking_requests
-			WHERE clinic_id = $1 AND service_type_id = $2 AND requested_date = $3::date
-			  AND client_phone = $4 AND status IN ('pending', 'confirmed')
-		`, clinicID, serviceTypeID, date, phone).Scan(&perService)
-		if err != nil {
-			return err
-		}
-		if perService >= bookingMaxActivePerUserServiceDate {
-			return ErrBookingAntispam
-		}
-
-		var perDay int
-		err = tx.QueryRow(`
-			SELECT COUNT(*)
-			FROM booking_requests
-			WHERE clinic_id = $1 AND requested_date = $2::date
-			  AND client_phone = $3 AND status IN ('pending', 'confirmed')
-		`, clinicID, date, phone).Scan(&perDay)
-		if err != nil {
-			return err
-		}
-		if perDay >= bookingMaxActivePerUserDay {
-			return ErrBookingAntispam
-		}
+		return checkIdentity(nil, phone)
 	}
-
 	return nil
 }
 
@@ -460,7 +514,8 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 	}
 
 	if err := r.checkAntispam(tx, clinicID, input.ServiceTypeID, input.RequestedDate,
-		input.TelegramUserID, input.ClientPhone); err != nil {
+		input.TelegramUserID, input.ClientPhone, input.PetName, slotTimeArg,
+		svc.Rules, svc.ScheduleStyle); err != nil {
 		return nil, err
 	}
 
@@ -594,6 +649,25 @@ func (r *BookingRepository) GetRequestByID(clinicID int, id string) (*BookingReq
 		return nil, nil
 	}
 	return req, err
+}
+
+// CancelRequestByTelegramUser — отмена клиентом своей заявки (pending или confirmed).
+func (r *BookingRepository) CancelRequestByTelegramUser(clinicID int, id string, telegramUserID int64) (*BookingRequest, error) {
+	existing, err := r.GetRequestByID(clinicID, id)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, ErrBookingNotFound
+	}
+	if existing.TelegramUserID == nil || *existing.TelegramUserID != telegramUserID {
+		return nil, ErrBookingNotFound
+	}
+	if existing.Status != "pending" && existing.Status != "confirmed" {
+		return nil, ErrBookingInvalidStatus
+	}
+	cancelled := "cancelled"
+	return r.UpdateRequest(clinicID, 0, id, BookingRequestPatch{Status: &cancelled})
 }
 
 func validStatusTransition(from, to string) bool {

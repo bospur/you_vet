@@ -45,24 +45,26 @@ export default function BookingServicesScreen() {
         <p className={styles.empty}>Запись пока недоступна</p>
       )}
       {grouped.map((group) => (
-        <div key={group.category}>
+        <div key={group.category} className={styles.listGroup}>
           <p className={styles.sectionTitle}>{group.label}</p>
-          {group.items.map((service) => (
-            <button
-              key={service.id}
-              type="button"
-              className={styles.card}
-              onClick={() => navigate(`/booking/new/${service.id}/date`)}
-            >
-              <div className={styles.cardTop}>
-                <span className={styles.cardTitle}>{service.name}</span>
-              </div>
-              <span className={styles.cardMeta}>
-                {SPECIES_LABELS[service.species_filter]} · {formatDuration(service.default_duration_min)}
-              </span>
-              <span className={styles.cardHint}>{BOOKING_MODE_HINT[service.booking_mode]}</span>
-            </button>
-          ))}
+          <div className={styles.cardList}>
+            {group.items.map((service) => (
+              <button
+                key={service.id}
+                type="button"
+                className={styles.card}
+                onClick={() => navigate(`/booking/new/${service.id}/date`)}
+              >
+                <div className={styles.cardTop}>
+                  <span className={styles.cardTitle}>{service.name}</span>
+                </div>
+                <span className={styles.cardMeta}>
+                  {SPECIES_LABELS[service.species_filter]} · {formatDuration(service.default_duration_min)}
+                </span>
+                <span className={styles.cardHint}>{BOOKING_MODE_HINT[service.booking_mode]}</span>
+              </button>
+            ))}
+          </div>
         </div>
       ))}
       <button type="button" className={styles.back} onClick={() => navigate(-1)}>

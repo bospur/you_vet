@@ -5,14 +5,14 @@ export interface BookingPetAgeRules {
   warn_message?: string;
 }
 
-export interface BookingMessageRules {
-  confirm_default?: string;
-  reject_default?: string;
+export interface BookingLimitsRules {
+  max_active_per_user_per_date?: number;
+  max_active_per_user_per_day?: number;
 }
 
 export interface BookingServiceRules {
   pet_age?: BookingPetAgeRules;
-  messages?: BookingMessageRules;
+  limits?: BookingLimitsRules;
 }
 
 const DEFAULT_WARN =
@@ -36,6 +36,21 @@ export function parseBookingRules(raw: unknown): BookingServiceRules {
           ? p.warn_from_years
           : undefined,
       warn_message: typeof p.warn_message === 'string' ? p.warn_message : undefined,
+    };
+  }
+
+  const limitsRaw = o.limits;
+  if (limitsRaw && typeof limitsRaw === 'object' && !Array.isArray(limitsRaw)) {
+    const l = limitsRaw as Record<string, unknown>;
+    rules.limits = {
+      max_active_per_user_per_date:
+        typeof l.max_active_per_user_per_date === 'number'
+          ? l.max_active_per_user_per_date
+          : undefined,
+      max_active_per_user_per_day:
+        typeof l.max_active_per_user_per_day === 'number'
+          ? l.max_active_per_user_per_day
+          : undefined,
     };
   }
 

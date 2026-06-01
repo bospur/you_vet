@@ -164,7 +164,7 @@ export function BookingSchedulePanel() {
           const intakeTo = showsIntakeWindow(scheduleStyle) ? d.intake_to : null;
           await upsertBookingWeeklyRule(sid, {
             day_of_week: day,
-            max_per_day: d.max_per_day,
+            max_per_day: scheduleStyle === 'time_slots' ? 1 : d.max_per_day,
             slot_mode: scheduleStyleToSlotMode(scheduleStyle),
             intake_from: intakeFrom,
             intake_to: intakeTo,
@@ -331,9 +331,10 @@ export function BookingSchedulePanel() {
           {tab === 0 && (
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Включите дни приёма, укажите количество мест и нажмите «Сохранить шаблон».
-                {scheduleStyle === 'day_capacity' && ' Для этой услуги время сдачи/забора не показывается клиенту.'}
-                {scheduleStyle === 'time_slots' && ' Клиент выбирает свободный слот времени.'}
+                Включите дни приёма и нажмите «Сохранить шаблон».
+                {scheduleStyle === 'day_capacity' && ' Укажите количество мест. Время сдачи/забора клиенту не показывается.'}
+                {scheduleStyle === 'time_slots' && ' Укажите окно «С»–«До» — слоты времени посчитаются автоматически.'}
+                {scheduleStyle === 'dropoff' && ' Укажите места и окно сдачи/забора.'}
               </Typography>
               {weeklyLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
@@ -368,17 +369,19 @@ export function BookingSchedulePanel() {
                             gap={1}
                             sx={{ width: isMobile ? '100%' : 'auto' }}
                           >
-                            <NumericTextField
-                              label="Мест"
-                              size="small"
-                              value={rule.max_per_day}
-                              onValueChange={(n) =>
-                                updateDraftDay(day, { max_per_day: n === '' ? 1 : n })
-                              }
-                              sx={{ width: isMobile ? '100%' : 80 }}
-                              min={1}
-                              allowEmpty={false}
-                            />
+                            {scheduleStyle !== 'time_slots' && (
+                              <NumericTextField
+                                label="Мест"
+                                size="small"
+                                value={rule.max_per_day}
+                                onValueChange={(n) =>
+                                  updateDraftDay(day, { max_per_day: n === '' ? 1 : n })
+                                }
+                                sx={{ width: isMobile ? '100%' : 80 }}
+                                min={1}
+                                allowEmpty={false}
+                              />
+                            )}
                             {showsIntakeWindow(scheduleStyle) && (
                               <>
                                 <TextField
