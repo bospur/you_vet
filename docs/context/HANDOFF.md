@@ -2,6 +2,41 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
+## Сессия 2026-06-01 (CI lint admin — React Hooks v7)
+
+### Сделано
+
+**Admin — CI `npm run lint` зелёный**
+- [x] `BookingSchedulePanel`: убран `useMemo` для `weeklyBaseline` (error `react-hooks/preserve-manual-memoization` на deps `scheduleStyle`)
+- [x] RHF: `watch()` → `useWatch({ control, name })` в `AppointmentFormDialog`, `ServiceTypeFormDialog`, `AnimalFormDialog` (warning `react-hooks/incompatible-library`)
+- [x] `AnimalsTable/useLogic`: `eslint-disable-next-line` для `useReactTable` (TanStack не совместим с правилами React Compiler)
+
+Проверка локально: `npm run lint` в monorepo — 0 errors, 0 warnings.
+
+### Push
+
+Только **apps/admin** (5 файлов). Server / Mini App / миграции в этом коммите **нет**.
+
+После push `dev`: workflow **Lint and build** должен пройти; при изменении только admin — сработает **Deploy admin** (если paths в workflow).
+
+### Prod / фаза 5 (без изменений в этом коммите)
+
+- BOOK-01 (`d.full_name`): убедиться, что **Deploy server** уже был на prod
+- **C1 Mini App** — в коде на `dev` может быть отдельно; в этом handoff не деплоится
+- Admin UX booking (фильтр услуг, ошибки API, шаблон недели) — см. сессию 2026-05-31
+
+### Следующая сессия
+
+1. Smoke после deploy: admin **Запись** (календарь, заявки), CI зелёный на `dev`
+2. Если C1 ещё не в prod — проверить Mini App: CTA «Записаться», маршруты booking, миграция **016** на VPS
+3. Backlog: форма заявки в admin (ADM-02), портал `портал запись` при изменении phase-5
+
+### Правило admin UI
+
+Эталон: `BookingScreen`, `GroomingScreen` — `< sm`: карточки, `fullScreen` диалоги, scrollable tabs.
+
+---
+
 ## Сессия 2026-05-31 (отладка prod «Запись» + admin UX + CI)
 
 ### Диагностика prod (VPS)
@@ -16,37 +51,13 @@ pq: column d.name does not exist
 
 **Фикс в коде:** `apps/server/internal/repository/booking_schedule.go` — `d.full_name`.
 
-Миграции на prod в порядке (контейнер `app` Up, таблицы booking есть). Путать с отсутствием `booking_requests` не нужно.
+### Сделано в коде
 
-### Сделано в коде (нужен push → Deploy server + admin)
+**Server:** `d.name` → `d.full_name` в `booking_day_staff`.
 
-**Server**
-- [x] `d.name` → `d.full_name` в запросе `booking_day_staff`
+**Admin:** ошибки API в календаре, фильтр заявок, подсказки шаблона недели, первый проход CI (`set-state-in-effect`).
 
-**Admin**
-- [x] CI: убран `setState` в `useEffect` в `BookingSchedulePanel`; сравнение черновика шаблона с сервером + подсказки, почему «Сохранить шаблон» неактивна
-- [x] Календарь: текст ошибки из ответа API (`bookingApiErrorMessage`), не только «миграции»
-- [x] Заявки: фильтр «Услуга» — `FormControl` + `Select` (был сжат ~20px)
-- [x] `weeklyDraft.ts`, `bookingApiError.ts` в `modules/booking/domain/`
-- [x] `ServiceTypeFormDialog`: lint `watch` в deps
-
-**CI**
-- Падал **lint admin** (`react-hooks/set-state-in-effect`); deploy admin/server **не ждут** CI — поэтому код на prod мог быть, а CI красный.
-- После правок: `npm run lint` — 0 errors.
-
-### Prod после фикса server
-
-```bash
-cd ~/you_vet/apps/server
-docker compose pull app && docker compose up -d app
-docker compose logs app --tail 20   # без d.name
-```
-
-Проверка: **Запись → Расписание → Календарь**; тестовая заявка (ниже).
-
-### Тестовая заявка (консоль, admin)
-
-Дата — **открытый день из календаря**; `service_type_id` — из **Запись → Услуги** или `GET .../service-types`.
+**Тестовая заявка (консоль):** см. ниже; форма в admin — backlog ADM-02.
 
 ```javascript
 fetch('https://api.snzbeachvolleyball25.ru/api/admin/booking/requests', {
@@ -64,23 +75,6 @@ fetch('https://api.snzbeachvolleyball25.ru/api/admin/booking/requests', {
   console.log(r.status, await r.text());
 });
 ```
-
-Форма в admin — **backlog** (ADM-02).
-
-### Важно для AI / продукта
-
-- **Календарь не требует существующих заявок** — только шаблон недели + горизонт; `booked_slots = 0` без записей.
-- **Mini App запись (C1) не сделана** — в `apps/app` нет booking UI; API `POST /api/clinics/{slug}/booking/requests` готов под C1.
-
-### Следующая сессия
-
-1. Убедиться, что фикс `d.full_name` в prod; smoke: календарь, заявка, confirm → чат `/link_staff`
-2. **C1** — Mini App: CTA «Записаться», услуга → дата → форма, «Мои заявки»
-3. Backlog: форма заявки в admin, очередь на слот, PRD-05
-
-### Правило admin UI
-
-Эталон: `BookingScreen`, `GroomingScreen` — `< sm`: карточки, `fullScreen` диалоги, scrollable tabs.
 
 ---
 

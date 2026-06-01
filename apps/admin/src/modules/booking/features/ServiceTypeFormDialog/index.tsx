@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import * as v from 'valibot';
 import {
@@ -79,7 +79,7 @@ function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput
 
 export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmit }: Props) {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-  const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: valibotResolver(schema),
     defaultValues: {
       name: '',
@@ -96,8 +96,8 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
     },
   });
 
-  const category = watch('category');
-  const capacityGroup = watch('capacity_group');
+  const category = useWatch({ control, name: 'category' });
+  const capacityGroup = useWatch({ control, name: 'capacity_group' });
 
   useEffect(() => {
     if (category === 'surgery') {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import * as v from 'valibot';
 import {
@@ -40,12 +40,12 @@ interface Props {
 }
 
 export function AppointmentFormDialog({ open, date, prefillTime, breeds, loading, onClose, onSubmit }: Props) {
-  const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: valibotResolver(schema),
     defaultValues: { breed_id: 0, pet_name: '', owner_phone: '', start_time: '' },
   });
 
-  const selectedBreedId = watch('breed_id');
+  const selectedBreedId = useWatch({ control, name: 'breed_id' });
   const selectedBreed = breeds.find((b) => b.id === selectedBreedId);
 
   useEffect(() => {

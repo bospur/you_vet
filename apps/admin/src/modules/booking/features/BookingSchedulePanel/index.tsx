@@ -106,10 +106,10 @@ export function BookingSchedulePanel() {
     enabled: sid > 0,
   });
 
-  const weeklyBaseline = useMemo(
-    () => (sid > 0 && !weeklyLoading ? weeklyDraftFromRules(weekly) : emptyWeeklyDraft(scheduleStyleToSlotMode(scheduleStyle))),
-    [sid, weekly, weeklyLoading, scheduleStyle],
-  );
+  const weeklyBaseline =
+    sid > 0 && !weeklyLoading
+      ? weeklyDraftFromRules(weekly)
+      : emptyWeeklyDraft(scheduleStyleToSlotMode(scheduleStyle));
 
   const nextWeeklySyncKey = sid > 0 && !weeklyLoading ? weeklyDraftSyncKey(sid, weekly) : '';
   if (nextWeeklySyncKey !== weeklySyncKey) {

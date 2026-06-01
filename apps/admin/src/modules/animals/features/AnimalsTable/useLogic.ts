@@ -44,6 +44,8 @@ export function useAnimalsTableLogic({ data, onEdit, onDelete }: UseAnimalsTable
     [onEdit, onDelete],
   );
 
+  // TanStack Table's useReactTable is not compatible with React Compiler memoization rules.
+  // eslint-disable-next-line react-hooks/incompatible-library -- stable table instance API
   const table = useReactTable({
     data,
     columns,

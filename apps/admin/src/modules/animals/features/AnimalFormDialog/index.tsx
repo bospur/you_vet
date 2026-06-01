@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import {
   Box,
   Button,
@@ -28,10 +28,10 @@ interface AnimalFormDialogProps {
 
 export function AnimalFormDialog({ open, animal, onClose }: AnimalFormDialogProps) {
   const { form, onSubmit, isEdit, loading } = useAnimalFormDialogLogic({ animal, onClose });
-  const { control, formState: { errors }, setValue, watch } = form;
+  const { control, formState: { errors }, setValue } = form;
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const iconValue = watch('icon');
+  const iconValue = useWatch({ control, name: 'icon' });
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     setValue('icon', emojiData.emoji, { shouldValidate: true });
