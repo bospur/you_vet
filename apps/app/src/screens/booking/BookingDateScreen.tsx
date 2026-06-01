@@ -102,9 +102,13 @@ export default function BookingDateScreen() {
     );
   }
 
-  const openDays = (availabilityQuery.data?.days ?? []).filter(
-    (d) => d.is_open && d.remaining > 0,
-  );
+  const openDays = (availabilityQuery.data?.days ?? []).filter((d) => {
+    if (!d.is_open || d.remaining <= 0) return false;
+    if (usesTimeSlots) {
+      return availableSlotsForDay(d, service.default_duration_min).length > 0;
+    }
+    return true;
+  });
 
   return (
     <div className={styles.wrapper}>

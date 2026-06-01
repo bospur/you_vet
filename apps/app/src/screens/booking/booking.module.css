@@ -16,6 +16,35 @@
   margin-bottom: 4px;
 }
 
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tgui--hint_color);
+  background: var(--vet-muted-bg);
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tabActive {
+  color: #fff;
+  background: var(--vet-accent);
+  border-color: var(--vet-accent);
+}
+
+.tab:active {
+  opacity: 0.85;
+}
+
 .listGroup {
   display: flex;
   flex-direction: column;
