@@ -164,7 +164,7 @@ export function BookingSchedulePanel() {
           await upsertBookingWeeklyRule(sid, {
             day_of_week: day,
             max_per_day: d.max_per_day,
-            slot_mode: d.slot_mode,
+            slot_mode: scheduleStyleToSlotMode(scheduleStyle),
             intake_from: intakeFrom,
             intake_to: intakeTo,
             pickup_after: pickup,

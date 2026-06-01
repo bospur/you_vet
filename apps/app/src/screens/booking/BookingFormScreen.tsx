@@ -49,9 +49,19 @@ export default function BookingFormScreen() {
     },
   });
 
+  const needsTime = service?.schedule_style === 'time_slots';
+
   useEffect(() => {
     if (servicesQuery.isError) notify('Не удалось загрузить услугу.', 'error');
   }, [servicesQuery.isError, notify]);
+
+  useEffect(() => {
+    if (!servicesQuery.isLoading && service && date && needsTime && !slotTime) {
+      navigate(`/booking/new/${serviceTypeId}/date?selectDate=${encodeURIComponent(date)}`, {
+        replace: true,
+      });
+    }
+  }, [servicesQuery.isLoading, service, date, needsTime, slotTime, serviceTypeId, navigate]);
 
   if (servicesQuery.isLoading) return <Preloader />;
 
@@ -66,16 +76,8 @@ export default function BookingFormScreen() {
     );
   }
 
-  const needsTime = service.schedule_style === 'time_slots';
   if (needsTime && !slotTime) {
-    return (
-      <div className={styles.wrapper}>
-        <p className={styles.empty}>Выберите время приёма</p>
-        <button type="button" className={styles.back} onClick={() => navigate(`/booking/new/${serviceTypeId}/date`)}>
-          ‹ К выбору времени
-        </button>
-      </div>
-    );
+    return <Preloader />;
   }
 
   const handleSubmit = (e: FormEvent) => {
