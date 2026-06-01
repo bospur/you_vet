@@ -614,22 +614,167 @@ func (h *BookingHandler) UpdateRequest(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, req)
 }
 
-// CreatePublicRequest — POST /api/clinics/{clinicSlug}/booking/requests
-func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Request) {
+// PublicBookingServiceType — услуга для Mini App (без служебных полей)
+type PublicBookingServiceType struct {
+	ID                 int             `json:"id"`
+	Name               string          `json:"name"`
+	Category           string          `json:"category"`
+	SpeciesFilter      string          `json:"species_filter"`
+	DefaultDurationMin int             `json:"default_duration_min"`
+	BookingMode        string          `json:"booking_mode"`
+	InstructionsClient *string         `json:"instructions_client"`
+	Rules              json.RawMessage `json:"rules"`
+	SortOrder          int             `json:"sort_order"`
+}
+
+// PublicBookingRequest — заявка клиента в Mini App
+type PublicBookingRequest struct {
+	ID            int     `json:"id"`
+	ServiceTypeID int     `json:"service_type_id"`
+	ServiceName   string  `json:"service_name"`
+	RequestedDate string  `json:"requested_date"`
+	SlotTime      *string `json:"slot_time"`
+	PetName       string  `json:"pet_name"`
+	Status        string  `json:"status"`
+	RejectReason  *string `json:"reject_reason"`
+	CreatedAt     string  `json:"created_at"`
+}
+
+func (h *BookingHandler) clinicIDFromSlug(w http.ResponseWriter, r *http.Request) (int, bool) {
 	clinicSlug := r.PathValue("clinicSlug")
 	if clinicSlug == "" {
 		http.Error(w, "clinic slug обязателен", http.StatusBadRequest)
-		return
+		return 0, false
 	}
-
 	clinicID, err := h.bookingRepo.GetClinicIDBySlug(clinicSlug)
 	if err != nil {
 		if errors.Is(err, repository.ErrBookingNotFound) {
 			http.Error(w, "клиника не найдена", http.StatusNotFound)
-			return
+			return 0, false
 		}
 		log.Printf("ошибка clinic slug: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return 0, false
+	}
+	return clinicID, true
+}
+
+func toPublicServiceType(s repository.BookingServiceType) PublicBookingServiceType {
+	return PublicBookingServiceType{
+		ID:                 s.ID,
+		Name:               s.Name,
+		Category:           s.Category,
+		SpeciesFilter:      s.SpeciesFilter,
+		DefaultDurationMin: s.DefaultDurationMin,
+		BookingMode:        s.BookingMode,
+		InstructionsClient: s.InstructionsClient,
+		Rules:              s.Rules,
+		SortOrder:          s.SortOrder,
+	}
+}
+
+func toPublicRequest(req repository.BookingRequest) PublicBookingRequest {
+	return PublicBookingRequest{
+		ID:            req.ID,
+		ServiceTypeID: req.ServiceTypeID,
+		ServiceName:   req.ServiceName,
+		RequestedDate: req.RequestedDate,
+		SlotTime:      req.SlotTime,
+		PetName:       req.PetName,
+		Status:        req.Status,
+		RejectReason:  req.RejectReason,
+		CreatedAt:     req.CreatedAt,
+	}
+}
+
+// GetPublicServiceTypes — GET /api/clinics/{clinicSlug}/booking/service-types
+func (h *BookingHandler) GetPublicServiceTypes(w http.ResponseWriter, r *http.Request) {
+	clinicID, ok := h.clinicIDFromSlug(w, r)
+	if !ok {
+		return
+	}
+	list, err := h.bookingRepo.GetActiveServiceTypes(clinicID)
+	if err != nil {
+		log.Printf("ошибка публичных услуг: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	out := make([]PublicBookingServiceType, 0, len(list))
+	for _, s := range list {
+		out = append(out, toPublicServiceType(s))
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// GetPublicAvailability — GET /api/clinics/{clinicSlug}/booking/availability
+func (h *BookingHandler) GetPublicAvailability(w http.ResponseWriter, r *http.Request) {
+	clinicID, ok := h.clinicIDFromSlug(w, r)
+	if !ok {
+		return
+	}
+	svcID, ok := parseServiceTypeIDQuery(r)
+	if !ok {
+		http.Error(w, "service_type_id обязателен", http.StatusBadRequest)
+		return
+	}
+	svc, err := h.bookingRepo.GetServiceTypeByID(clinicID, strconv.Itoa(svcID))
+	if err != nil {
+		log.Printf("ошибка услуги: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if svc == nil || !svc.IsActive {
+		http.Error(w, "услуга не найдена", http.StatusNotFound)
+		return
+	}
+	resp, err := h.bookingRepo.GetAvailability(
+		clinicID, svcID,
+		r.URL.Query().Get("from"),
+		r.URL.Query().Get("to"),
+	)
+	if err != nil {
+		if errors.Is(err, repository.ErrBookingNotFound) {
+			http.Error(w, "услуга не найдена", http.StatusNotFound)
+			return
+		}
+		log.Printf("ошибка availability: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// ListPublicRequests — GET /api/clinics/{clinicSlug}/booking/requests
+func (h *BookingHandler) ListPublicRequests(w http.ResponseWriter, r *http.Request) {
+	clinicID, ok := h.clinicIDFromSlug(w, r)
+	if !ok {
+		return
+	}
+	visit, ok := middleware.ParseInitDataUser(middleware.InitDataFromRequest(r))
+	if !ok {
+		http.Error(w, "требуется авторизация Telegram", http.StatusUnauthorized)
+		return
+	}
+	tgID := visit.TelegramUserID
+	list, err := h.bookingRepo.ListRequests(clinicID, repository.BookingRequestFilters{
+		TelegramUserID: &tgID,
+	})
+	if err != nil {
+		log.Printf("ошибка списка заявок клиента: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	out := make([]PublicBookingRequest, 0, len(list))
+	for _, req := range list {
+		out = append(out, toPublicRequest(req))
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// CreatePublicRequest — POST /api/clinics/{clinicSlug}/booking/requests
+func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Request) {
+	clinicID, ok := h.clinicIDFromSlug(w, r)
+	if !ok {
 		return
 	}
 
@@ -663,5 +808,5 @@ func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Requ
 	if h.notifier != nil {
 		go h.notifier.NotifyBookingRequestCreated(clinicID, *req)
 	}
-	writeJSON(w, http.StatusCreated, req)
+	writeJSON(w, http.StatusCreated, toPublicRequest(*req))
 }

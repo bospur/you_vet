@@ -13,6 +13,11 @@ import GroomingScreen from './screens/GroomingScreen';
 import GroomingBreedsScreen from './screens/GroomingBreedsScreen';
 import GroomingScheduleScreen from './screens/GroomingScheduleScreen';
 import TelegramOnlyScreen from './screens/TelegramOnlyScreen';
+import BookingScreen from './screens/booking/BookingScreen';
+import BookingServicesScreen from './screens/booking/BookingServicesScreen';
+import BookingDateScreen from './screens/booking/BookingDateScreen';
+import BookingFormScreen from './screens/booking/BookingFormScreen';
+import BookingRequestsScreen from './screens/booking/BookingRequestsScreen';
 
 function BackButtonHandler() {
   const navigate = useNavigate();
@@ -79,6 +84,11 @@ export default function App() {
             <Route path="/grooming/breeds" element={<GroomingBreedsScreen />} />
             <Route path="/grooming/schedule" element={<GroomingScheduleScreen />} />
           </Route>
+          <Route path="/booking" element={<BookingScreen />} />
+          <Route path="/booking/new" element={<BookingServicesScreen />} />
+          <Route path="/booking/new/:serviceId/date" element={<BookingDateScreen />} />
+          <Route path="/booking/new/:serviceId/date/:date" element={<BookingFormScreen />} />
+          <Route path="/booking/requests" element={<BookingRequestsScreen />} />
         </Route>
       </Routes>
     </BrowserRouter>

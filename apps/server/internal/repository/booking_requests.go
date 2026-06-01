@@ -70,10 +70,11 @@ type BookingRequestPatch struct {
 
 // BookingRequestFilters — фильтры списка
 type BookingRequestFilters struct {
-	Status        string
-	ServiceTypeID int
-	From          string
-	To            string
+	Status         string
+	ServiceTypeID  int
+	From           string
+	To             string
+	TelegramUserID *int64
 }
 
 func scanBookingRequest(row interface{ Scan(dest ...any) error }) (*BookingRequest, error) {
@@ -515,6 +516,11 @@ func (r *BookingRepository) ListRequests(clinicID int, f BookingRequestFilters) 
 	if f.To != "" {
 		q += ` AND br.requested_date <= $` + strconv.Itoa(n) + `::date`
 		args = append(args, f.To)
+		n++
+	}
+	if f.TelegramUserID != nil {
+		q += ` AND br.telegram_user_id = $` + strconv.Itoa(n)
+		args = append(args, *f.TelegramUserID)
 		n++
 	}
 	q += ` ORDER BY br.requested_date DESC, br.created_at DESC LIMIT 500`

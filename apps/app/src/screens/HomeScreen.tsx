@@ -5,8 +5,9 @@ import { HomeHero } from '../components/HomeHero/HomeHero';
 import { FeaturedArticles } from '../components/FeaturedArticles/FeaturedArticles';
 import { NavGrid } from '../components/NavGrid/NavGrid';
 import { TodayAtClinic } from '../components/TodayAtClinic/TodayAtClinic';
-import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming } from '../components/NavGrid/icons';
+import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming, IconBooking } from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
+import { useBookingAvailable } from '../hooks/useBookingAvailable';
 import styles from './HomeScreen.module.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const navigate = useNavigate();
   const info = useOutletContext<ClinicInfo | null>();
   const { available: groomingAvailable, isLoading: groomingLoading } = useGroomingAvailable();
+  const { available: bookingAvailable, isLoading: bookingLoading } = useBookingAvailable();
   const [aboutExpanded, setAboutExpanded] = useState(
     () => sessionStorage.getItem(ABOUT_EXPANDED_KEY) === '1',
   );
@@ -38,6 +40,17 @@ export default function HomeScreen() {
   };
 
   const navItems = [
+    ...(bookingLoading
+      ? [{ key: 'booking-skeleton', skeleton: true as const }]
+      : bookingAvailable
+        ? [{
+            key: 'booking',
+            icon: <IconBooking />,
+            label: 'Записаться',
+            subtitle: 'на приём',
+            onClick: () => navigate('/booking'),
+          }]
+        : []),
     {
       key: 'animals',
       icon: <IconFirstAid />,

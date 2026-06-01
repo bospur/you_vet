@@ -1,6 +1,6 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
-> Статус: **утверждено, разработка с admin + API** · Обновлено: 2026-05-31  
+> Статус: **B3–B4 в prod после фикса BOOK-01** · Обновлено: 2026-05-31 (вечер)  
 > Для клиники (простым языком): [booking-for-clinic.html](./booking-for-clinic.html)  
 > Связанные документы: [roadmap.html](./roadmap.html) · [roles.md](./roles.md) · [mobile/roadmap.md](./mobile/roadmap.md)
 
@@ -224,4 +224,17 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ## Следующий шаг
 
-**C1:** Mini App — запись, «Мои заявки».
+1. **Deploy server** с фиксом `doctors.full_name` в `loadScheduleData` (см. BOOK-01 в [context/ISSUES.md](./context/ISSUES.md))
+2. Smoke: календарь, тестовая заявка (консоль admin), `/link_staff`
+3. **C1:** Mini App — запись, «Мои заявки»
+
+## Отладка prod (2026-05-31)
+
+| Симптом | Частая причина |
+|---|---|
+| Календарь / POST заявки → 500 | Лог: `column d.name does not exist` → в SQL должно быть `d.full_name` ([BOOK-01](./context/ISSUES.md)) |
+| Сообщение про миграции 013–015 в admin | Общий fallback; смотреть лог `docker compose logs app` и Network |
+| Календарь пустой, без ошибки | Нет открытых дней в шаблоне или не нажато «Сохранить шаблон» |
+| Заявок нет — календарь должен работать | `booked_slots = 0`; заявки не обязательны |
+
+Календарь **не зависит** от наличия заявок в БД.

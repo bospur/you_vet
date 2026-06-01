@@ -19,6 +19,7 @@ const CARD_ANIM: Record<string, string> = {
   animals: styles.cardArticles,
   doctors: styles.cardDoctors,
   schedule: styles.cardSchedule,
+  booking: styles.cardBooking,
   grooming: styles.cardGrooming,
 };
 

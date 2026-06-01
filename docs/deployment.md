@@ -1,5 +1,7 @@
 # Деплой и инфраструктура
 
+> AI: загрузка памяти — **`контекст деплой`** · обновление HTML — **`портал`** (см. [CODEWORDS.md](./CODEWORDS.md)).
+
 ## Сервер
 
 | Параметр | Значение |
@@ -152,3 +154,73 @@ sudo certbot certonly --webroot -w /var/www/certbot -d <subdomain>
 
 Nginx проксирует `api.*` → `localhost:8080`. PostgreSQL снаружи недоступен.
 Uploads: volume `uploads_data` → `/app/uploads`.
+
+## Идеи (backlog инфраструктуры и ops)
+
+> Не в реализации. Приоритизация — после стабилизации фазы 5 (запись) и C1.
+
+### Мониторинг сервера в admin (суперадмин)
+
+**Задача:** экран в веб-admin «Состояние системы» — без SSH и без отдельного Grafana на первом этапе.
+
+| Блок | Что показывать |
+|---|---|
+| Сервисы | API / bot / DB: up, uptime, версия образа (`latest` digest или git sha из env) |
+| Ресурсы | CPU/RAM/диск VPS (агент или периодический сбор по SSH — позже) |
+| БД | размер, последняя миграция (`schema_migrations`), latency ping |
+| Деплой | время последнего успешного Deploy server/admin (из GH Actions API или метка в БД) |
+| Очереди | необработанные ошибки (см. ниже) |
+
+**Доступ:** только роль **`superadmin`** (разработчик / владелец платформы), не путать с `admin` клиники.
+
+- `admin` клиники — контент, запись, пользователи **своей** клиники.
+- `superadmin` — платформа, все клиники (когда появится multi-tenant на одном инстансе), инфра, логи, флаги.
+
+Технически: поле `role` в `users` + `superadminAuth` в `main.go`; UI — отдельный пункт меню или `/platform` (скрыт от обычных ролей). Первого superadmin завести миграцией или env `SUPERADMIN_LOGIN` по аналогии с `ADMIN_LOGIN`.
+
+Связано: [roles.md](./roles.md) (сейчас ролей superadmin нет).
+
+### Упрощённый «Sentry» (ошибки приложения)
+
+**Задача:** не полноценный Sentry, а **свой лёгкий слой**, заточенный под известные уязвимые места кодовой базы.
+
+Принцип: мы знаем, где чаще всего ломается — логировать и показывать в admin суперадмину структурированно, а не только `docker compose logs`.
+
+| Источник | Что ловить |
+|---|---|
+| Go API | 5xx, необработанные ошибки repo, сбои миграций при старте, Telegram API errors |
+| Критичные домены | booking (`availability`, заявки), auth/cookie, upload/MIME, initData Mini App |
+| Admin / Mini App | `window.onerror`, rejected fetch к API (без PII в теле) |
+| CI / deploy | failed workflow (webhook → запись в таблицу или Telegram dev-чат) |
+
+**Модель данных (черновик):**
+
+```text
+error_events (id, source, level, fingerprint, message, context_json, clinic_id?, created_at)
+```
+
+- **fingerprint** — группировка («booking.availability.sql», «auth.cookie.missing»).
+- **context** — route, status, user_id/clinic_id без паролей и токенов.
+- Retention 7–30 дней; счётчик «повторов за 24ч» на экране мониторинга.
+
+**Интеграции (по желанию позже):** экспорт в Telegram dev-канал; опционально forward в настоящий Sentry для prod.
+
+**Не цель v1:** session replay, performance APM, алерты на каждый 404.
+
+### Связь с текущим деплоем
+
+| Сейчас | После идеи |
+|---|---|
+| Ошибки — `docker compose logs app` на VPS | Лента в admin + алерт при всплеске |
+| CI красный, deploy зелёный — путаница | Плитка «последний CI / последний deploy» для superadmin |
+| Ручной SSH — только аварийно | Основной путь: push `dev` → Actions; мониторинг подтверждает выкат |
+
+### Порядок внедрения (предложение)
+
+1. Роль `superadmin` + защищённые API `/api/platform/*` (health, version, recent errors).
+2. Таблица `error_events` + middleware/handler wrapper на критичных роут booking/auth.
+3. Экран «Мониторинг» в admin.
+4. Webhook GitHub Actions → событие `deploy.succeeded` / `deploy.failed`.
+5. Агент метрик VPS (опционально).
+
+Завести трекинг: **INF-06** (мониторинг), **INF-07** (error_events) — см. [context/ISSUES.md](./context/ISSUES.md).

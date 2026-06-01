@@ -76,6 +76,27 @@ const bookingServiceSelect = `
 	FROM booking_service_types
 `
 
+func (r *BookingRepository) GetActiveServiceTypes(clinicID int) ([]BookingServiceType, error) {
+	rows, err := r.db.Query(bookingServiceSelect+`
+		WHERE clinic_id = $1 AND is_active = TRUE
+		ORDER BY sort_order, id
+	`, clinicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []BookingServiceType
+	for rows.Next() {
+		s, err := scanBookingServiceType(rows)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, *s)
+	}
+	return list, rows.Err()
+}
+
 func (r *BookingRepository) GetAllServiceTypes(clinicID int) ([]BookingServiceType, error) {
 	rows, err := r.db.Query(bookingServiceSelect+`
 		WHERE clinic_id = $1
