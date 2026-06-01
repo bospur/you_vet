@@ -21,6 +21,16 @@ function BookingRoute() {
   return <Outlet />;
 }
 
+/** Расписание врачей — admin, editor (редактирование), manager (просмотр и печать) */
+function ScheduleRoute() {
+  const { user } = useAuth();
+  if (user?.role === 'groomer') return <Navigate to="/grooming" replace />;
+  if (user?.role === 'admin' || user?.role === 'editor' || user?.role === 'manager') {
+    return <Outlet />;
+  }
+  return <Navigate to="/login" replace />;
+}
+
 function GroomingRoute() {
   const { user } = useAuth();
   if (user?.role === 'manager') return <Navigate to="/booking" replace />;
@@ -69,6 +79,12 @@ const router = createBrowserRouter([
         ],
       },
       {
+        element: <ScheduleRoute />,
+        children: [
+          { path: '/schedule', element: <Suspense fallback={<Loader />}><ScheduleScreen /></Suspense> },
+        ],
+      },
+      {
         element: <ContentRoute />,
         children: [
           { path: '/dashboard', element: <Suspense fallback={<Loader />}><DashboardScreen /></Suspense> },
@@ -81,7 +97,6 @@ const router = createBrowserRouter([
           { path: '/doctors', element: <Suspense fallback={<Loader />}><DoctorsScreen /></Suspense> },
           { path: '/doctors/new', element: <Suspense fallback={<Loader />}><DoctorEditorScreen /></Suspense> },
           { path: '/doctors/:id/edit', element: <Suspense fallback={<Loader />}><DoctorEditorScreen /></Suspense> },
-          { path: '/schedule', element: <Suspense fallback={<Loader />}><ScheduleScreen /></Suspense> },
         ],
       },
       {

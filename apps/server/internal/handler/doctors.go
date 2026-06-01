@@ -367,6 +367,50 @@ func (h *DoctorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, settings)
 }
 
+// GetAdminSchedule — GET /api/admin/schedule?from=YYYY-MM-DD&to=YYYY-MM-DD
+func (h *DoctorHandler) GetAdminSchedule(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
+	if fromStr == "" || toStr == "" {
+		http.Error(w, "from и to обязательны", http.StatusBadRequest)
+		return
+	}
+	from, err := time.Parse("2006-01-02", fromStr)
+	if err != nil {
+		http.Error(w, "неверный формат from", http.StatusBadRequest)
+		return
+	}
+	to, err := time.Parse("2006-01-02", toStr)
+	if err != nil {
+		http.Error(w, "неверный формат to", http.StatusBadRequest)
+		return
+	}
+	if to.Before(from) {
+		http.Error(w, "to не может быть раньше from", http.StatusBadRequest)
+		return
+	}
+	if to.Sub(from) > 31*24*time.Hour {
+		http.Error(w, "максимальный период — 31 день", http.StatusBadRequest)
+		return
+	}
+
+	entries, err := h.doctorRepo.GetScheduleForPeriod(claims.ClinicID, from, to)
+	if err != nil {
+		log.Printf("ошибка расписания admin: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if entries == nil {
+		entries = []repository.ScheduleEntry{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"from":    fromStr,
+		"to":      toStr,
+		"entries": entries,
+	})
+}
+
 // ── Публичный API (для бота) ──────────────────────────────────────────────────
 
 // GetPublicDoctors обрабатывает GET /api/clinics/{clinicSlug}/doctors
