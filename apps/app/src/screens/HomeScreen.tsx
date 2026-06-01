@@ -5,7 +5,14 @@ import { HomeHero } from '../components/HomeHero/HomeHero';
 import { FeaturedArticles } from '../components/FeaturedArticles/FeaturedArticles';
 import { NavGrid } from '../components/NavGrid/NavGrid';
 import { TodayAtClinic } from '../components/TodayAtClinic/TodayAtClinic';
-import { IconFirstAid, IconDoctors, IconSchedule, IconGrooming, IconBooking } from '../components/NavGrid/icons';
+import {
+  IconFirstAid,
+  IconDoctors,
+  IconSchedule,
+  IconGrooming,
+  IconBooking,
+  IconQuestion,
+} from '../components/NavGrid/icons';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
 import { useBookingAvailable } from '../hooks/useBookingAvailable';
 import styles from './HomeScreen.module.css';
@@ -51,6 +58,13 @@ export default function HomeScreen() {
             onClick: () => navigate('/booking'),
           }]
         : []),
+    {
+      key: 'question',
+      icon: <IconQuestion />,
+      label: 'Задать вопрос',
+      subtitle: 'ответ врача в боте',
+      onClick: () => navigate('/question'),
+    },
     {
       key: 'animals',
       icon: <IconFirstAid />,

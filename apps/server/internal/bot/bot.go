@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go-server/internal/repository"
@@ -24,6 +25,9 @@ type Bot struct {
 	articleRepo *repository.ArticleRepository
 	doctorRepo  *repository.DoctorRepository
 	bookingRepo *repository.BookingRepository
+	questionRepo *repository.ClientQuestionRepository
+	questionPending map[string]pendingQuestionReply
+	questionPendingMu sync.Mutex
 }
 
 // New создаёт и настраивает Telegram бота
@@ -35,6 +39,7 @@ func New(
 	articleRepo *repository.ArticleRepository,
 	doctorRepo *repository.DoctorRepository,
 	bookingRepo *repository.BookingRepository,
+	questionRepo *repository.ClientQuestionRepository,
 ) (*Bot, error) {
 	pref := tele.Settings{
 		Token:  token,
@@ -80,7 +85,9 @@ func New(
 		animalRepo:  animalRepo,
 		articleRepo: articleRepo,
 		doctorRepo:  doctorRepo,
-		bookingRepo: bookingRepo,
+		bookingRepo:     bookingRepo,
+		questionRepo:    questionRepo,
+		questionPending: make(map[string]pendingQuestionReply),
 	}
 
 	bot.registerHandlers()
@@ -122,6 +129,9 @@ func (b *Bot) registerHandlers() {
 
 	// Обработчик Inline-кнопок (кнопки прямо в сообщении)
 	b.tele.Handle(tele.OnCallback, b.handleCallback)
+
+	// Ответы врачей на вопросы клиентов (чат врачей)
+	b.tele.Handle(tele.OnText, b.handleStaffQuestionText)
 }
 
 // handleStart обрабатывает /start
@@ -227,6 +237,8 @@ func (b *Bot) handleCallback(c tele.Context) error {
 		default:
 			return b.showAnimalsInline(c)
 		}
+	case "qreply":
+		return b.handleQuestionReplyCallback(c, cbValue)
 	}
 
 	return c.Respond()

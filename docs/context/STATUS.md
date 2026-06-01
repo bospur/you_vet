@@ -1,35 +1,33 @@
 # Текущий статус проекта
 
-> Последнее обновление: 2026-06-01
+> Последнее обновление: 2026-06-01 (передача)
 
 ## Prod
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | ✅ | `/link_staff`, уведомления с **временем** после deploy server |
-| Mini App | 🟡 | **C1 в коде на `dev`** — после deploy app: запись, слоты, отмена |
-| Admin | 🟡 | `/booking` + новые правила услуг — после deploy admin |
-| API | 🟡 | BOOK-01, 016, лимиты, отмена — **Deploy server** |
-| Docs portal | ✅ | phase-5 + booking-for-clinic обновлены 2026-06-01 |
-| VPS | ✅ | SSH `vps`, `~/you_vet/apps/server` |
+| Telegram-бот | 🟡 | вопросы + ответ врача — после **Deploy server**; Group Privacy off |
+| Mini App | 🟡 | C1 polish + «Задать вопрос» — после **Deploy app** |
+| Admin | ✅ / 🟡 | запись без изменений в этой сессии |
+| API | 🟡 | 016, 017, отмена, questions — **Deploy server** |
+| Docs portal | ✅ | phase-5 + booking-for-clinic sync 2026-06-01 |
+| VPS | ✅ | SSH `vps`, миграции 016+017 с deploy server |
 
-## Функциональность (MVP) — запись
+## Функциональность (MVP)
 
-| Модуль | Admin | Mini App | API |
+| Модуль | Admin | Mini App | API / бот |
 |---|---|---|---|
-| B1 услуги + manager | ✅ | — | ✅ |
-| B2 расписание / календарь | 🟡 | 🟡 | 🟡 |
-| B3 заявки + лимиты по кличке | 🟡 | 🟡 | 🟡 |
-| B4 бот + staff-чат | 🟡 | — | 🟡 |
-| C1 клиентский UI | — | 🟡 код готов | 🟡 |
+| B1–B4 запись | 🟡 | 🟡 | 🟡 deploy |
+| C1 запись UI | — | 🟡 | 🟡 |
+| **Вопросы клиенту** | — | 🟡 код | 🟡 код |
 
 ## Фокус
 
-1. Push `dev` → CI green → deploy **server + app + admin**
-2. Миграция **016** на prod
-3. Smoke C1 end-to-end + настройка услуг (лимиты, УЗИ по времени)
+1. Push `dev` → deploy **server + app**
+2. VPS: **016** + **017**; BotFather privacy для группы врачей
+3. Smoke: запись (отмена, слоты, вкладки) + вопрос → ответ в боте
 4. Backlog: ADM-02, очередь на слот
 
 ## CI
 
-`ci.yml` на push `dev`: Go test + lint/build — admin lint исправлен 2026-06-01.
+`ci.yml` на push `dev`: Go test + lint/build + admin/app.

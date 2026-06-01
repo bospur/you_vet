@@ -180,3 +180,11 @@ export const cancelBookingRequest = (id: number) =>
   apiClient
     .patch<BookingRequest>(`/booking/requests/${id}`, { status: 'cancelled' })
     .then((r) => r.data);
+
+export interface ClientQuestionCreated {
+  id: number;
+  created_at: string;
+}
+
+export const submitClientQuestion = (text: string) =>
+  apiClient.post<ClientQuestionCreated>('/questions', { text }).then((r) => r.data);

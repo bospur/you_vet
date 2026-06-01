@@ -2,6 +2,7 @@ import { createElement, type ComponentType, type ReactNode } from 'react';
 import {
   FaCalendarDays,
   FaCalendarPlus,
+  FaCircleQuestion,
   FaHeart,
   FaScissors,
   FaUserDoctor,
@@ -26,6 +27,7 @@ const UserDoctorIcon = asNavIcon(FaUserDoctor);
 const CalendarDaysIcon = asNavIcon(FaCalendarDays);
 const CalendarPlusIcon = asNavIcon(FaCalendarPlus);
 const ScissorsIcon = asNavIcon(FaScissors);
+const CircleQuestionIcon = asNavIcon(FaCircleQuestion);
 
 function NavFaIcon({ icon }: { icon: ComponentType<NavReactIconProps> }): ReactNode {
   return createElement(icon, {
@@ -58,4 +60,9 @@ export function IconBooking(): ReactNode {
 /** Груминг */
 export function IconGrooming(): ReactNode {
   return NavFaIcon({ icon: ScissorsIcon });
+}
+
+/** Задать вопрос */
+export function IconQuestion(): ReactNode {
+  return NavFaIcon({ icon: CircleQuestionIcon });
 }

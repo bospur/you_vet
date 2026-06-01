@@ -194,8 +194,11 @@ Admin SPA отправляет запросы с `credentials: include`. JWT д�
 | Метод | URL | Описание |
 |---|---|---|
 | POST | `/api/clinics/{slug}/booking/requests` | Заявка клиента |
+| PATCH | `/api/clinics/{slug}/booking/requests/{id}` | Отмена своей заявки (`status: cancelled`) |
+| POST | `/api/clinics/{slug}/questions` | Вопрос клиента (текст 10–2000, max 5/день) |
 
-Статусы: `pending` (резерв), `confirmed`, `rejected`, `cancelled`, `rescheduled`.  
+Статусы заявки: `pending` (резерв), `confirmed`, `rejected`, `cancelled`, `rescheduled`.
+Вопросы: уведомление в `staff_chat_id`, ответ врача через бот (callback `qreply` или reply на сообщение).  
 Антиспам: max 1 активная заявка на user/телефон + услуга + день; max 3 на user/телефон + день.
 
 ### Запись — настройки и бот (B4)

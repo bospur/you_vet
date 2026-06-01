@@ -31,6 +31,7 @@
     li { margin-bottom: 5px; }
     .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e8f5e9; color: #2e7d32; }
     .badge-warn { background: #fff8e1; color: #f57f17; }
+    .badge-new { background: #e3f2fd; color: #1565c0; }
     .tip { background: #f0f7ff; border-left: 3px solid #0066cc; padding: 12px 16px; margin: 12px 0 20px; font-size: 13px; }
     a { color: #0066cc; }
   </style>
@@ -41,58 +42,56 @@
 
 <div class="header">
   <h1>Фаза 5 — Запись на приём</h1>
-  <div class="subtitle">PRD-03 · узкий каталог · слоты · роль Менеджер · Mini App</div>
-  <p style="margin-top:12px;"><span class="badge">C1 в коде</span> <span class="badge-warn">prod после deploy</span> <span style="color:#888;font-size:12px;">обновлено 1 июня 2026</span></p>
+  <div class="subtitle">PRD-03 · слоты · Mini App · вопросы клиентам</div>
+  <p style="margin-top:12px;"><span class="badge">код на dev</span> <span class="badge-warn">prod после deploy</span> <span class="badge-new">Q1 вопросы</span> <span style="color:#888;font-size:12px;">обновлено 1 июня 2026</span></p>
 </div>
 
 <div class="tip">
-  Запись на <strong>УЗИ, операции кошек (общий лимит), рентген</strong>. Клиент — <strong>Mini App</strong> (услуга → дата → при необходимости <strong>время</strong>). Staff — admin «Запись» + <strong>групповой чат</strong> врачей. При <code>pending</code> место <strong>резервируется</strong>.
+  Клиент: <strong>запись</strong> (услуга → дата → время) и <strong>задать вопрос</strong> в Mini App. Staff: admin «Запись» + <strong>один чат врачей</strong> (заявки и вопросы). Ответ на вопрос — кнопка «Ответить» или reply в чате → личка клиента в боте.
 </div>
 
 <h2>Этапы</h2>
 <table>
   <tr><th>Этап</th><th>Статус</th><th>Содержание</th></tr>
-  <tr><td>B1</td><td>✅</td><td>Услуги, роль manager</td></tr>
-  <tr><td>B2</td><td>✅</td><td>Расписание, ёмкость (2 нед.)</td></tr>
-  <tr><td>B3</td><td>✅</td><td>Заявки, резерв, лимиты по кличке/слоту</td></tr>
-  <tr><td>B4</td><td>✅</td><td>Бот → чат + клиент (дата и время)</td></tr>
-  <tr><td>C1</td><td>🟡</td><td>Mini App: запись, «Мои заявки», отмена — deploy app</td></tr>
-  <tr><td>B5</td><td>частично</td><td>ADM-02 заявка из admin; тесты</td></tr>
+  <tr><td>B1–B4</td><td>✅</td><td>Услуги, расписание, заявки, бот → чат</td></tr>
+  <tr><td>C1</td><td>🟡</td><td>Запись, «Мои заявки» (вкладки), отмена, слоты на сегодня — deploy app</td></tr>
+  <tr><td>Q1</td><td>🟡</td><td>«Задать вопрос», ответ врача в бот — deploy server+app, миграция <strong>017</strong></td></tr>
+  <tr><td>B5</td><td>частично</td><td>ADM-02; тесты; история вопросов в admin</td></tr>
 </table>
 
-<h2>Услуги: стиль расписания</h2>
-<table>
-  <tr><th><code>schedule_style</code></th><th>Пример</th><th>Клиент</th></tr>
-  <tr><td><code>day_capacity</code></td><td>Операции кошек</td><td>Выбор дня, окно сдачи/забора</td></tr>
-  <tr><td><code>time_slots</code></td><td>УЗИ</td><td>День + <strong>конкретное время</strong> (окно «С»–«До» в шаблоне)</td></tr>
-</table>
-<p>Миграция <strong>016</strong> на сервере. В admin при «Выбор времени» поле «Мест» скрыто.</p>
-
-<h2>Лимиты (антиспам)</h2>
+<h2>Mini App — запись (C1)</h2>
 <ul>
-  <li>Нельзя две заявки с <strong>одной кличкой</strong> на ту же услугу и дату</li>
-  <li>Для time_slots — нельзя занять <strong>тот же слот</strong> дважды</li>
-  <li>По умолчанию: <strong>1</strong> заявка на услугу/день (УЗИ), <strong>2</strong> (остальное), <strong>5</strong> на все услуги в день — настраивается в карточке услуги</li>
+  <li>Услуга → день → при УЗИ <strong>время</strong> (<code>time_slots</code>)</li>
+  <li>На <strong>сегодня</strong> не показываются прошедшие часы</li>
+  <li><strong>Мои заявки</strong>: вкладки «Активные» / «Архив», отмена своей заявки</li>
+  <li>Лимиты: кличка, слот, настраиваемые потолки в <code>rules</code></li>
 </ul>
 
-<h2>Admin «Запись»</h2>
+<h2>Mini App — вопрос (Q1)</h2>
+<ul>
+  <li>Главная → <strong>Задать вопрос</strong> (10–2000 символов, до 5 в день)</li>
+  <li>Сообщение в тот же <code>staff_chat_id</code>, что и заявки</li>
+  <li>Врач: кнопка <strong>«Ответить»</strong> или <strong>reply</strong> на пост бота</li>
+  <li>Клиент получает ответ в <strong>личку бота</strong></li>
+</ul>
+<p><strong>BotFather:</strong> Group Privacy → <em>Disable</em> (чтобы бот видел reply в группе).</p>
+
+<h2>Миграции на VPS</h2>
 <table>
-  <tr><th>Вкладка</th><th>Содержание</th></tr>
-  <tr><td>Услуги</td><td>Каталог, правила (возраст, лимиты, тексты confirm/reject)</td></tr>
-  <tr><td>Расписание</td><td>Шаблон недели, окна, календарь</td></tr>
-  <tr><td>Заявки</td><td>Подтвердить / отклонить с сообщением клиенту</td></tr>
-  <tr><td>Настройки</td><td><code>/link_staff</code>, горизонт</td></tr>
+  <tr><th>#</th><th>Содержание</th></tr>
+  <tr><td>016</td><td><code>schedule_style</code> (time_slots)</td></tr>
+  <tr><td>017</td><td><code>client_questions</code></td></tr>
 </table>
 
 <h2>Деплой и smoke</h2>
 <ol>
-  <li>Push <code>dev</code> → deploy <strong>server</strong> + <strong>app</strong> + <strong>admin</strong></li>
-  <li>Миграция <strong>016</strong> на VPS</li>
-  <li>Smoke: УЗИ со временем, два питомца (разные клички), отмена в Mini App, бот с временем</li>
+  <li>Push <code>dev</code> → deploy <strong>server</strong> + <strong>app</strong></li>
+  <li>Миграции <strong>016</strong>, <strong>017</strong></li>
+  <li>Smoke: УЗИ со временем, отмена, вкладки заявок; вопрос → ответ в боте</li>
 </ol>
 
-<h2>Backlog (не v1)</h2>
-<p>Очередь на освободившийся слот; форма заявки в admin (ADM-02).</p>
+<h2>Backlog</h2>
+<p>Очередь на слот; ADM-02 заявка из admin; история вопросов в Mini App / admin.</p>
 
 <p style="margin-top:24px;font-size:13px;color:#555;">Полная спецификация: <code>phase-5-appointments.md</code> · для клиники: <a href="booking-for-clinic.html">booking-for-clinic.html</a></p>
 
