@@ -125,6 +125,9 @@ func main() {
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/breeds", miniApp(groomingHandler.GetPublicBreeds))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/grooming/schedule", miniApp(groomingHandler.GetPublicSchedule))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/clinic-info", miniApp(clinicInfoHandler.GetPublicClinicInfo))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/booking/service-types", miniApp(bookingHandler.GetPublicServiceTypes))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/booking/availability", miniApp(bookingHandler.GetPublicAvailability))
+	http.HandleFunc("GET /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.ListPublicRequests))
 	http.HandleFunc("POST /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.CreatePublicRequest))
 
 	// Статические файлы (фото врачей)
