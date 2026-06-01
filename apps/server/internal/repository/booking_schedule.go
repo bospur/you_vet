@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -840,6 +841,17 @@ func (r *BookingRepository) GetAvailability(clinicID, serviceTypeID int, fromStr
 			ov = &o
 		}
 		sched, open := resolveDaySchedule(d, weekly, windows, ov)
+		if open && svc.ScheduleStyle == "time_slots" {
+			sched.slotMode = "fixed_times"
+			if sched.intakeFrom == nil || strings.TrimSpace(*sched.intakeFrom) == "" {
+				v := "09:00"
+				sched.intakeFrom = &v
+			}
+			if sched.intakeTo == nil || strings.TrimSpace(*sched.intakeTo) == "" {
+				v := "18:00"
+				sched.intakeTo = &v
+			}
+		}
 		booked := bookedCounts[dateKey]
 		slotMode := sched.slotMode
 		if slotMode == "" {
