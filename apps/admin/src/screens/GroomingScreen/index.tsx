@@ -20,15 +20,25 @@ import { Layout } from '../../shared/ui/Layout';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { useNotification } from '../../shared/ui/Notification/NotificationContext';
 import {
-  getBreeds, createBreed, updateBreed, deleteBreed,
-  getTemplate, getAppointments, createAppointment, deleteAppointment,
+  getBreeds,
+  saveBreedGroup,
+  deleteBreedGroup,
+  getTemplate,
+  getAppointments,
+  createAppointment,
+  deleteAppointment,
 } from '../../data/source/grooming';
+import { groupBreedsByName } from '../../modules/grooming/domain/formatPrice';
 import { BreedsTable } from '../../modules/grooming/features/BreedsTable';
 import { BreedFormDialog } from '../../modules/grooming/features/BreedFormDialog';
 import { WeeklyTemplate } from '../../modules/grooming/features/WeeklyTemplate';
 import { DayTimeline, DayTimelineEmpty, DayAppointmentBadges } from '../../modules/grooming/features/DayTimeline';
 import { AppointmentFormDialog } from '../../modules/grooming/features/AppointmentFormDialog';
-import type { GroomingBreed, GroomingAppointmentInput } from '../../modules/grooming/domain/types';
+import type {
+  GroomingBreedGroup,
+  GroomingBreedGroupFormValues,
+  GroomingAppointmentInput,
+} from '../../modules/grooming/domain/types';
 
 // ── Утилиты ──────────────────────────────────────────────────────────────────
 
@@ -69,10 +79,11 @@ export function GroomingScreen() {
   const [scheduleTab, setScheduleTab] = useState(0); // 0=Шаблон, 1=Записи
 
   // ── Состояние пород ──
-  const [breedDialog, setBreedDialog] = useState<{ open: boolean; breed: GroomingBreed | null }>({
-    open: false, breed: null,
+  const [breedDialog, setBreedDialog] = useState<{ open: boolean; group: GroomingBreedGroup | null }>({
+    open: false,
+    group: null,
   });
-  const [deleteBreedTarget, setDeleteBreedTarget] = useState<GroomingBreed | null>(null);
+  const [deleteBreedTarget, setDeleteBreedTarget] = useState<GroomingBreedGroup | null>(null);
 
   // ── Состояние календаря ──
   const today = new Date();
@@ -105,29 +116,24 @@ export function GroomingScreen() {
 
   // ── Мутации пород ──
 
-  const createBreedMutation = useMutation({
-    mutationFn: createBreed,
+  const saveBreedMutation = useMutation({
+    mutationFn: ({
+      values,
+      originalBreed,
+    }: {
+      values: GroomingBreedGroupFormValues;
+      originalBreed?: string;
+    }) => saveBreedGroup(values, originalBreed),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['grooming-breeds'] });
-      setBreedDialog({ open: false, breed: null });
-      notify('Порода создана', 'success');
+      setBreedDialog({ open: false, group: null });
+      notify(breedDialog.group ? 'Порода обновлена' : 'Порода создана', 'success');
     },
-    onError: () => notify('Ошибка создания породы', 'error'),
-  });
-
-  const updateBreedMutation = useMutation({
-    mutationFn: ({ id, ...input }: { id: number } & Parameters<typeof updateBreed>[1]) =>
-      updateBreed(id, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['grooming-breeds'] });
-      setBreedDialog({ open: false, breed: null });
-      notify('Порода обновлена', 'success');
-    },
-    onError: () => notify('Ошибка обновления', 'error'),
+    onError: () => notify('Ошибка сохранения', 'error'),
   });
 
   const deleteBreedMutation = useMutation({
-    mutationFn: (id: number) => deleteBreed(id),
+    mutationFn: (breedName: string) => deleteBreedGroup(breedName),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['grooming-breeds'] });
       setDeleteBreedTarget(null);
@@ -186,12 +192,13 @@ export function GroomingScreen() {
 
   // ── Обработчики ──
 
-  const handleBreedSubmit = (values: Parameters<typeof createBreed>[0]) => {
-    if (breedDialog.breed) {
-      updateBreedMutation.mutate({ id: breedDialog.breed.id, ...values });
-    } else {
-      createBreedMutation.mutate(values);
-    }
+  const breedGroups = groupBreedsByName(breeds);
+
+  const handleBreedSubmit = (values: GroomingBreedGroupFormValues) => {
+    saveBreedMutation.mutate({
+      values,
+      originalBreed: breedDialog.group?.breed,
+    });
   };
 
   const handleApptSubmit = (values: GroomingAppointmentInput & { date: string }) => {
@@ -232,7 +239,7 @@ export function GroomingScreen() {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => setBreedDialog({ open: true, breed: null })}
+                onClick={() => setBreedDialog({ open: true, group: null })}
               >
                 Добавить породу
               </Button>
@@ -248,9 +255,9 @@ export function GroomingScreen() {
             ) : (
               <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
                 <BreedsTable
-                  data={breeds}
-                  onEdit={(b) => setBreedDialog({ open: true, breed: b })}
-                  onDelete={(b) => setDeleteBreedTarget(b)}
+                  data={breedGroups}
+                  onEdit={(g) => setBreedDialog({ open: true, group: g })}
+                  onDelete={(g) => setDeleteBreedTarget(g)}
                 />
               </Paper>
             )}
@@ -409,19 +416,19 @@ export function GroomingScreen() {
 
       <BreedFormDialog
         open={breedDialog.open}
-        initial={breedDialog.breed}
-        loading={createBreedMutation.isPending || updateBreedMutation.isPending}
-        onClose={() => setBreedDialog({ open: false, breed: null })}
+        initial={breedDialog.group}
+        loading={saveBreedMutation.isPending}
+        onClose={() => setBreedDialog({ open: false, group: null })}
         onSubmit={handleBreedSubmit}
       />
 
       <ConfirmDialog
         open={!!deleteBreedTarget}
         title="Удалить породу"
-        message={`Удалить «${deleteBreedTarget?.breed}»? Это действие нельзя отменить.`}
+        message={`Удалить «${deleteBreedTarget?.breed}» и все типы услуг? Это действие нельзя отменить.`}
         confirmLabel="Удалить"
         loading={deleteBreedMutation.isPending}
-        onConfirm={() => deleteBreedTarget && deleteBreedMutation.mutate(deleteBreedTarget.id)}
+        onConfirm={() => deleteBreedTarget && deleteBreedMutation.mutate(deleteBreedTarget.breed)}
         onClose={() => setDeleteBreedTarget(null)}
       />
 

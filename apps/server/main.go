@@ -215,9 +215,8 @@ func main() {
 
 	// Grooming breeds
 	http.HandleFunc("GET /api/admin/grooming/breeds", groomingAuth(groomingHandler.GetBreeds))
-	http.HandleFunc("POST /api/admin/grooming/breeds", groomingAuth(groomingHandler.CreateBreed))
-	http.HandleFunc("PUT /api/admin/grooming/breeds/{id}", groomingAuth(groomingHandler.UpdateBreed))
-	http.HandleFunc("DELETE /api/admin/grooming/breeds/{id}", groomingAuth(groomingHandler.DeleteBreed))
+	http.HandleFunc("PUT /api/admin/grooming/breed-groups", groomingAuth(groomingHandler.SaveBreedGroup))
+	http.HandleFunc("DELETE /api/admin/grooming/breed-groups", groomingAuth(groomingHandler.DeleteBreedGroup))
 
 	// Grooming weekly template
 	http.HandleFunc("GET /api/admin/grooming/template", groomingAuth(groomingHandler.GetTemplate))

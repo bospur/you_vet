@@ -1,12 +1,14 @@
 import axiosInstance from './axiosInstance';
 import type {
   GroomingBreed,
-  GroomingBreedFormValues,
+  GroomingBreedGroupInput,
   GroomingTemplateSlot,
   GroomingTemplateInput,
   GroomingAppointment,
   GroomingAppointmentInput,
 } from '../../modules/grooming/domain/types';
+import type { GroomingBreedGroupFormValues } from '../../modules/grooming/domain/types';
+import { parseOptionalPrice } from '../../modules/grooming/domain/formatPrice';
 
 // ── Породы ────────────────────────────────────────────────────────────────────
 
@@ -15,28 +17,42 @@ export async function getBreeds(): Promise<GroomingBreed[]> {
   return data ?? [];
 }
 
-export async function createBreed(input: GroomingBreedFormValues): Promise<GroomingBreed> {
-  const { data } = await axiosInstance.post<GroomingBreed>('/api/admin/grooming/breeds', {
-    breed: input.breed,
-    duration: input.duration,
-    price: input.price !== '' ? Number(input.price) : null,
-    description: input.description || null,
-  });
-  return data;
+function toGroupPayload(
+  values: GroomingBreedGroupFormValues,
+  originalBreed?: string,
+): GroomingBreedGroupInput {
+  return {
+    breed: values.breed.trim(),
+    description: values.description.trim() || null,
+    original_breed: originalBreed,
+    services: values.services.map((s) => {
+      const from = parseOptionalPrice(s.price_from);
+      const to = parseOptionalPrice(s.price_to);
+      return {
+        service_name: s.service_name.trim() || 'Стрижка',
+        duration: typeof s.duration === 'number' ? s.duration : 0,
+        price_from: from,
+        price_to: to ?? from,
+      };
+    }),
+  };
 }
 
-export async function updateBreed(id: number, input: GroomingBreedFormValues): Promise<GroomingBreed> {
-  const { data } = await axiosInstance.put<GroomingBreed>(`/api/admin/grooming/breeds/${id}`, {
-    breed: input.breed,
-    duration: input.duration,
-    price: input.price !== '' ? Number(input.price) : null,
-    description: input.description || null,
-  });
-  return data;
+export async function saveBreedGroup(
+  values: GroomingBreedGroupFormValues,
+  originalBreed?: string,
+): Promise<GroomingBreed[]> {
+  const { data } = await axiosInstance.put<GroomingBreed[]>(
+    '/api/admin/grooming/breed-groups',
+    toGroupPayload(values, originalBreed),
+  );
+  return data ?? [];
 }
 
-export async function deleteBreed(id: number): Promise<void> {
-  await axiosInstance.delete(`/api/admin/grooming/breeds/${id}`);
+export async function deleteBreedGroup(breedName: string): Promise<void> {
+  await axiosInstance.delete('/api/admin/grooming/breed-groups', {
+    params: { name: breedName },
+  });
 }
 
 // ── Шаблон недели ─────────────────────────────────────────────────────────────

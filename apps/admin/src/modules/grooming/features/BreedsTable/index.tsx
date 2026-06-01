@@ -17,12 +17,13 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import type { GroomingBreed } from '../../domain/types';
+import type { GroomingBreedGroup } from '../../domain/types';
+import { formatPriceRange } from '../../domain/formatPrice';
 
 interface Props {
-  data: GroomingBreed[];
-  onEdit: (breed: GroomingBreed) => void;
-  onDelete: (breed: GroomingBreed) => void;
+  data: GroomingBreedGroup[];
+  onEdit: (group: GroomingBreedGroup) => void;
+  onDelete: (group: GroomingBreedGroup) => void;
 }
 
 function formatDuration(minutes: number): string {
@@ -32,6 +33,22 @@ function formatDuration(minutes: number): string {
   return m > 0 ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
+function ServiceChips({ group }: { group: GroomingBreedGroup }) {
+  return (
+    <Stack spacing={0.75}>
+      {group.services.map((s) => (
+        <Stack key={s.id} direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+          {group.services.length > 1 && (
+            <Chip label={s.service_name} size="small" variant="outlined" />
+          )}
+          <Chip label={formatDuration(s.duration)} size="small" color="primary" variant="outlined" />
+          <Chip label={formatPriceRange(s.price_from, s.price_to)} size="small" />
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
 export function BreedsTable({ data, onEdit, onDelete }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -39,32 +56,29 @@ export function BreedsTable({ data, onEdit, onDelete }: Props) {
   if (isMobile) {
     return (
       <Stack spacing={1.5}>
-        {data.map((breed) => (
-          <Card key={breed.id} variant="outlined">
+        {data.map((group) => (
+          <Card key={group.breed} variant="outlined">
             <CardContent sx={{ pb: '12px !important' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography fontWeight={600}>{breed.breed}</Typography>
-                  <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap>
-                    <Chip label={formatDuration(breed.duration)} size="small" color="primary" variant="outlined" />
-                    {breed.price != null && (
-                      <Chip label={`${breed.price} ₽`} size="small" />
-                    )}
-                  </Stack>
-                  {breed.description && (
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography fontWeight={600}>{group.breed}</Typography>
+                  <Box mt={1}>
+                    <ServiceChips group={group} />
+                  </Box>
+                  {group.description && (
                     <Typography variant="body2" color="text.secondary" mt={0.5}>
-                      {breed.description}
+                      {group.description}
                     </Typography>
                   )}
                 </Box>
                 <Stack direction="row">
                   <Tooltip title="Редактировать">
-                    <IconButton size="small" onClick={() => onEdit(breed)}>
+                    <IconButton size="small" onClick={() => onEdit(group)}>
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Удалить">
-                    <IconButton size="small" color="error" onClick={() => onDelete(breed)}>
+                    <IconButton size="small" color="error" onClick={() => onDelete(group)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -82,31 +96,29 @@ export function BreedsTable({ data, onEdit, onDelete }: Props) {
       <TableHead>
         <TableRow>
           <TableCell><strong>Порода</strong></TableCell>
-          <TableCell><strong>Время стрижки</strong></TableCell>
-          <TableCell><strong>Стоимость</strong></TableCell>
+          <TableCell><strong>Услуги</strong></TableCell>
           <TableCell><strong>Описание</strong></TableCell>
           <TableCell align="right" />
         </TableRow>
       </TableHead>
       <TableBody>
-        {data.map((breed) => (
-          <TableRow key={breed.id} hover>
-            <TableCell><Typography fontWeight={500}>{breed.breed}</Typography></TableCell>
+        {data.map((group) => (
+          <TableRow key={group.breed} hover>
+            <TableCell><Typography fontWeight={500}>{group.breed}</Typography></TableCell>
             <TableCell>
-              <Chip label={formatDuration(breed.duration)} size="small" color="primary" variant="outlined" />
+              <ServiceChips group={group} />
             </TableCell>
-            <TableCell>{breed.price != null ? `${breed.price} ₽` : '—'}</TableCell>
-            <TableCell sx={{ maxWidth: 300, color: 'text.secondary', fontSize: 13 }}>
-              {breed.description ?? '—'}
+            <TableCell sx={{ maxWidth: 280, color: 'text.secondary', fontSize: 13 }}>
+              {group.description ?? '—'}
             </TableCell>
             <TableCell align="right">
               <Tooltip title="Редактировать">
-                <IconButton size="small" onClick={() => onEdit(breed)}>
+                <IconButton size="small" onClick={() => onEdit(group)}>
                   <EditIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Удалить">
-                <IconButton size="small" color="error" onClick={() => onDelete(breed)}>
+                <IconButton size="small" color="error" onClick={() => onDelete(group)}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>

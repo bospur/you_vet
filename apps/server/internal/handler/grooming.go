@@ -38,71 +38,40 @@ func (h *GroomingHandler) GetBreeds(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, breeds)
 }
 
-// CreateBreed обрабатывает POST /api/admin/grooming/breeds
-func (h *GroomingHandler) CreateBreed(w http.ResponseWriter, r *http.Request) {
+// SaveBreedGroup — PUT /api/admin/grooming/breed-groups (порода + типы услуг)
+func (h *GroomingHandler) SaveBreedGroup(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r)
 
-	var input repository.GroomingBreedInput
+	var input repository.GroomingBreedGroupInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
 		return
 	}
-	if strings.TrimSpace(input.Breed) == "" {
-		http.Error(w, "порода обязательна", http.StatusBadRequest)
-		return
-	}
-	if input.Duration <= 0 {
-		http.Error(w, "продолжительность должна быть больше 0", http.StatusBadRequest)
-		return
-	}
 
-	breed, err := h.groomingRepo.CreateBreed(claims.ClinicID, input)
+	breeds, err := h.groomingRepo.SaveBreedGroup(claims.ClinicID, input)
 	if err != nil {
-		log.Printf("ошибка создания породы: %v", err)
+		if strings.Contains(err.Error(), "обязательн") || strings.Contains(err.Error(), "хотя бы") ||
+			strings.Contains(err.Error(), "продолжительность") {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("ошибка сохранения породы: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, http.StatusCreated, breed)
+	writeJSON(w, http.StatusOK, breeds)
 }
 
-// UpdateBreed обрабатывает PUT /api/admin/grooming/breeds/{id}
-func (h *GroomingHandler) UpdateBreed(w http.ResponseWriter, r *http.Request) {
+// DeleteBreedGroup — DELETE /api/admin/grooming/breed-groups?name=...
+func (h *GroomingHandler) DeleteBreedGroup(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r)
-	id := r.PathValue("id")
-
-	var input repository.GroomingBreedInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
-		return
-	}
-	if strings.TrimSpace(input.Breed) == "" {
-		http.Error(w, "порода обязательна", http.StatusBadRequest)
-		return
-	}
-	if input.Duration <= 0 {
-		http.Error(w, "продолжительность должна быть больше 0", http.StatusBadRequest)
+	name := strings.TrimSpace(r.URL.Query().Get("name"))
+	if name == "" {
+		http.Error(w, "параметр name обязателен", http.StatusBadRequest)
 		return
 	}
 
-	breed, err := h.groomingRepo.UpdateBreed(claims.ClinicID, id, input)
-	if err != nil {
-		log.Printf("ошибка обновления породы: %v", err)
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	if breed == nil {
-		http.Error(w, "не найдено", http.StatusNotFound)
-		return
-	}
-	writeJSON(w, http.StatusOK, breed)
-}
-
-// DeleteBreed обрабатывает DELETE /api/admin/grooming/breeds/{id}
-func (h *GroomingHandler) DeleteBreed(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.ClaimsFromContext(r)
-	id := r.PathValue("id")
-
-	if err := h.groomingRepo.DeleteBreed(claims.ClinicID, id); err != nil {
+	if err := h.groomingRepo.DeleteBreedGroup(claims.ClinicID, name); err != nil {
 		log.Printf("ошибка удаления породы: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return

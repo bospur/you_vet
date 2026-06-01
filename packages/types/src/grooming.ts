@@ -2,11 +2,30 @@ export interface GroomingBreed {
   id: number;
   clinic_id: number;
   breed: string;
+  service_name: string;
   duration: number; // минуты
-  price: number | null;
+  price_from: number | null;
+  price_to: number | null;
   description: string | null;
 }
 
+export interface GroomingBreedServiceInput {
+  id?: number;
+  service_name: string;
+  duration: number;
+  price_from?: number | null;
+  price_to?: number | null;
+}
+
+export interface GroomingBreedGroupInput {
+  breed: string;
+  description?: string | null;
+  services: GroomingBreedServiceInput[];
+  /** При переименовании породы — прежнее название */
+  original_breed?: string;
+}
+
+/** @deprecated одиночное создание — используйте GroomingBreedGroupInput */
 export interface GroomingBreedInput {
   breed: string;
   duration: number;
@@ -33,8 +52,10 @@ export interface GroomingAppointment {
   clinic_id: number;
   breed_id: number;
   breed: string;
+  service_name: string;
   duration: number;
-  price: number | null;
+  price_from: number | null;
+  price_to: number | null;
   date: string;
   pet_name: string;
   owner_phone: string;

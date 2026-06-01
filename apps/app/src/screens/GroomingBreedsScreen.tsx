@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchGroomingBreeds } from '../api';
@@ -13,9 +13,13 @@ function formatDuration(minutes: number): string {
   return m > 0 ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
-function formatPrice(price: number | null): string {
-  if (price === null || price === undefined) return "По запросу";
-  return `${price.toLocaleString("ru-RU")} ₽`;
+function formatPrice(from: number | null, to: number | null): string {
+  if (from == null && to == null) return 'По запросу';
+  if (from != null && to != null && from !== to) {
+    return `${from.toLocaleString('ru-RU')}–${to.toLocaleString('ru-RU')} ₽`;
+  }
+  const single = from ?? to;
+  return single != null ? `${single.toLocaleString('ru-RU')} ₽` : 'По запросу';
 }
 
 export default function GroomingBreedsScreen() {
@@ -31,11 +35,17 @@ export default function GroomingBreedsScreen() {
     if (isError) notify('Не удалось загрузить список услуг. Попробуйте позже.', 'error');
   }, [isError, notify]);
 
-  if (isLoading) return <Preloader />;
+  const filtered = useMemo(() => {
+    const list = data ?? [];
+    const q = search.toLowerCase();
+    return list.filter(
+      (b) =>
+        b.breed.toLowerCase().includes(q) ||
+        (b.service_name?.toLowerCase().includes(q) ?? false),
+    );
+  }, [data, search]);
 
-  const filtered = (data ?? []).filter((b) =>
-    b.breed.toLowerCase().includes(search.toLowerCase())
-  );
+  if (isLoading) return <Preloader />;
 
   return (
     <div className={styles.wrapper}>
@@ -52,22 +62,26 @@ export default function GroomingBreedsScreen() {
           {search ? 'Ничего не найдено' : 'Услуги ещё не добавлены'}
         </p>
       )}
-      {filtered.map((breed) => (
-        <div key={breed.id} className={styles.card}>
-          <div className={styles.cardTop}>
-            <span className={styles.breedName}>{breed.breed}</span>
-            <span className={styles.price}>{formatPrice(breed.price)}</span>
+      {filtered.map((breed) => {
+        const showType =
+          (data ?? []).filter((x) => x.breed === breed.breed).length > 1 &&
+          breed.service_name !== 'Стрижка';
+        return (
+          <div key={breed.id} className={styles.card}>
+            <div className={styles.cardTop}>
+              <span className={styles.breedName}>
+                {breed.breed}
+                {showType ? ` · ${breed.service_name}` : ''}
+              </span>
+              <span className={styles.price}>{formatPrice(breed.price_from, breed.price_to)}</span>
+            </div>
+            <div className={styles.cardMeta}>
+              <span className={styles.duration}>⏱ {formatDuration(breed.duration)}</span>
+            </div>
+            {breed.description && <p className={styles.description}>{breed.description}</p>}
           </div>
-          <div className={styles.cardMeta}>
-            <span className={styles.duration}>
-              ⏱ {formatDuration(breed.duration)}
-            </span>
-          </div>
-          {breed.description && (
-            <p className={styles.description}>{breed.description}</p>
-          )}
-        </div>
-      ))}
+        );
+      })}
       <div className={styles.backSpacer} />
       <button className={styles.back} onClick={() => navigate(-1)}>
         ‹ Назад
