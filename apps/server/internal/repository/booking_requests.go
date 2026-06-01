@@ -727,7 +727,7 @@ func (r *BookingRepository) UpdateRequest(clinicID, userID int, id string, patch
 			reject_reason = COALESCE($5, reject_reason),
 			requested_date = $6::date,
 			slot_time = COALESCE($7, slot_time),
-			handled_by_user_id = $8,
+			handled_by_user_id = CASE WHEN $8 > 0 THEN $8 ELSE handled_by_user_id END,
 			updated_at = NOW()
 		WHERE id = $1 AND clinic_id = $2
 		RETURNING id, clinic_id, service_type_id,
