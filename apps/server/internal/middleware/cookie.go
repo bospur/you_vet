@@ -9,7 +9,16 @@ import (
 
 const AdminTokenCookie = "vp_admin_token"
 
-const adminTokenMaxAge = 24 * time.Hour
+const adminTokenSessionMaxAge = 24 * time.Hour
+const adminTokenRememberMaxAge = 30 * 24 * time.Hour
+
+// AdminTokenTTL возвращает срок жизни JWT и cookie для admin.
+func AdminTokenTTL(remember bool) time.Duration {
+	if remember {
+		return adminTokenRememberMaxAge
+	}
+	return adminTokenSessionMaxAge
+}
 
 func adminCookieDomain() string {
 	return strings.TrimSpace(os.Getenv("COOKIE_DOMAIN"))
@@ -21,13 +30,13 @@ func adminCookieSecure() bool {
 }
 
 // SetAdminAuthCookie сохраняет JWT в httpOnly cookie.
-func SetAdminAuthCookie(w http.ResponseWriter, token string) {
+func SetAdminAuthCookie(w http.ResponseWriter, token string, remember bool) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     AdminTokenCookie,
 		Value:    token,
 		Path:     "/",
 		Domain:   adminCookieDomain(),
-		MaxAge:   int(adminTokenMaxAge.Seconds()),
+		MaxAge:   int(AdminTokenTTL(remember).Seconds()),
 		HttpOnly: true,
 		Secure:   adminCookieSecure(),
 		SameSite: http.SameSiteLaxMode,

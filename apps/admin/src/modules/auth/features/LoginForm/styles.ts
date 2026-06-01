@@ -18,6 +18,15 @@ export const styles = {
     mb: 2,
   } satisfies SxProps<Theme>,
 
+  remember: {
+    mb: 1,
+    ml: -0.5,
+    display: 'block',
+    '& .MuiFormControlLabel-label': {
+      fontSize: 14,
+    },
+  } satisfies SxProps<Theme>,
+
   submitBtn: {
     mt: 1,
     py: 1.5,

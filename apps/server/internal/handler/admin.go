@@ -39,8 +39,9 @@ func NewAdminHandler(
 // ── Авторизация ──────────────────────────────────────────────────────────────
 
 type loginRequest struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Login      string `json:"login"`
+	Password   string `json:"password"`
+	RememberMe bool   `json:"remember_me"`
 }
 
 type loginResponse struct {
@@ -71,11 +72,12 @@ func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenTTL := middleware.AdminTokenTTL(req.RememberMe)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":   user.ID,
 		"clinic_id": user.ClinicID,
 		"role":      user.Role,
-		"exp":       time.Now().Add(24 * time.Hour).Unix(),
+		"exp":       time.Now().Add(tokenTTL).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(h.jwtSecret))
@@ -84,7 +86,7 @@ func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	middleware.SetAdminAuthCookie(w, tokenString)
+	middleware.SetAdminAuthCookie(w, tokenString, req.RememberMe)
 
 	resp := loginResponse{}
 	resp.User.ID = user.ID

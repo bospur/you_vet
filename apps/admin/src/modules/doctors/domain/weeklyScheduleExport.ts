@@ -1,6 +1,9 @@
 import type { ScheduleDayRow } from './scheduleMatrix';
 import { formatPeriodLabel, formatScheduleDateLong } from './scheduleDates';
-import { formatTimeRange } from './scheduleMatrix';
+import {
+  formatTimeRange,
+  groupWorkingByDoctor,
+} from './scheduleMatrix';
 
 function escapeHtml(text: string): string {
   return text
@@ -20,15 +23,19 @@ export function buildWeeklyScheduleHtml(
     if (working.length === 0) {
       return [`<tr><td>${escapeHtml(formatScheduleDateLong(date))}</td><td colspan="3" class="muted">—</td></tr>`];
     }
-    return working.map((doc, index) => {
+    const groups = groupWorkingByDoctor(working);
+    return groups.map((doc, index) => {
       const dateCell = index === 0
-        ? `<td rowspan="${working.length}">${escapeHtml(formatScheduleDateLong(date))}</td>`
+        ? `<td rowspan="${groups.length}">${escapeHtml(formatScheduleDateLong(date))}</td>`
         : '';
+      const timesHtml = doc.slots
+        .map((s) => escapeHtml(formatTimeRange(s.time_from, s.time_to)))
+        .join('<br />');
       return `<tr>
         ${dateCell}
         <td>${escapeHtml(doc.full_name)}</td>
         <td>${escapeHtml(doc.specialty || '—')}</td>
-        <td>${escapeHtml(formatTimeRange(doc.time_from, doc.time_to))}</td>
+        <td class="times">${timesHtml}</td>
       </tr>`;
     });
   }).join('');
@@ -50,6 +57,7 @@ export function buildWeeklyScheduleHtml(
     th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: top; }
     th { background: #f5f5f5; font-weight: 600; }
     .muted { color: #888; text-align: center; }
+    .times { line-height: 1.45; white-space: nowrap; }
     @media print {
       body { margin: 12mm; }
       .no-print { display: none; }

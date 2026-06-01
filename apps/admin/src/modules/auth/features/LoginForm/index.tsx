@@ -2,7 +2,9 @@ import { Controller } from 'react-hook-form';
 import {
   Box,
   Button,
+  Checkbox,
   CircularProgress,
+  FormControlLabel,
   Paper,
   TextField,
   Typography,
@@ -51,6 +53,23 @@ export function LoginForm() {
               error={!!errors.password}
               helperText={errors.password?.message}
               sx={styles.field}
+            />
+          )}
+        />
+
+        <Controller
+          name="rememberMe"
+          control={control}
+          render={({ field }) => (
+            <FormControlLabel
+              sx={styles.remember}
+              control={
+                <Checkbox
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                />
+              }
+              label="Запомнить меня"
             />
           )}
         />
