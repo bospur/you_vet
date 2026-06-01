@@ -1,6 +1,6 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
-> Статус: **B3–B4 в prod после фикса BOOK-01** · Обновлено: 2026-05-31 (вечер)  
+> Статус: **C1 в коде на `dev`** · B1–B4 + лимиты/слоты — deploy server+app+admin · Обновлено: 2026-06-01  
 > Для клиники (простым языком): [booking-for-clinic.html](./booking-for-clinic.html)  
 > Связанные документы: [roadmap.html](./roadmap.html) · [roles.md](./roles.md) · [mobile/roadmap.md](./mobile/roadmap.md)
 
@@ -54,8 +54,9 @@
 ## Backlog (зафиксировать, не v1)
 
 - **Очередь на освободившийся слот:** при отказе/отмене — уведомить следующего по времени ожидания, что место свободно; возможность сдвига времени.
-- **Защита от спама / monopolizing слотов:** один `telegram_user_id` (и/или телефон) не может занять все места на день/период — лимит активных заявок на пользователя, на услугу, на дату; rate limit на POST; опционально капча/ cooldown. Реализовать в **B3** (заявки) или отдельным подпунктом перед C1.
-- Клиентский UI: возраст питомца, разбор `rules`, выбор `fixed_times` vs «день + окно сдачи».
+- **Очередь на освободившийся слот** (см. выше) — единственный крупный backlog из антиспама.
+- ~~Защита от спама~~ — **реализовано 2026-06-01** (см. «Лимиты заявок»).
+- ~~Клиентский UI: возраст, rules, time_slots~~ — **C1** (см. ниже).
 
 ---
 
@@ -86,7 +87,9 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ### `booking_service_types`
 
-Справочник услуг: `name`, `category` (uzi|surgery|xray), `species_filter` (cats_only|any), `default_duration_min`, `booking_mode` (instant|pending_request), `instructions_client`, `rules` JSONB, `is_active`, `sort_order`.
+Справочник услуг: `name`, `category` (uzi|surgery|xray), `species_filter` (cats_only|any), `default_duration_min`, `booking_mode` (instant|pending_request), `schedule_style` (`day_capacity` | `time_slots` — миграция **016**), `instructions_client`, `rules` JSONB, `is_active`, `sort_order`.
+
+**`rules` (примеры):** `pet_age` (min/max, warn/block), `confirm_message` / `reject_message` (шаблоны для staff), `limits.max_active_per_user_per_date`, `limits.max_active_per_user_per_day`.
 
 ### `booking_weekly_rules`
 
@@ -142,8 +145,19 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 |---|---|
 | Услуги | CRUD `service-types` |
 | Доступность | CRUD `weekly-rules`, `windows`, GET `availability?from&to` |
-| Заявки | GET/PATCH `requests`, POST public `requests` |
+| Заявки | GET/PATCH `requests`, POST public `requests`, **PATCH public cancel** (своя заявка) |
 | Настройки | GET/PATCH `settings`, POST `settings/link-chat` |
+
+### Лимиты заявок (PRD-03a, 2026-06-01)
+
+| Правило | Поведение |
+|---|---|
+| Одна кличка | Нельзя две активные заявки на **ту же услугу + дату** с одинаковым именем питомца |
+| Слот (`time_slots`) | Нельзя две заявки на **тот же слот** (услуга+дата+время) |
+| На услугу в день | По умолчанию **1** при `time_slots`, иначе **2**; переопределение в `rules.limits.max_active_per_user_per_date` |
+| На все услуги в день | По умолчанию **5**; `rules.limits.max_active_per_user_per_day` |
+
+Ошибки API — понятные сообщения на русском (дубликат клички, слот занят, лимит).
 
 ---
 
@@ -168,7 +182,8 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 - [x] Миграция `015_booking_requests`
 - [x] POST/PATCH requests, резерв при pending, освобождение при reject/cancel
 - [x] GET availability учитывает booked_slots
-- [x] PRD-03a антиспам (1 заявка / user+услуга+день, max 3 / user+день)
+- [x] PRD-03a антиспам v1 (2026-05-31)
+- [x] PRD-03a v2: кличка, слот, настраиваемые лимиты в `rules` (2026-06-01)
 - [x] Admin: вкладка «Заявки» в `/booking`
 - [x] Public POST `/api/clinics/{slug}/booking/requests` (для C1)
 
@@ -180,21 +195,24 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ### C1 — Mini App
 
-- [ ] CTA «Записаться», выбор услуги → дата → форма
-- [ ] «Мои заявки», отображение pending vs confirmed
+- [x] CTA «Записаться», услуга → дата → **время** (`schedule_style=time_slots`) → форма
+- [x] «Мои заявки», pending vs confirmed, **отмена** своей заявки
+- [x] Маска телефона, валидация, toast сверху, `rules` (возраст)
+- [ ] Prod smoke после deploy app
 
 ### B5 — Polish
 
 - [ ] Тесты: capacity, pending reserve, tenant isolation
-- [x] Admin UX: единый `/booking`, кнопка «Сохранить шаблон»
-- [ ] Форма создания заявки в admin
-- [ ] Инструкция для клиники (HTML-портал sync)
+- [x] Admin UX: единый `/booking`, «Сохранить шаблон», confirm/reject с текстом
+- [x] Услуга: лимиты, возраст, тексты; расписание без «Мест» для time_slots
+- [ ] **ADM-02** — форма создания заявки в admin
+- [x] Инструкция для клиники (HTML-портал sync 2026-06-01)
 
 ---
 
 ## Бот (текущее состояние)
 
-В prod Reply-меню + Menu Button «Открыть» → Mini App. Команда **`/link_staff`** — привязка чата врачей для записи. Запись клиента — **Mini App** (C1).
+В prod Reply-меню + Menu Button «Открыть» → Mini App. Команда **`/link_staff`** — привязка чата врачей. Уведомления staff/клиенту: **дата + время** при `slot_time` (после deploy server).
 
 ---
 
@@ -224,9 +242,9 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ## Следующий шаг
 
-1. **Deploy server** с фиксом `doctors.full_name` в `loadScheduleData` (см. BOOK-01 в [context/ISSUES.md](./context/ISSUES.md))
-2. Smoke: календарь, тестовая заявка (консоль admin), `/link_staff`
-3. **C1:** Mini App — запись, «Мои заявки»
+1. Push `dev` → deploy **server** (BOOK-01, 016, лимиты, бот) + **app** (C1) + **admin**
+2. VPS: миграция **016**; smoke: УЗИ по времени, 2 кота (разные клички), отмена, confirm/reject
+3. **ADM-02** — заявка из admin; backlog — очередь на освободившийся слот
 
 ## Отладка prod (2026-05-31)
 

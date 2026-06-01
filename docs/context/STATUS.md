@@ -6,41 +6,30 @@
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | ✅ | `/link_staff` (B4) после деплоя server |
-| Mini App | 🟡 | C1 (запись) — по ветке `dev`; см. phase-5 |
-| Admin | 🟡 | `/booking` в prod; **CI lint fix** в очереди на push |
-| API | 🟡 | BOOK-01 `d.full_name` — проверить Deploy server на VPS |
-| Docs portal | 🟡 | `docs/context` обновлён 2026-06-01 |
+| Telegram-бот | ✅ | `/link_staff`, уведомления с **временем** после deploy server |
+| Mini App | 🟡 | **C1 в коде на `dev`** — после deploy app: запись, слоты, отмена |
+| Admin | 🟡 | `/booking` + новые правила услуг — после deploy admin |
+| API | 🟡 | BOOK-01, 016, лимиты, отмена — **Deploy server** |
+| Docs portal | ✅ | phase-5 + booking-for-clinic обновлены 2026-06-01 |
 | VPS | ✅ | SSH `vps`, `~/you_vet/apps/server` |
 
-## Функциональность (MVP)
+## Функциональность (MVP) — запись
 
 | Модуль | Admin | Mini App | API |
 |---|---|---|---|
-| Контент | ✅ | ✅ | ✅ |
-| M0: telegram_users + «Обзор» | ✅ | — | ✅ |
-| Запись B1 услуги + manager | ✅ | 🟡 | ✅ |
-| Запись B2 расписание / ёмкость | 🟡 | 🟡 | 🟡 |
-| Запись B3 заявки + антиспам | 🟡 | 🟡 | 🟡 |
-| Запись B4 бот + staff-чат | 🟡 | 🟡 | 🟡 |
-| Запись C1 клиентский UI | — | 🟡 | 🟡 public booking API |
-| Аналитика полная (PRD-04) | ❌ | ❌ | ❌ |
-
-## CI
-
-`ci.yml` на push `dev`: Go test + `npm run lint` + build admin/app.
-
-- **2026-06-01:** исправлены ошибки React Hooks v7 в admin (`preserve-manual-memoization`, `incompatible-library` для RHF/TanStack) — ожидается зелёный lint после push.
-
-Деплои **отдельные** workflow по paths; CI и deploy не блокируют друг друга, но **красный CI = не мержить без фикса**.
+| B1 услуги + manager | ✅ | — | ✅ |
+| B2 расписание / календарь | 🟡 | 🟡 | 🟡 |
+| B3 заявки + лимиты по кличке | 🟡 | 🟡 | 🟡 |
+| B4 бот + staff-чат | 🟡 | — | 🟡 |
+| C1 клиентский UI | — | 🟡 код готов | 🟡 |
 
 ## Фокус
 
-1. Push → зелёный **Lint and build**
-2. Deploy admin (если только lint-файлы) + smoke `/booking`
-3. Deploy server/app при наличии других коммитов на `dev`; миграция **016** на VPS при schedule_style / time_slots
-4. Smoke C1 в Mini App после deploy app
+1. Push `dev` → CI green → deploy **server + app + admin**
+2. Миграция **016** на prod
+3. Smoke C1 end-to-end + настройка услуг (лимиты, УЗИ по времени)
+4. Backlog: ADM-02, очередь на слот
 
-## Техдолг
+## CI
 
-UI-02 NavGrid — deferred. ADM-02 форма заявки в admin — backlog.
+`ci.yml` на push `dev`: Go test + lint/build — admin lint исправлен 2026-06-01.

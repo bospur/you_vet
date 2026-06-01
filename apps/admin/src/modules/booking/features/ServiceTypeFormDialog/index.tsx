@@ -13,6 +13,7 @@ import {
   Stack,
   Switch,
   TextField,
+  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -20,6 +21,7 @@ import { NumericTextField } from '../../../../shared/ui/NumericTextField';
 import type { BookingServiceType, BookingServiceTypeInput } from '../../../../data/source/booking';
 import {
   buildBookingRules,
+  DEFAULT_MAX_PER_DAY,
   parseBookingRules,
   rulesToFormFields,
 } from '../../domain/bookingRules';
@@ -32,7 +34,6 @@ const schema = v.object({
   name: v.pipe(v.string(), v.minLength(1, 'Название обязательно')),
   category: v.picklist(['uzi', 'surgery', 'xray']),
   species_filter: v.picklist(['any', 'cats_only']),
-  capacity_group: v.string(),
   default_duration_min: v.pipe(v.number(), v.minValue(1, 'Минимум 1 минута')),
   booking_mode: v.picklist(['instant', 'pending_request']),
   schedule_style: v.picklist(['day_capacity', 'dropoff', 'time_slots']),
@@ -44,6 +45,8 @@ const schema = v.object({
   pet_age_warn_message: v.string(),
   confirm_default: v.string(),
   reject_default: v.string(),
+  max_per_service_date: v.pipe(v.number(), v.minValue(1)),
+  max_per_day: v.pipe(v.number(), v.minValue(1)),
   is_active: v.boolean(),
   sort_order: v.number(),
 });
@@ -52,7 +55,6 @@ type FormValues = {
   name: string;
   category: BookingServiceType['category'];
   species_filter: BookingServiceType['species_filter'];
-  capacity_group: string;
   default_duration_min: number;
   booking_mode: BookingServiceType['booking_mode'];
   schedule_style: ScheduleStyle;
@@ -64,6 +66,8 @@ type FormValues = {
   pet_age_warn_message: string;
   confirm_default: string;
   reject_default: string;
+  max_per_service_date: number;
+  max_per_day: number;
   is_active: boolean;
   sort_order: number;
 };
@@ -77,13 +81,13 @@ interface Props {
 }
 
 function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput {
-  const group = values.capacity_group.trim();
   const seed = values.seed_max_per_day;
+  const capacityGroup = values.category === 'surgery' ? 'cat_surgery' : null;
   return {
     name: values.name.trim(),
     category: values.category,
     species_filter: values.species_filter,
-    capacity_group: group === '' ? null : group,
+    capacity_group: capacityGroup,
     default_duration_min: values.default_duration_min,
     booking_mode: values.booking_mode,
     schedule_style: values.schedule_style,
@@ -96,6 +100,8 @@ function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput
       petAgeWarnMessage: values.pet_age_warn_message,
       confirmDefault: values.confirm_default,
       rejectDefault: values.reject_default,
+      maxPerServiceDate: values.max_per_service_date,
+      maxPerDay: values.max_per_day,
     }),
     is_active: values.is_active,
     sort_order: values.sort_order,
@@ -110,7 +116,6 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
       name: '',
       category: 'uzi',
       species_filter: 'any',
-      capacity_group: '',
       default_duration_min: 30,
       booking_mode: 'pending_request',
       schedule_style: 'day_capacity',
@@ -119,44 +124,52 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
       pet_age_collect: false,
       pet_age_required: false,
       pet_age_warn_years: 8,
-      pet_age_warn_message: rulesToFormFields({}).petAgeWarnMessage,
-      confirm_default: rulesToFormFields({}).confirmDefault,
-      reject_default: rulesToFormFields({}).rejectDefault,
+      pet_age_warn_message: rulesToFormFields({}, 'day_capacity').petAgeWarnMessage,
+      confirm_default: rulesToFormFields({}, 'day_capacity').confirmDefault,
+      reject_default: rulesToFormFields({}, 'day_capacity').rejectDefault,
+      max_per_service_date: 2,
+      max_per_day: DEFAULT_MAX_PER_DAY,
       is_active: true,
       sort_order: 0,
     },
   });
 
   const category = useWatch({ control, name: 'category' });
-  const capacityGroup = useWatch({ control, name: 'capacity_group' });
+  const scheduleStyle = useWatch({ control, name: 'schedule_style' });
   const petAgeCollect = useWatch({ control, name: 'pet_age_collect' });
 
   useEffect(() => {
     if (category === 'surgery') {
-      if (!capacityGroup) setValue('capacity_group', 'cat_surgery');
       setValue('schedule_style', 'dropoff');
       if (!initial) {
         setValue('seed_max_per_day', 10);
         setValue('pet_age_collect', true);
         setValue('pet_age_required', true);
+        setValue('max_per_service_date', 3);
       }
     } else if (category === 'uzi' && !initial) {
       setValue('schedule_style', 'day_capacity');
       setValue('pet_age_collect', false);
       setValue('pet_age_required', false);
     }
-  }, [category, capacityGroup, setValue, initial]);
+  }, [category, setValue, initial]);
+
+  useEffect(() => {
+    if (scheduleStyle === 'time_slots') {
+      setValue('max_per_service_date', 1);
+    }
+  }, [scheduleStyle, setValue]);
 
   useEffect(() => {
     if (open) {
-      const ruleFields = rulesToFormFields(parseBookingRules(initial?.rules));
+      const style = (initial?.schedule_style ?? 'day_capacity') as ScheduleStyle;
+      const ruleFields = rulesToFormFields(parseBookingRules(initial?.rules), style);
       reset(
         initial
           ? {
               name: initial.name,
               category: initial.category,
               species_filter: initial.species_filter,
-              capacity_group: initial.capacity_group ?? '',
               default_duration_min: initial.default_duration_min,
               booking_mode: initial.booking_mode,
               schedule_style: initial.schedule_style,
@@ -170,7 +183,6 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               name: '',
               category: 'uzi',
               species_filter: 'any',
-              capacity_group: '',
               default_duration_min: 30,
               booking_mode: 'pending_request',
               schedule_style: 'day_capacity',
@@ -230,7 +242,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               </TextField>
             )}
           />
-          {(capacityGroup || category === 'surgery') && !initial && (
+          {!initial && category === 'surgery' && (
             <Controller
               name="seed_max_per_day"
               control={control}
@@ -238,30 +250,19 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
                 <NumericTextField
                   value={field.value ?? ''}
                   onValueChange={(n) => field.onChange(n === '' ? undefined : n)}
-                  label="Мест в день (шаблон Пн–Сб)"
+                  label="Мест в день (шаблон Пн–Сб при создании)"
                   fullWidth
                   min={1}
-                  helperText={
-                    capacityGroup
-                      ? `Общий лимит для группы «${capacityGroup}» — настраивается в «Расписание»`
-                      : 'Создаст шаблон недели при первом сохранении'
-                  }
+                  helperText="Общий лимит кастрации и стерилизации на день. Дальше — в «Расписание»."
                 />
               )}
             />
           )}
-          <Controller
-            name="capacity_group"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Группа общего лимита (необязательно)"
-                fullWidth
-                helperText="Для кастрации и стерилизации укажите cat_surgery — один лимит на день"
-              />
-            )}
-          />
+          {category === 'surgery' && (
+            <Typography variant="caption" color="text.secondary" display="block">
+              Операции кошек делят один дневной лимит (кастрация + стерилизация).
+            </Typography>
+          )}
           <Controller
             name="default_duration_min"
             control={control}
@@ -365,6 +366,39 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               />
             </>
           )}
+          <Typography variant="subtitle2" sx={{ pt: 1 }}>
+            Лимиты для клиента (Mini App)
+          </Typography>
+          <Controller
+            name="max_per_service_date"
+            control={control}
+            render={({ field }) => (
+              <NumericTextField
+                value={field.value}
+                onValueChange={field.onChange}
+                label="Макс. заявок на эту услугу в один день"
+                fullWidth
+                min={1}
+                allowEmpty={false}
+                helperText="Разные клички — отдельные заявки. Для записи по времени обычно 1."
+              />
+            )}
+          />
+          <Controller
+            name="max_per_day"
+            control={control}
+            render={({ field }) => (
+              <NumericTextField
+                value={field.value}
+                onValueChange={field.onChange}
+                label="Макс. заявок на все услуги в один день"
+                fullWidth
+                min={1}
+                allowEmpty={false}
+                helperText="Защита от злоупотреблений (по умолчанию 5)."
+              />
+            )}
+          />
           <Controller
             name="confirm_default"
             control={control}

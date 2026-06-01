@@ -19,6 +19,28 @@ func formatBookingDate(iso string) string {
 	return t.Format("02.01.2006")
 }
 
+func formatBookingSlotTime(slot *string) string {
+	if slot == nil {
+		return ""
+	}
+	t := strings.TrimSpace(*slot)
+	if t == "" {
+		return ""
+	}
+	if len(t) >= 5 {
+		return t[:5]
+	}
+	return t
+}
+
+func bookingDateTimeLines(req repository.BookingRequest) (dateLine, timeLine string) {
+	dateLine = formatBookingDate(req.RequestedDate)
+	if tm := formatBookingSlotTime(req.SlotTime); tm != "" {
+		timeLine = tm
+	}
+	return dateLine, timeLine
+}
+
 func bookingStatusLabel(status string) string {
 	switch status {
 	case "pending":
@@ -101,10 +123,15 @@ func staffRequestMessage(req repository.BookingRequest, title string) string {
 	if phone == "" {
 		phone = "—"
 	}
+	dateStr, timeStr := bookingDateTimeLines(req)
+	dateBlock := fmt.Sprintf("<b>Дата:</b> %s\n", escapeHTML(dateStr))
+	if timeStr != "" {
+		dateBlock += fmt.Sprintf("<b>Время:</b> %s\n", escapeHTML(timeStr))
+	}
 	return fmt.Sprintf(
 		"%s\n\n"+
 			"<b>Услуга:</b> %s\n"+
-			"<b>Дата:</b> %s\n"+
+			"%s"+
 			"<b>Клиент:</b> %s\n"+
 			"<b>Телефон:</b> %s\n"+
 			"<b>Питомец:</b> %s\n"+
@@ -112,7 +139,7 @@ func staffRequestMessage(req repository.BookingRequest, title string) string {
 			"<i>Заявка #%d</i>",
 		title,
 		escapeHTML(req.ServiceName),
-		formatBookingDate(req.RequestedDate),
+		dateBlock,
 		escapeHTML(req.ClientName),
 		escapeHTML(phone),
 		escapeHTML(req.PetName),
@@ -125,7 +152,11 @@ func clientRequestMessage(req repository.BookingRequest) string {
 	var body strings.Builder
 	body.WriteString(fmt.Sprintf("<b>%s</b>\n\n", bookingStatusLabel(req.Status)))
 	body.WriteString(fmt.Sprintf("Услуга: %s\n", escapeHTML(req.ServiceName)))
-	body.WriteString(fmt.Sprintf("Дата: %s\n", formatBookingDate(req.RequestedDate)))
+	dateStr, timeStr := bookingDateTimeLines(req)
+	body.WriteString(fmt.Sprintf("Дата: %s\n", escapeHTML(dateStr)))
+	if timeStr != "" {
+		body.WriteString(fmt.Sprintf("Время: %s\n", escapeHTML(timeStr)))
+	}
 
 	switch req.Status {
 	case "pending":

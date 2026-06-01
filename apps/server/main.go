@@ -129,6 +129,7 @@ func main() {
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/booking/availability", miniApp(bookingHandler.GetPublicAvailability))
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.ListPublicRequests))
 	http.HandleFunc("POST /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.CreatePublicRequest))
+	http.HandleFunc("PATCH /api/clinics/{clinicSlug}/booking/requests/{id}", miniApp(bookingHandler.CancelPublicRequest))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))

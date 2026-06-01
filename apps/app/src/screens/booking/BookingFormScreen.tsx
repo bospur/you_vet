@@ -15,7 +15,12 @@ import {
   shouldCollectPetAge,
 } from '../../domain/booking/rules';
 import { getApiErrorMessage } from '../../utils/apiError';
-import { formatRuPhone, phoneDigitsOnly, phoneToApi } from '../../utils/phoneMask';
+import {
+  formatRuPhone,
+  isPhoneComplete,
+  phoneDigitsOnly,
+  phoneToApi,
+} from '../../utils/phoneMask';
 import styles from './booking.module.css';
 
 export default function BookingFormScreen() {
@@ -45,6 +50,21 @@ export default function BookingFormScreen() {
 
   const parsedAge = petAge.trim() === '' ? undefined : Number(petAge);
   const ageWarning = getPetAgeWarning(rules, parsedAge);
+  const phoneComplete = isPhoneComplete(clientPhone);
+
+  const needsTime = service?.schedule_style === 'time_slots';
+
+  const formComplete = Boolean(
+    service &&
+    date &&
+    clientName.trim().length > 0 &&
+    petName.trim().length > 0 &&
+    phoneComplete &&
+    (!needsTime || Boolean(slotTime)) &&
+    (!collectAge ||
+      !ageRequired ||
+      (petAge.trim() !== '' && parsedAge !== undefined && !Number.isNaN(parsedAge))),
+  );
 
   const mutation = useMutation({
     mutationFn: createBookingRequest,
@@ -61,8 +81,6 @@ export default function BookingFormScreen() {
       notify(message, 'error');
     },
   });
-
-  const needsTime = service?.schedule_style === 'time_slots';
 
   useEffect(() => {
     if (servicesQuery.isError) notify('Не удалось загрузить услугу.', 'error');
@@ -97,8 +115,8 @@ export default function BookingFormScreen() {
     e.preventDefault();
     setFormError(null);
 
-    if (collectAge && ageRequired && (petAge.trim() === '' || Number.isNaN(parsedAge))) {
-      const msg = 'Укажите возраст питомца';
+    if (!formComplete) {
+      const msg = 'Заполните все поля формы';
       setFormError(msg);
       notify(msg, 'error');
       return;
@@ -115,12 +133,8 @@ export default function BookingFormScreen() {
     });
   };
 
-  const canSubmit =
-    clientName.trim().length > 0 &&
-    petName.trim().length > 0 &&
-    (!needsTime || Boolean(slotTime)) &&
-    (!collectAge || !ageRequired || (petAge.trim() !== '' && !Number.isNaN(parsedAge!))) &&
-    !mutation.isPending;
+  const canSubmit = formComplete && !mutation.isPending;
+  const showSubmitHint = !formComplete && !mutation.isPending;
 
   return (
     <div className={styles.wrapper}>
@@ -144,13 +158,12 @@ export default function BookingFormScreen() {
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             autoComplete="name"
-            required
           />
         </label>
         <label className={styles.field}>
-          <span className={styles.label}>Телефон</span>
+          <span className={styles.label}>Телефон *</span>
           <input
-            className={styles.input}
+            className={`${styles.input} ${phoneComplete ? styles.inputPhoneComplete : styles.inputPhone}`}
             type="tel"
             value={formatRuPhone(clientPhone)}
             onChange={(e) => setClientPhone(phoneDigitsOnly(e.target.value))}
@@ -165,7 +178,6 @@ export default function BookingFormScreen() {
             className={styles.input}
             value={petName}
             onChange={(e) => setPetName(e.target.value)}
-            required
           />
         </label>
         {collectAge && (
@@ -183,10 +195,12 @@ export default function BookingFormScreen() {
                 const v = e.target.value.replace(/\D/g, '').slice(0, 2);
                 setPetAge(v);
               }}
-              required={ageRequired}
             />
             {ageWarning && <p className={styles.ageWarn}>{ageWarning}</p>}
           </label>
+        )}
+        {showSubmitHint && (
+          <p className={styles.submitHint}>Заполните все поля формы, чтобы отправить заявку</p>
         )}
         <button type="submit" className={styles.submit} disabled={!canSubmit}>
           {mutation.isPending ? 'Отправка…' : 'Отправить заявку'}

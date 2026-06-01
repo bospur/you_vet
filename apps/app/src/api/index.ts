@@ -175,3 +175,8 @@ export const fetchMyBookingRequests = () =>
 
 export const createBookingRequest = (input: CreateBookingRequestInput) =>
   apiClient.post<BookingRequest>('/booking/requests', input).then((r) => r.data);
+
+export const cancelBookingRequest = (id: number) =>
+  apiClient
+    .patch<BookingRequest>(`/booking/requests/${id}`, { status: 'cancelled' })
+    .then((r) => r.data);

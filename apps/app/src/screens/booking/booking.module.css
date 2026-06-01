@@ -16,11 +16,24 @@
   margin-bottom: 4px;
 }
 
+.listGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .sectionTitle {
   font-size: 13px;
   font-weight: 700;
   color: var(--vet-accent);
-  padding: 8px 4px 2px;
+  padding: 4px 4px 0;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -175,6 +188,71 @@
 .input:focus {
   border-color: var(--vet-accent);
   box-shadow: 0 0 0 3px var(--vet-accent-soft-md);
+}
+
+.inputPhone {
+  color: var(--tgui--hint_color);
+}
+
+.inputPhoneComplete {
+  color: var(--tgui--text_color);
+}
+
+.inputPhone::placeholder {
+  color: var(--tgui--hint_color);
+  opacity: 0.45;
+}
+
+.submitHint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tgui--hint_color);
+  text-align: center;
+}
+
+.cancelRequestBtn {
+  margin-top: 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #c62828;
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.35);
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.cancelRequestBtn:disabled {
+  opacity: 0.5;
+}
+
+.cancelConfirmRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cancelConfirmRow button {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.cancelYes {
+  background: #c62828;
+  color: #fff;
+}
+
+.cancelNo {
+  background: var(--vet-muted-bg);
+  color: var(--tgui--text_color);
 }
 
 .submit {

@@ -23,3 +23,7 @@ export function phoneToApi(digits: string): string {
   const d = phoneDigitsOnly(digits);
   return d.length === 0 ? '' : `+7${d}`;
 }
+
+export function isPhoneComplete(digits: string): boolean {
+  return phoneDigitsOnly(digits).length === 10;
+}

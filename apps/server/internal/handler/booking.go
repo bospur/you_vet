@@ -507,12 +507,20 @@ func bookingRequestError(w http.ResponseWriter, err error) bool {
 		http.Error(w, "не найдено", http.StatusNotFound)
 	case errors.Is(err, repository.ErrBookingCapacityFull):
 		http.Error(w, "нет свободных мест на эту дату", http.StatusConflict)
+	case errors.Is(err, repository.ErrBookingDuplicatePet):
+		http.Error(w, "На эту услугу в этот день уже есть запись с такой кличкой", http.StatusConflict)
+	case errors.Is(err, repository.ErrBookingDuplicateSlot):
+		http.Error(w, "Вы уже записаны на это время", http.StatusConflict)
+	case errors.Is(err, repository.ErrBookingLimitPerService):
+		http.Error(w, "Достигнут лимит заявок на эту услугу в этот день. Запишите другого питомца с другой кличкой или отмените лишнюю заявку", http.StatusTooManyRequests)
+	case errors.Is(err, repository.ErrBookingLimitPerDay):
+		http.Error(w, "Достигнут лимит заявок на этот день", http.StatusTooManyRequests)
 	case errors.Is(err, repository.ErrBookingAntispam):
 		http.Error(w, "превышен лимит заявок", http.StatusTooManyRequests)
 	case errors.Is(err, repository.ErrBookingInvalidDate):
 		http.Error(w, "дата недоступна для записи", http.StatusBadRequest)
 	case errors.Is(err, repository.ErrBookingInvalidStatus):
-		http.Error(w, "недопустимый переход статуса", http.StatusBadRequest)
+		http.Error(w, "эту заявку нельзя отменить", http.StatusBadRequest)
 	case errors.Is(err, repository.ErrBookingServiceInactive):
 		http.Error(w, "услуга недоступна", http.StatusBadRequest)
 	default:
@@ -826,4 +834,48 @@ func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Requ
 		go h.notifier.NotifyBookingRequestCreated(clinicID, *req)
 	}
 	writeJSON(w, http.StatusCreated, toPublicRequest(*req))
+}
+
+// CancelPublicRequest — PATCH /api/clinics/{clinicSlug}/booking/requests/{id} (клиент отменяет свою заявку)
+func (h *BookingHandler) CancelPublicRequest(w http.ResponseWriter, r *http.Request) {
+	clinicID, ok := h.clinicIDFromSlug(w, r)
+	if !ok {
+		return
+	}
+	visit, ok := middleware.ParseInitDataUser(middleware.InitDataFromRequest(r))
+	if !ok {
+		http.Error(w, "требуется авторизация Telegram", http.StatusUnauthorized)
+		return
+	}
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "id обязателен", http.StatusBadRequest)
+		return
+	}
+
+	existing, err := h.bookingRepo.GetRequestByID(clinicID, id)
+	if err != nil {
+		log.Printf("ошибка чтения заявки: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if existing == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+	prevStatus := existing.Status
+
+	req, err := h.bookingRepo.CancelRequestByTelegramUser(clinicID, id, visit.TelegramUserID)
+	if err != nil {
+		if bookingRequestError(w, err) {
+			return
+		}
+		log.Printf("ошибка отмены заявки клиентом: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if h.notifier != nil {
+		go h.notifier.NotifyBookingRequestUpdated(clinicID, *req, prevStatus)
+	}
+	writeJSON(w, http.StatusOK, toPublicRequest(*req))
 }
