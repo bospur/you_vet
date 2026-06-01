@@ -5,14 +5,34 @@ import * as v from 'valibot';
 import { useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { loginRequest } from '../../../../data/source/auth';
+import type { AuthUserResponse } from '../../../../data/source/auth';
 import { useAuth } from '../../../../shared/config/AuthContext';
 import { useNotification } from '../../../../shared/ui/Notification/NotificationContext';
 import type { LoginFormValues } from '../../domain/types';
+import {
+  loadRememberedLogin,
+  loadRememberPreference,
+  saveRememberLogin,
+} from '../../domain/rememberLogin';
 
 const schema = v.object({
   login: v.pipe(v.string(), v.minLength(1, 'Введите логин')),
   password: v.pipe(v.string(), v.minLength(1, 'Введите пароль')),
+  rememberMe: v.boolean(),
 });
+
+function homePathForRole(role: AuthUserResponse['role']): string {
+  switch (role) {
+    case 'manager':
+      return '/booking';
+    case 'groomer':
+      return '/grooming';
+    case 'admin':
+      return '/dashboard';
+    default:
+      return '/animals';
+  }
+}
 
 export function useLoginFormLogic() {
   const { establishSession } = useAuth();
@@ -22,16 +42,25 @@ export function useLoginFormLogic() {
 
   const form = useForm<LoginFormValues>({
     resolver: valibotResolver(schema),
-    defaultValues: { login: '', password: '' },
+    defaultValues: {
+      login: loadRememberedLogin(),
+      password: '',
+      rememberMe: loadRememberPreference() || Boolean(loadRememberedLogin()),
+    },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
     setLoading(true);
     try {
-      const { user } = await loginRequest(values);
+      const { user } = await loginRequest({
+        login: values.login,
+        password: values.password,
+        remember_me: values.rememberMe,
+      });
+      saveRememberLogin(values.login, values.rememberMe);
       establishSession(user);
       notify('Вход выполнен', 'success');
-      navigate('/dashboard');
+      navigate(homePathForRole(user.role));
     } catch (err) {
       if (isAxiosError(err)) {
         const status = err.response?.status;
