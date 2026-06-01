@@ -62,6 +62,7 @@ func main() {
 	doctorRepo := repository.NewDoctorRepository(database)
 	groomingRepo := repository.NewGroomingRepository(database)
 	bookingRepo := repository.NewBookingRepository(database)
+	questionRepo := repository.NewClientQuestionRepository(database)
 	clinicInfoRepo := repository.NewClinicInfoRepository(database)
 	telegramUserRepo := repository.NewTelegramUserRepository(database)
 
@@ -106,13 +107,14 @@ func main() {
 		appURL = "https://app.snzbeachvolleyball25.ru"
 	}
 
-	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo)
+	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo, questionRepo)
 	if err != nil {
 		log.Fatalf("ошибка инициализации бота: %v", err)
 	}
 	go tgBot.Start()
 
 	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
+	questionHandler := handler.NewClientQuestionHandler(questionRepo, tgBot)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
@@ -130,6 +132,7 @@ func main() {
 	http.HandleFunc("GET /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.ListPublicRequests))
 	http.HandleFunc("POST /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.CreatePublicRequest))
 	http.HandleFunc("PATCH /api/clinics/{clinicSlug}/booking/requests/{id}", miniApp(bookingHandler.CancelPublicRequest))
+	http.HandleFunc("POST /api/clinics/{clinicSlug}/questions", miniApp(questionHandler.CreatePublicQuestion))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))

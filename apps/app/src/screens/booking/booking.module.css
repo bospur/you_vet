@@ -219,6 +219,32 @@
   box-shadow: 0 0 0 3px var(--vet-accent-soft-md);
 }
 
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  font-family: inherit;
+  color: var(--tgui--text_color);
+  background: var(--tgui--bg_color);
+  border: 1.5px solid var(--vet-accent-border-strong);
+  border-radius: 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.textarea:focus {
+  border-color: var(--vet-accent);
+  box-shadow: 0 0 0 3px var(--vet-accent-soft-md);
+}
+
+.charCount {
+  font-size: 12px;
+  color: var(--tgui--hint_color);
+}
+
 .inputPhone {
   color: var(--tgui--hint_color);
 }

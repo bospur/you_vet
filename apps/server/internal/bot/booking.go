@@ -81,7 +81,7 @@ func (b *Bot) handleLinkStaff(c tele.Context) error {
 
 	log.Printf("staff chat linked: clinic=%d chat_id=%d title=%q", b.clinicID, chatID, chat.Title)
 	return c.Send(fmt.Sprintf(
-		"✅ Чат «%s» привязан для уведомлений о записи.\n\nСюда будут приходить новые заявки и изменения статусов.",
+		"✅ Чат «%s» привязан для уведомлений.\n\nСюда будут приходить заявки на запись, вопросы клиентов и изменения статусов.",
 		chat.Title,
 	))
 }

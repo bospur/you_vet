@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-01 (вечер, передача)
+> Последнее обновление: 2026-06-01 (передача, C1 polish + вопросы)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -76,13 +76,16 @@
 | BOOK-05 | 🟡 | C1 Mini App — запись, слоты, отмена, UX | **fixed в коде 2026-06-01** — ждёт deploy app |
 | BOOK-06 | 🟡 | Миграция `016_booking_schedule_style` | **в коде** — применить на VPS с deploy server |
 | BOOK-07 | 🟡 | Бот без времени в уведомлениях | **fixed 2026-06-01** — deploy server |
+| BOOK-08 | 🔴 | Отмена заявки из Mini App → 500 (`handled_by_user_id=0`) | **fixed 2026-06-01** — deploy server |
+| BOOK-09 | ⚪ | C1: прошедшие слоты на сегодня; вкладки «Мои заявки» | **fixed 2026-06-01** — deploy app |
+| QST-01 | ⚪ | «Задать вопрос» Mini App → чат врачей → ответ в бот | **fixed в коде 2026-06-01** — миграция **017**, deploy server+app |
 | INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../deployment.md) § Идеи |
 | INF-07 | ⚪ | Упрощённый error tracking (свой «мини-Sentry») | planned — fingerprint, booking/auth/upload |
 | INF-08 | ⚪ | Роль `superadmin` (разработчик платформы) | planned — отдельно от `admin` клиники |
 
 ## Следующие шаги
 
-1. **Deploy server + app + admin** (BOOK-01, 005–007, 016)
-2. Smoke C1 и настройка услуг (УЗИ по времени, лимиты 2 кота/день)
+1. **Deploy server + app** (BOOK-01, 005–009, 016, QST-01 / 017)
+2. Smoke C1 + вопросы; BotFather Group Privacy off
 3. **ADM-02** форма заявки в admin
 4. PRD-04 — `analytics_events`

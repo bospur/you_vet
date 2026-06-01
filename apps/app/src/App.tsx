@@ -18,6 +18,7 @@ import BookingServicesScreen from './screens/booking/BookingServicesScreen';
 import BookingDateScreen from './screens/booking/BookingDateScreen';
 import BookingFormScreen from './screens/booking/BookingFormScreen';
 import BookingRequestsScreen from './screens/booking/BookingRequestsScreen';
+import QuestionScreen from './screens/QuestionScreen';
 
 function BackButtonHandler() {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomeScreen />} />
+          <Route path="/question" element={<QuestionScreen />} />
           <Route path="/animals" element={<AnimalsScreen />} />
           <Route path="/animals/:animalSlug/articles" element={<ArticlesScreen />} />
           <Route path="/articles/:articleSlug" element={<ArticleScreen />} />
