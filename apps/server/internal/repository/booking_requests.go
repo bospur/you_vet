@@ -185,6 +185,45 @@ func (r *BookingRepository) countActiveBookingsForDate(
 	return count, err
 }
 
+func (r *BookingRepository) countActiveBookingsForSlot(
+	tx *sql.Tx,
+	clinicID int,
+	svc *BookingServiceType,
+	date, slotTime string,
+	excludeRequestID int,
+) (int, error) {
+	target := bookingTargetFromService(svc)
+	slotTime = normalizeSlotKey(slotTime)
+	var count int
+	var err error
+
+	if target.capacityGroup != nil {
+		err = tx.QueryRow(`
+			SELECT COUNT(*)
+			FROM booking_requests br
+			JOIN booking_service_types st ON st.id = br.service_type_id
+			WHERE br.clinic_id = $1
+			  AND br.requested_date = $2::date
+			  AND br.status IN ('pending', 'confirmed')
+			  AND st.capacity_group = $3
+			  AND COALESCE(br.slot_time::text, '') LIKE $4 || '%'
+			  AND ($5 = 0 OR br.id <> $5)
+		`, clinicID, date, *target.capacityGroup, slotTime, excludeRequestID).Scan(&count)
+	} else {
+		err = tx.QueryRow(`
+			SELECT COUNT(*)
+			FROM booking_requests br
+			WHERE br.clinic_id = $1
+			  AND br.service_type_id = $2
+			  AND br.requested_date = $3::date
+			  AND br.status IN ('pending', 'confirmed')
+			  AND COALESCE(br.slot_time::text, '') LIKE $4 || '%'
+			  AND ($5 = 0 OR br.id <> $5)
+		`, clinicID, *target.serviceTypeID, date, slotTime, excludeRequestID).Scan(&count)
+	}
+	return count, err
+}
+
 func (r *BookingRepository) loadBookedCounts(
 	clinicID, serviceTypeID int,
 	from, to time.Time,
@@ -362,7 +401,7 @@ func (r *BookingRepository) validateRequestDate(
 	if err != nil {
 		return nil, daySchedule{}, err
 	}
-	if booked >= sched.max {
+	if sched.slotMode != "fixed_times" && booked >= sched.max {
 		return nil, daySchedule{}, ErrBookingCapacityFull
 	}
 	if err := tx.Rollback(); err != nil {
@@ -380,7 +419,7 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 		return nil, errors.New("имя клиента и кличка обязательны")
 	}
 
-	svc, _, err := r.validateRequestDate(clinicID, input.ServiceTypeID, input.RequestedDate, 0)
+	svc, sched, err := r.validateRequestDate(clinicID, input.ServiceTypeID, input.RequestedDate, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -391,27 +430,28 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 	}
 	defer tx.Rollback()
 
-	booked, err := r.countActiveBookingsForDate(tx, clinicID, svc, input.RequestedDate, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	weekly, windows, overrides, _, err := r.loadScheduleData(
-		clinicID, input.ServiceTypeID,
-		mustParseDate(input.RequestedDate), mustParseDate(input.RequestedDate),
-	)
-	if err != nil {
-		return nil, err
-	}
-	d := mustParseDate(input.RequestedDate)
-	dateKey := d.Format("2006-01-02")
-	var ov *BookingDayOverride
-	if o, ok := overrides[dateKey]; ok {
-		ov = &o
-	}
-	sched, open := resolveDaySchedule(d, weekly, windows, ov)
-	if !open || booked >= sched.max {
-		return nil, ErrBookingCapacityFull
+	var slotTimeArg *string
+	if sched.slotMode == "fixed_times" {
+		if input.SlotTime == nil || strings.TrimSpace(*input.SlotTime) == "" {
+			return nil, errors.New("укажите время приёма")
+		}
+		normalized := normalizeSlotKey(*input.SlotTime)
+		slotCount, err := r.countActiveBookingsForSlot(tx, clinicID, svc, input.RequestedDate, normalized, 0)
+		if err != nil {
+			return nil, err
+		}
+		if slotCount >= 1 {
+			return nil, ErrBookingCapacityFull
+		}
+		slotTimeArg = &normalized
+	} else {
+		booked, err := r.countActiveBookingsForDate(tx, clinicID, svc, input.RequestedDate, 0)
+		if err != nil {
+			return nil, err
+		}
+		if booked >= sched.max {
+			return nil, ErrBookingCapacityFull
+		}
 	}
 
 	if err := r.checkAntispam(tx, clinicID, input.ServiceTypeID, input.RequestedDate,
@@ -436,7 +476,7 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 		          client_name, client_phone, pet_name, pet_species, pet_age_years,
 		          telegram_user_id, status, staff_note, reject_reason,
 		          handled_by_user_id, rules_ack, created_at, updated_at
-	`, clinicID, input.ServiceTypeID, input.RequestedDate, input.SlotTime,
+	`, clinicID, input.ServiceTypeID, input.RequestedDate, slotTimeArg,
 		strings.TrimSpace(input.ClientName), phone, strings.TrimSpace(input.PetName),
 		input.PetSpecies, input.PetAgeYears, input.TelegramUserID, status,
 		normalizeRules(input.RulesAck))

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import {
@@ -16,6 +16,8 @@ export default function BookingFormScreen() {
   const queryClient = useQueryClient();
   const notify = useNotification();
   const { serviceId, date } = useParams<{ serviceId: string; date: string }>();
+  const [searchParams] = useSearchParams();
+  const slotTime = searchParams.get('time') ?? undefined;
   const serviceTypeId = Number(serviceId);
 
   const [clientName, setClientName] = useState('');
@@ -64,12 +66,25 @@ export default function BookingFormScreen() {
     );
   }
 
+  const needsTime = service.schedule_style === 'time_slots';
+  if (needsTime && !slotTime) {
+    return (
+      <div className={styles.wrapper}>
+        <p className={styles.empty}>Выберите время приёма</p>
+        <button type="button" className={styles.back} onClick={() => navigate(`/booking/new/${serviceTypeId}/date`)}>
+          ‹ К выбору времени
+        </button>
+      </div>
+    );
+  }
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const age = petAge.trim() ? Number(petAge) : undefined;
     mutation.mutate({
       service_type_id: serviceTypeId,
       requested_date: date,
+      ...(slotTime ? { slot_time: slotTime } : {}),
       client_name: clientName.trim(),
       client_phone: clientPhone.trim(),
       pet_name: petName.trim(),
@@ -80,6 +95,7 @@ export default function BookingFormScreen() {
   const canSubmit =
     clientName.trim().length > 0 &&
     petName.trim().length > 0 &&
+    (!needsTime || Boolean(slotTime)) &&
     !mutation.isPending;
 
   return (
@@ -87,7 +103,10 @@ export default function BookingFormScreen() {
       <p className={styles.header}>Заявка</p>
       <div className={`${styles.card} ${styles.cardStatic}`}>
         <span className={styles.cardTitle}>{service.name}</span>
-        <span className={styles.cardMeta}>{formatBookingDate(date)}</span>
+        <span className={styles.cardMeta}>
+          {formatBookingDate(date)}
+          {slotTime ? ` · ${slotTime.slice(0, 5)}` : ''}
+        </span>
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>

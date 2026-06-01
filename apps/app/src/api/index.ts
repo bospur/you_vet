@@ -103,9 +103,17 @@ export interface BookingServiceType {
   species_filter: 'any' | 'cats_only';
   default_duration_min: number;
   booking_mode: 'instant' | 'pending_request';
+  schedule_style: 'day_capacity' | 'dropoff' | 'time_slots';
   instructions_client: string | null;
   rules: unknown;
   sort_order: number;
+}
+
+export interface BookingTimeSlot {
+  time: string;
+  booked_slots: number;
+  max_slots: number;
+  remaining: number;
 }
 
 export interface BookingAvailabilityDay {
@@ -117,6 +125,8 @@ export interface BookingAvailabilityDay {
   intake_from: string | null;
   intake_to: string | null;
   pickup_after: string | null;
+  slot_mode: string;
+  time_slots?: BookingTimeSlot[];
 }
 
 export interface BookingAvailability {
@@ -142,6 +152,7 @@ export interface BookingRequest {
 export interface CreateBookingRequestInput {
   service_type_id: number;
   requested_date: string;
+  slot_time?: string;
   client_name: string;
   client_phone: string;
   pet_name: string;

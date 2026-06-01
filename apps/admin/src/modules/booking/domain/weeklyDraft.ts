@@ -3,22 +3,23 @@ import { DAY_DISPLAY_ORDER } from './days';
 export type DayDraft = {
   enabled: boolean;
   max_per_day: number;
+  slot_mode: 'day_capacity' | 'fixed_times';
   intake_from: string;
   intake_to: string;
   pickup_after: string;
 };
 
-export const DEFAULT_DAY: Omit<DayDraft, 'enabled'> = {
+export const DEFAULT_DAY: Omit<DayDraft, 'enabled' | 'slot_mode'> = {
   max_per_day: 10,
   intake_from: '12:00',
   intake_to: '13:00',
   pickup_after: '17:00',
 };
 
-export function emptyWeeklyDraft(): Record<number, DayDraft> {
+export function emptyWeeklyDraft(slotMode: 'day_capacity' | 'fixed_times' = 'day_capacity'): Record<number, DayDraft> {
   const d: Record<number, DayDraft> = {};
   for (const day of DAY_DISPLAY_ORDER) {
-    d[day] = { enabled: false, ...DEFAULT_DAY };
+    d[day] = { enabled: false, slot_mode: slotMode, ...DEFAULT_DAY };
   }
   return d;
 }
@@ -30,15 +31,18 @@ export function weeklyDraftFromRules(
     intake_from: string | null;
     intake_to: string | null;
     pickup_after: string | null;
+    slot_mode: string;
   }[],
 ): Record<number, DayDraft> {
-  const d = emptyWeeklyDraft();
+  const slotMode = weekly.some((r) => r.slot_mode === 'fixed_times') ? 'fixed_times' : 'day_capacity';
+  const d = emptyWeeklyDraft(slotMode);
   for (const rule of weekly) {
     d[rule.day_of_week] = {
       enabled: true,
       max_per_day: rule.max_per_day,
-      intake_from: (rule.intake_from ?? '12:00').slice(0, 5),
-      intake_to: (rule.intake_to ?? '13:00').slice(0, 5),
+      slot_mode: rule.slot_mode === 'fixed_times' ? 'fixed_times' : 'day_capacity',
+      intake_from: (rule.intake_from ?? '09:00').slice(0, 5),
+      intake_to: (rule.intake_to ?? '18:00').slice(0, 5),
       pickup_after: (rule.pickup_after ?? '17:00').slice(0, 5),
     };
   }
@@ -54,6 +58,7 @@ export function weeklyDraftsEqual(a: Record<number, DayDraft>, b: Record<number,
     if (!da.enabled) continue;
     if (
       da.max_per_day !== db.max_per_day
+      || da.slot_mode !== db.slot_mode
       || da.intake_from !== db.intake_from
       || da.intake_to !== db.intake_to
       || da.pickup_after !== db.pickup_after

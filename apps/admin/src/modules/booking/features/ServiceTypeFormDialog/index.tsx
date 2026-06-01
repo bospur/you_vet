@@ -17,6 +17,10 @@ import {
   useTheme,
 } from '@mui/material';
 import type { BookingServiceType, BookingServiceTypeInput } from '../../../../data/source/booking';
+import {
+  SCHEDULE_STYLE_LABELS,
+  type ScheduleStyle,
+} from '../../domain/scheduleStyle';
 
 const schema = v.object({
   name: v.pipe(v.string(), v.minLength(1, 'Название обязательно')),
@@ -25,6 +29,8 @@ const schema = v.object({
   capacity_group: v.string(),
   default_duration_min: v.pipe(v.number(), v.minValue(1, 'Минимум 1 минута')),
   booking_mode: v.picklist(['instant', 'pending_request']),
+  schedule_style: v.picklist(['day_capacity', 'dropoff', 'time_slots']),
+  seed_max_per_day: v.optional(v.pipe(v.number(), v.minValue(1))),
   instructions_client: v.string(),
   is_active: v.boolean(),
   sort_order: v.number(),
@@ -37,6 +43,8 @@ type FormValues = {
   capacity_group: string;
   default_duration_min: number;
   booking_mode: BookingServiceType['booking_mode'];
+  schedule_style: ScheduleStyle;
+  seed_max_per_day?: number;
   instructions_client: string;
   is_active: boolean;
   sort_order: number;
@@ -50,8 +58,9 @@ interface Props {
   onSubmit: (values: BookingServiceTypeInput) => void;
 }
 
-function toInput(values: FormValues): BookingServiceTypeInput {
+function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput {
   const group = values.capacity_group.trim();
+  const seed = values.seed_max_per_day;
   return {
     name: values.name.trim(),
     category: values.category,
@@ -59,6 +68,8 @@ function toInput(values: FormValues): BookingServiceTypeInput {
     capacity_group: group === '' ? null : group,
     default_duration_min: values.default_duration_min,
     booking_mode: values.booking_mode,
+    schedule_style: values.schedule_style,
+    seed_max_per_day: isCreate && seed && seed > 0 ? seed : undefined,
     instructions_client: values.instructions_client.trim() || null,
     rules: [],
     is_active: values.is_active,
@@ -77,6 +88,8 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
       capacity_group: '',
       default_duration_min: 30,
       booking_mode: 'pending_request',
+      schedule_style: 'day_capacity',
+      seed_max_per_day: undefined,
       instructions_client: '',
       is_active: true,
       sort_order: 0,
@@ -87,10 +100,14 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
   const capacityGroup = watch('capacity_group');
 
   useEffect(() => {
-    if (category === 'surgery' && !capacityGroup) {
-      setValue('capacity_group', 'cat_surgery');
+    if (category === 'surgery') {
+      if (!capacityGroup) setValue('capacity_group', 'cat_surgery');
+      setValue('schedule_style', 'dropoff');
+      if (!initial) setValue('seed_max_per_day', 10);
+    } else if (category === 'uzi') {
+      setValue('schedule_style', 'day_capacity');
     }
-  }, [category, capacityGroup, setValue]);
+  }, [category, capacityGroup, setValue, initial]);
 
   useEffect(() => {
     if (open) {
@@ -103,6 +120,8 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               capacity_group: initial.capacity_group ?? '',
               default_duration_min: initial.default_duration_min,
               booking_mode: initial.booking_mode,
+              schedule_style: initial.schedule_style,
+              seed_max_per_day: undefined,
               instructions_client: initial.instructions_client ?? '',
               is_active: initial.is_active,
               sort_order: initial.sort_order,
@@ -114,6 +133,8 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               capacity_group: '',
               default_duration_min: 30,
               booking_mode: 'pending_request',
+              schedule_style: 'day_capacity',
+              seed_max_per_day: undefined,
               instructions_client: '',
               is_active: true,
               sort_order: 0,
@@ -155,6 +176,39 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               </TextField>
             )}
           />
+          <Controller
+            name="schedule_style"
+            control={control}
+            render={({ field }) => (
+              <TextField {...field} select label="Тип расписания" fullWidth>
+                {(Object.keys(SCHEDULE_STYLE_LABELS) as ScheduleStyle[]).map((key) => (
+                  <MenuItem key={key} value={key}>{SCHEDULE_STYLE_LABELS[key]}</MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
+          {(capacityGroup || category === 'surgery') && !initial && (
+            <Controller
+              name="seed_max_per_day"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                  value={field.value ?? ''}
+                  type="number"
+                  label="Мест в день (шаблон Пн–Сб)"
+                  fullWidth
+                  inputProps={{ min: 1 }}
+                  helperText={
+                    capacityGroup
+                      ? `Общий лимит для группы «${capacityGroup}» — настраивается в «Расписание»`
+                      : 'Создаст шаблон недели при первом сохранении'
+                  }
+                />
+              )}
+            />
+          )}
           <Controller
             name="capacity_group"
             control={control}
@@ -234,7 +288,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>Отмена</Button>
-        <Button variant="contained" disabled={loading} onClick={handleSubmit((v) => onSubmit(toInput(v)))}>
+        <Button variant="contained" disabled={loading} onClick={handleSubmit((v) => onSubmit(toInput(v, !initial)))}>
           {initial ? 'Сохранить' : 'Создать'}
         </Button>
       </DialogActions>

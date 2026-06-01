@@ -45,6 +45,8 @@ export function BookingServicesPanel() {
     mutationFn: createBookingServiceType,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['booking-service-types'] });
+      qc.invalidateQueries({ queryKey: ['booking-weekly'] });
+      qc.invalidateQueries({ queryKey: ['booking-availability'] });
       setDialog({ open: false, item: null });
       notify('Услуга создана', 'success');
     },
