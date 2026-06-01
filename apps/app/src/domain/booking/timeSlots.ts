@@ -16,6 +16,28 @@ function formatClock(totalMin: number): string {
   return `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
 }
 
+function clockToMinutes(s: string): number | null {
+  const c = parseClock(s);
+  if (!c) return null;
+  return c.hour * 60 + c.min;
+}
+
+/** Локальная дата YYYY-MM-DD (для сравнения с датой записи). */
+export function localDateISO(now: Date = new Date()): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Слот уже начался или прошёл (по локальному времени устройства). */
+export function isSlotTimeInPast(slotTime: string, now: Date = new Date()): boolean {
+  const slotMin = clockToMinutes(slotTime);
+  if (slotMin === null) return true;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  return slotMin <= nowMin;
+}
+
 /** Генерация слотов по окну приёма (как на сервере). */
 export function generateSlotTimes(from: string, to: string, durationMin: number): string[] {
   const duration = durationMin > 0 ? durationMin : 30;
@@ -36,17 +58,26 @@ export function generateSlotTimes(from: string, to: string, durationMin: number)
 export function availableSlotsForDay(
   day: BookingAvailabilityDay,
   durationMin: number,
+  now: Date = new Date(),
 ): BookingTimeSlot[] {
   const fromApi = (day.time_slots ?? []).filter((s) => s.remaining > 0);
-  if (fromApi.length > 0) return fromApi;
+  let slots: BookingTimeSlot[];
+  if (fromApi.length > 0) {
+    slots = fromApi;
+  } else if (!day.intake_from || !day.intake_to) {
+    slots = [];
+  } else {
+    const times = generateSlotTimes(day.intake_from, day.intake_to, durationMin);
+    slots = times.map((time) => ({
+      time,
+      booked_slots: 0,
+      max_slots: 1,
+      remaining: 1,
+    }));
+  }
 
-  if (!day.intake_from || !day.intake_to) return [];
-
-  const times = generateSlotTimes(day.intake_from, day.intake_to, durationMin);
-  return times.map((time) => ({
-    time,
-    booked_slots: 0,
-    max_slots: 1,
-    remaining: 1,
-  }));
+  if (day.date === localDateISO(now)) {
+    slots = slots.filter((s) => !isSlotTimeInPast(s.time, now));
+  }
+  return slots;
 }
