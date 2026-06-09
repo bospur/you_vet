@@ -65,7 +65,8 @@
 | `клиника`, `booking-clinic` | *(часто только HTML)* | `html/booking-for-clinic.html` — сверить с md фазы 5 / решениями |
 | `roadmap` | `md/mobile/roadmap.md` + контекст | `html/roadmap.html` |
 | `аудит` | `md/general/audit.md` | `html/audit.html` |
-| `дизайн` | `md/general/design-brief.md` | `html/design-brief.html` |
+| `дизайн` | `md/general/design-brief.md` | *(только md, с портала снят)* |
+| `rustore`, `ветпрактика` | `md/mobile/rustore-guide.md` | `html/rustore-app.html` |
 | `мобайл` | `md/mobile/*.md` | `html/mobile.html` |
 | `dev`, `проект` | `md/general/architecture.md`, `README.md` | `html/project-for-devs.html` |
 | `деплой` | `md/general/deployment.md` | *(страницы нет — при крупных изменениях добавить блок в `project-for-devs.html` или завести `deployment.html`)* |

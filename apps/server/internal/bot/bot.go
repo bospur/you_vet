@@ -24,9 +24,11 @@ type Bot struct {
 	animalRepo  *repository.AnimalRepository
 	articleRepo *repository.ArticleRepository
 	doctorRepo  *repository.DoctorRepository
-	bookingRepo *repository.BookingRepository
-	questionRepo *repository.ClientQuestionRepository
-	questionPending map[string]pendingQuestionReply
+	bookingRepo      *repository.BookingRepository
+	questionRepo     *repository.ClientQuestionRepository
+	mobileRepo       *repository.MobileAuthRepository
+	telegramUserRepo *repository.TelegramUserRepository
+	questionPending  map[string]pendingQuestionReply
 	questionPendingMu sync.Mutex
 }
 
@@ -40,6 +42,8 @@ func New(
 	doctorRepo *repository.DoctorRepository,
 	bookingRepo *repository.BookingRepository,
 	questionRepo *repository.ClientQuestionRepository,
+	mobileRepo *repository.MobileAuthRepository,
+	telegramUserRepo *repository.TelegramUserRepository,
 ) (*Bot, error) {
 	pref := tele.Settings{
 		Token:  token,
@@ -85,9 +89,11 @@ func New(
 		animalRepo:  animalRepo,
 		articleRepo: articleRepo,
 		doctorRepo:  doctorRepo,
-		bookingRepo:     bookingRepo,
-		questionRepo:    questionRepo,
-		questionPending: make(map[string]pendingQuestionReply),
+		bookingRepo:      bookingRepo,
+		questionRepo:     questionRepo,
+		mobileRepo:       mobileRepo,
+		telegramUserRepo: telegramUserRepo,
+		questionPending:  make(map[string]pendingQuestionReply),
 	}
 
 	bot.registerHandlers()
@@ -130,12 +136,19 @@ func (b *Bot) registerHandlers() {
 	// Обработчик Inline-кнопок (кнопки прямо в сообщении)
 	b.tele.Handle(tele.OnCallback, b.handleCallback)
 
+	// Привязка телефона для mobile app
+	b.tele.Handle(tele.OnContact, b.handleContact)
+
 	// Ответы врачей на вопросы клиентов (чат врачей)
 	b.tele.Handle(tele.OnText, b.handleStaffQuestionText)
 }
 
 // handleStart обрабатывает /start
 func (b *Bot) handleStart(c tele.Context) error {
+	if c.Message() != nil && c.Message().Payload == "link" {
+		return b.promptLinkContact(c)
+	}
+
 	text := "🏥 *Ветеринарная первая помощь*\n\n" +
 		"Здесь вы можете получить информацию о первой помощи вашему питомцу в нерабочие часы клиники.\n\n" +
 		"Используйте кнопки ниже для навигации."

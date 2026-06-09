@@ -1,0 +1,37 @@
+.tabBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: calc(var(--vet-tab-height) + var(--vet-safe-bottom));
+  padding-bottom: var(--vet-safe-bottom);
+  background: var(--vet-tab-bar-bg);
+  border-top: 1px solid var(--vet-tab-bar-border);
+  z-index: 20;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  color: var(--vet-text-hint);
+  font-size: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tabActive {
+  color: var(--vet-accent);
+  font-weight: 600;
+}
+
+.icon {
+  font-size: 20px;
+  line-height: 1;
+}

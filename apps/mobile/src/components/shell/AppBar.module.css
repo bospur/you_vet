@@ -1,0 +1,68 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--vet-app-bar-height);
+  padding: 8px var(--vet-page-padding);
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--vet-tab-bar-border);
+  background: var(--vet-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.titleBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--vet-text-primary);
+  font-weight: 700;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.backBtn {
+  border: none;
+  background: none;
+  color: var(--vet-accent);
+  font-size: 16px;
+  padding: 0;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.center {
+  flex: 1;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--vet-text-body);
+}
+
+.phoneBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--vet-surface-card);
+  color: var(--vet-icon-color);
+  text-decoration: none;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}

@@ -775,12 +775,11 @@ func (h *BookingHandler) ListPublicRequests(w http.ResponseWriter, r *http.Reque
 	if !ok {
 		return
 	}
-	visit, ok := middleware.ParseInitDataUser(middleware.InitDataFromRequest(r))
+	tgID, ok := middleware.ClientTelegramUserID(r)
 	if !ok {
-		http.Error(w, "требуется авторизация Telegram", http.StatusUnauthorized)
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
 		return
 	}
-	tgID := visit.TelegramUserID
 	list, err := h.bookingRepo.ListRequests(clinicID, repository.BookingRequestFilters{
 		TelegramUserID: &tgID,
 	})
@@ -817,8 +816,8 @@ func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if visit, ok := middleware.ParseInitDataUser(middleware.InitDataFromRequest(r)); ok {
-		input.TelegramUserID = &visit.TelegramUserID
+	if tgID, ok := middleware.ClientTelegramUserID(r); ok {
+		input.TelegramUserID = &tgID
 	}
 
 	req, err := h.bookingRepo.CreateRequest(clinicID, input)
@@ -842,9 +841,9 @@ func (h *BookingHandler) CancelPublicRequest(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	visit, ok := middleware.ParseInitDataUser(middleware.InitDataFromRequest(r))
+	tgID, ok := middleware.ClientTelegramUserID(r)
 	if !ok {
-		http.Error(w, "требуется авторизация Telegram", http.StatusUnauthorized)
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
 		return
 	}
 	id := r.PathValue("id")
@@ -865,7 +864,7 @@ func (h *BookingHandler) CancelPublicRequest(w http.ResponseWriter, r *http.Requ
 	}
 	prevStatus := existing.Status
 
-	req, err := h.bookingRepo.CancelRequestByTelegramUser(clinicID, id, visit.TelegramUserID)
+	req, err := h.bookingRepo.CancelRequestByTelegramUser(clinicID, id, tgID)
 	if err != nil {
 		if bookingRequestError(w, err) {
 			return

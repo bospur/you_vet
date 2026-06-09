@@ -2,46 +2,60 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-06-01 (C1 polish, вопросы клиентам, доки)
+## Сессия 2026-06-09 (Mobile «Ветпрактика», M0+M1, docs-портал)
 
-### Сделано в коде (push `dev` → deploy)
+### Сделано в коде (локально — **ждёт push `dev`**)
 
-**Mini App — запись (C1)**
-- [x] Отмена заявки — фикс 500 (`handled_by_user_id` при отмене клиентом)
-- [x] Слоты на **сегодня**: не показывать прошедшее время
-- [x] «Мои заявки»: вкладки **Активные** / **Архив**
+**Mobile — проектирование (`docs/md/mobile/`)**
+- [x] `design-mvp.md` — scope RuStore v1, IA, UI-kit, auth, API M0, структура monorepo
+- [x] `screen-specs.md` — 21 экран (wireframes, API, навигация)
+- [x] `app-id-and-stores.md` — обучение: appId, RuStore, keystore
+- [x] `multi-tenant-notes.md` — 1 клиника/сборку, задел SaaS
+- [x] Решения: название **Ветпрактика**, appId `ru.snzbeachvolleyball25.vetpraktika`, запись в v1.0
 
-**Mini App — вопросы (новое)**
-- [x] Карточка «Задать вопрос» на главной → форма → `POST …/questions`
-- [x] Ответ врача: уведомление в **тот же чат** (`staff_chat_id`), кнопка «Ответить» или **reply** на сообщение бота → ответ клиенту в личку
+**Server — M0 mobile API**
+- [x] Миграция **019** `mobile_users`, `auth_codes`
+- [x] `POST /api/mobile/v1/auth/{request,verify,refresh}`
+- [x] `GET /api/mobile/v1/clinics/{slug}/…` — без initData, rate limit
+- [x] Booking GET/POST/PATCH через **mobile JWT** (`ClientTelegramUserID`)
+- [x] Бот: `/start link`, `OnContact`, `SendAuthCode` (OTP в TG)
+- [x] `JWT_MOBILE_SECRET` (fallback → `JWT_SECRET`)
 
-**Server**
-- [x] Миграция **017** `client_questions`
-- [x] API `POST /api/clinics/{slug}/questions` (initData, лимит 5/день, 10–2000 символов)
-- [x] Бот: `qreply` callback, ожидание текста врача в чате (15 мин)
+**Mobile app — M1 sprint 1 (`apps/mobile/`)**
+- [x] Capacitor 7 + Vite + React 18, `capacitor.config.ts`
+- [x] Shell: splash, tab bar, AppBar, главная (clinic-info), booking hub (soft gate)
+- [x] API client → `/api/mobile/v1`, auth context + token storage
+- [x] CI: build `@you-vet/mobile` в `ci.yml`
 
-**Документация**
-- [x] `передача портал запись` — context + phase-5 md/html + booking-for-clinic.html
+**Инфра / docs**
+- [x] Восстановлен **docs.snzbeachvolleyball25.ru** на новом VPS (`213.176.65.71`) — nginx + certbot
+- [x] `docs-portal-restore.md`, обновлён `deployment.md`
+- [x] `html/mobile.html` — MVP + appId (портал)
 
 ### Деплой
 
-Push `dev` → **Deploy server**, **Deploy app** (admin без изменений, если paths не задели).
+Push `dev` → **Deploy server** (миграция **019**, mobile API, бот).  
+**Deploy app/admin** — только если трогали paths (в этой сессии — нет).
 
-На VPS после server: миграции **016** (если ещё нет) и **017**.
+На VPS после server: миграция **019**.
 
-BotFather: **Group Privacy → Disable** (reply врача в группе).
+Проверить **GitHub Secret `VPS_HOST`** = `213.176.65.71` (если ещё старый IP — CI docs/admin/app не попадут на новый хост).
 
-Smoke:
-1. Запись: отмена, слоты на сегодня, вкладки заявок
-2. Вопрос: Mini App → чат врачей → «Ответить» → ответ в личку клиента
-3. Admin/booking без регрессии
+Smoke mobile API (после deploy):
+1. Бот: `t.me/VPract_bot?start=link` → поделиться контактом
+2. `POST /api/mobile/v1/auth/request` `{ "phone": "+79…" }` → код в TG
+3. `POST …/auth/verify` → JWT
+4. `GET …/clinics/default/clinic-info` без auth
+5. `GET …/booking/requests` с `Authorization: Bearer …`
+
+Локально mobile: `npm run dev --workspace=@you-vet/mobile` → http://localhost:5175
 
 ### Следующая сессия
 
-1. Prod smoke после деплоя (C1 + вопросы)
-2. **ADM-02** — форма заявки в admin (backlog)
-3. Очередь на освободившийся слот (backlog phase-5)
-4. Опционально: история вопросов в Mini App; admin-список вопросов
+1. Push `dev` + deploy server (019) + smoke auth
+2. Mobile **sprint 2** — статьи (animals → articles → article) + «Ещё»
+3. Mobile **sprint 4** — auth screens (login / verify / link-telegram) — можно раньше booking
+4. Параллельно backlog: prod smoke C1+вопросы (если ещё не закрыто), **ADM-02**
 
 ### Правило admin UI
 
@@ -49,6 +63,7 @@ Smoke:
 
 ---
 
-## Фаза 5
+## Фаза 5 + Mobile
 
-[phase-5-appointments.md](../md/phases/phase-5-appointments.md) · [booking-for-clinic.html](../html/booking-for-clinic.html)
+- Запись: [phase-5-appointments.md](../md/phases/phase-5-appointments.md)
+- Mobile: [design-mvp.md](../md/mobile/design-mvp.md) · [screen-specs.md](../md/mobile/screen-specs.md) · [mobile.html](../html/mobile.html)

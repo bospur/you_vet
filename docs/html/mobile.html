@@ -106,14 +106,14 @@
 </head>
 <body>
 
-<p class="doc-back"><a href="index.html">← Все документы</a> · <a href="project-for-devs.html">Project Overview</a> · <a href="roadmap.html">Roadmap</a></p>
+<p class="doc-back"><a href="index.html">← Все документы</a> · <a href="rustore-app.html">RuStore (гайд)</a> · <a href="project-for-devs.html">Project Overview</a> · <a href="roadmap.html">Roadmap</a></p>
 
 <div class="header">
   <h1>Мобильное приложение</h1>
   <div class="subtitle">Отдельный iOS/Android клиент на Capacitor · общий Go API · не связан с Telegram Mini App</div>
   <div class="meta">
-    <span class="badge badge-planned">Исследование</span>
-    <span style="color:#888;font-size:12px;">Обновлено: 2026-05-30</span>
+    <span class="badge badge-chosen">Разработка M0+M1</span>
+    <span style="color:#888;font-size:12px;">Обновлено: 2026-06-09</span>
     <a href="https://capacitorjs.com" target="_blank" rel="noopener">Capacitor ↗</a>
   </div>
 </div>
@@ -121,6 +121,8 @@
 <nav class="nav-toc">
   <h2>Разделы</h2>
   <ul>
+    <li><a href="#mvp">MVP RuStore v1 (утверждено)</a></li>
+    <li><a href="#appid">App ID и RuStore (обучение)</a></li>
     <li><a href="#overview">Обзор и решения</a></li>
     <li><a href="#research">Аналитика и изучение возможностей</a></li>
     <li><a href="#auth">Авторизация (телефон + код в TG)</a></li>
@@ -130,6 +132,52 @@
     <li><a href="#monorepo">Монорепо vs отдельная репа</a></li>
   </ul>
 </nav>
+
+<!-- ── MVP ── -->
+<h2 id="mvp">MVP RuStore v1 (утверждено 2026-06-09)</h2>
+
+<table>
+  <tr><th>Решение</th><th>Значение</th></tr>
+  <tr><td>Название в сторе</td><td><strong>Ветпрактика</strong></td></tr>
+  <tr><td>App ID</td><td><code>ru.snzbeachvolleyball25.vetpraktika</code></td></tr>
+  <tr><td>Клиника в сборке</td><td>1 slug на APK (<code>VITE_CLINIC_SLUG=default</code>)</td></tr>
+  <tr><td>Запись на приём</td><td>✅ в v1.0 (auth + booking)</td></tr>
+  <tr><td>Контент read-only</td><td>✅ parity с Mini App</td></tr>
+  <tr><td>«Задать вопрос»</td><td>v1.1 (нужен TG)</td></tr>
+  <tr><td>Push FCM</td><td>v1.1</td></tr>
+</table>
+
+<p>Навигация: bottom tabs — <strong>Главная · Запись · Статьи · Ещё</strong>. Детальный дизайн: <code>design-mvp.md</code>, wireframes: <code>screen-specs.md</code>.</p>
+
+<div class="phase-item">
+  <h4>Прогресс в коде <span class="badge badge-chosen">2026-06-09</span></h4>
+  <ul>
+    <li><strong>M0:</strong> миграция 019, <code>/api/mobile/v1</code>, auth OTP через бота, mobile JWT для booking</li>
+    <li><strong>M1 sprint 1:</strong> <code>apps/mobile</code> — splash, tabs, главная, booking hub (placeholders на остальное)</li>
+    <li><strong>Дальше:</strong> sprints 2–5 по <code>screen-specs.md</code> (статьи → auth UI → booking → RuStore)</li>
+  </ul>
+</div>
+
+<div class="tip">
+  <strong>Multi-tenant позже:</strong> отдельная сборка на клинику (другой appId + slug). В v1 экран выбора клиники не делаем — см. <code>multi-tenant-notes.md</code>.
+</div>
+
+<!-- ── APP ID ── -->
+<h2 id="appid">App ID и RuStore — кратко для новичка</h2>
+
+<p><strong>App ID</strong> — уникальный идентификатор приложения (как домен в интернете). Задаётся один раз в <code>capacitor.config.ts</code> и <strong>не меняется</strong> после первой публикации в RuStore.</p>
+
+<table>
+  <tr><th>Поле</th><th>Пример</th><th>Меняется?</th></tr>
+  <tr><td>appId</td><td><code>ru.snzbeachvolleyball25.vetpraktika</code></td><td>Нет</td></tr>
+  <tr><td>appName</td><td>Ветпрактика</td><td>Да (в консоли стора)</td></tr>
+</table>
+
+<p>App ID <strong>не участвует</strong> в API — клиника задаётся через <code>VITE_CLINIC_SLUG</code> при сборке. Полный обучающий справочник: <code>docs/md/mobile/app-id-and-stores.md</code> (keystore, подпись APK, чеклист).</p>
+
+<div class="warn">
+  <strong>Keystore:</strong> файл подписи APK хранить отдельно от git. Потеря keystore = невозможность обновлять то же приложение в RuStore.
+</div>
 
 <!-- ── OVERVIEW ── -->
 <h2 id="overview">Обзор и решения</h2>
@@ -296,6 +344,10 @@ Go API + PostgreSQL<br>
 
 <h3>Сторы</h3>
 <div class="link-grid">
+  <a class="link-card" href="rustore-app.html">
+    <strong>Ветпрактика → RuStore (наш гайд)</strong>
+    <span>Чеклист, сборка, модерация, ссылки</span>
+  </a>
   <a class="link-card" href="https://www.rustore.ru/help/developers" target="_blank" rel="noopener">
     <strong>RuStore для разработчиков</strong>
     <span>Публикация Android в РФ</span>
@@ -418,7 +470,7 @@ you_vet/<br>
 └── packages/types/
 </div>
 
-<p style="margin-top:32px;color:#888;font-size:12px;">Markdown-источники: <code>docs/md/mobile/overview.md</code>, <code>research.md</code>, <code>roadmap.md</code></p>
+<p style="margin-top:32px;color:#888;font-size:12px;">Markdown-источники: <code>design-mvp.md</code>, <code>screen-specs.md</code>, <code>app-id-and-stores.md</code>, <code>multi-tenant-notes.md</code>, <code>overview.md</code>, <code>research.md</code>, <code>roadmap.md</code></p>
 
 <div style="background:#f0f7ff;border:1px solid #c8e6c9;border-radius:8px;padding:16px 20px;margin:32px 0 24px;">
   <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#2e7d32;margin-bottom:6px;">Для клиники</div>

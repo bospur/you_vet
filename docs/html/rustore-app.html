@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ветпрактика — публикация в RuStore</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #ffffff;
+      max-width: 900px;
+      margin: 48px auto;
+      padding: 0 40px 80px;
+      line-height: 1.7;
+    }
+    .doc-back { margin-bottom: 8px; }
+    .doc-back a { color: #555; text-decoration: none; font-size: 13px; border-bottom: 1px solid #ddd; }
+    .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 32px; }
+    .header h1 { font-size: 28px; font-weight: 700; }
+    .header .subtitle { font-size: 16px; color: #555; margin-top: 6px; }
+    .header .meta { margin-top: 14px; font-size: 12px; color: #888; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: #e8f5e9; color: #2e7d32; }
+    .nav-toc { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px 20px; margin-bottom: 32px; }
+    .nav-toc h2 { font-size: 13px; text-transform: uppercase; color: #888; margin: 0 0 10px; }
+    .nav-toc ul { list-style: none; padding: 0; margin: 0; }
+    .nav-toc li { margin-bottom: 6px; }
+    .nav-toc a { color: #0066cc; text-decoration: none; font-weight: 500; }
+    h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+    h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; }
+    p { margin-bottom: 12px; }
+    a { color: #0066cc; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+    th { background: #f5f5f5; text-align: left; padding: 8px 12px; border: 1px solid #ddd; }
+    td { padding: 7px 12px; border: 1px solid #ddd; vertical-align: top; }
+    code { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; color: #c7254e; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 14px 18px; border-radius: 6px; font-size: 12px; overflow-x: auto; margin: 12px 0 20px; }
+    ul, ol { padding-left: 22px; margin-bottom: 12px; }
+    .tip { background: #f0f7ff; border-left: 3px solid #0066cc; padding: 12px 16px; margin: 12px 0 20px; font-size: 13px; }
+    .warn { background: #fff8e1; border-left: 3px solid #f59e0b; padding: 12px 16px; margin: 12px 0 20px; font-size: 13px; }
+    .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 20px; }
+    .link-card { display: block; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 6px; text-decoration: none; color: #1a1a1a; font-size: 13px; }
+    .link-card:hover { border-color: #0066cc; }
+    .link-card strong { display: block; color: #0066cc; margin-bottom: 2px; }
+    .link-card span { color: #777; font-size: 12px; }
+    .checklist { list-style: none; padding: 0; }
+    .checklist li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .checklist li::before { content: '☐ '; color: #888; }
+    @media (max-width: 640px) { body { padding: 0 16px 60px; } .link-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<p class="doc-back"><a href="index.html">← Все документы</a> · <a href="mobile.html">Mobile (техн.)</a> · <a href="roadmap.html">Roadmap</a></p>
+
+<div class="header">
+  <h1>Ветпрактика — RuStore</h1>
+  <div class="subtitle">Как опубликовать Android-приложение клиники · первый опыт</div>
+  <div class="meta"><span class="badge">RuStore</span> Обновлено: 9 июня 2026</div>
+</div>
+
+<nav class="nav-toc">
+  <h2>Разделы</h2>
+  <ul>
+    <li><a href="#params">Параметры приложения</a></li>
+    <li><a href="#docs">Официальная документация RuStore</a></li>
+    <li><a href="#steps">Порядок действий</a></li>
+    <li><a href="#build">Сборка Android</a></li>
+    <li><a href="#materials">Материалы для модерации</a></li>
+    <li><a href="#auth">Тест входа и записи</a></li>
+    <li><a href="#progress">Прогресс разработки</a></li>
+  </ul>
+</nav>
+
+<h2 id="params">Параметры приложения</h2>
+
+<p>Отдельное приложение в RuStore — <strong>не</strong> Telegram Mini App. Общий API клиники.</p>
+
+<table>
+  <tr><th>Параметр</th><th>Значение</th></tr>
+  <tr><td>Название в сторе</td><td><strong>Ветпрактика</strong></td></tr>
+  <tr><td>App ID (package)</td><td><code>ru.snzbeachvolleyball25.vetpraktika</code></td></tr>
+  <tr><td>Клиника в сборке</td><td><code>VITE_CLINIC_SLUG=default</code></td></tr>
+  <tr><td>API</td><td><code>https://api.snzbeachvolleyball25.ru/api/mobile/v1</code></td></tr>
+  <tr><td>Бот (привязка телефона)</td><td><a href="https://t.me/VPract_bot?start=link" target="_blank" rel="noopener">@VPract_bot</a></td></tr>
+</table>
+
+<div class="tip">
+  <strong>App ID ≠ URL.</strong> Идентификатор <code>ru.snzbeachvolleyball25.vetpraktika</code> — это «паспорт» приложения в Android/RuStore (обратный домен). Поддомен сайта <code>vetpraktika.…</code> — другая сущность. Подробнее в <a href="mobile.html#appid">mobile.html → App ID</a>.
+</div>
+
+<h2 id="docs">Официальная документация RuStore</h2>
+
+<div class="link-grid">
+  <a class="link-card" href="https://www.rustore.ru/help/developers" target="_blank" rel="noopener">
+    <strong>RuStore — разработчикам ↗</strong>
+    <span>Главное оглавление help</span>
+  </a>
+  <a class="link-card" href="https://www.rustore.ru/developer" target="_blank" rel="noopener">
+    <strong>Страница для разработчиков ↗</strong>
+    <span>Обзор консоли</span>
+  </a>
+  <a class="link-card" href="https://www.rustore.ru/help/developers/publishing-and-verifying-apps/app-publication" target="_blank" rel="noopener">
+    <strong>Публикация приложения ↗</strong>
+    <span>Главная пошаговая инструкция</span>
+  </a>
+  <a class="link-card" href="https://console.rustore.ru" target="_blank" rel="noopener">
+    <strong>RuStore Консоль ↗</strong>
+    <span>Вход через VK ID</span>
+  </a>
+  <a class="link-card" href="https://static.rustore.ru/rustore-en-developers-documentation.pdf" target="_blank" rel="noopener">
+    <strong>PDF-документация (EN) ↗</strong>
+    <span>Полный справочник, Ctrl+F</span>
+  </a>
+  <a class="link-card" href="https://developer.android.com/studio/publish/app-signing" target="_blank" rel="noopener">
+    <strong>Подпись Android ↗</strong>
+    <span>Keystore, AAB — Google</span>
+  </a>
+</div>
+
+<h2 id="steps">Порядок действий (первый раз)</h2>
+
+<h3>1. Аккаунт разработчика</h3>
+<ol>
+  <li>Зарегистрироваться в <a href="https://console.rustore.ru" target="_blank" rel="noopener">RuStore Консоль</a> (VK ID).</li>
+  <li>Для <strong>бесплатного</strong> приложения без покупок внутри — часто хватает аккаунта <strong>физлица</strong>.</li>
+  <li>Монетизация через RuStore — ИП/юрлицо, часто ЭЦП / VK Бизнес ID.</li>
+</ol>
+
+<h3>2. Карточка приложения</h3>
+<ol>
+  <li>Консоль → <strong>Приложения</strong> → <strong>Добавить приложение</strong></li>
+  <li>Название: <strong>Ветпрактика</strong></li>
+  <li><strong>Загрузить версию</strong></li>
+  <li>Package name = <code>ru.snzbeachvolleyball25.vetpraktika</code></li>
+</ol>
+
+<h3>3. Загрузка и модерация</h3>
+<p>RuStore принимает <strong>APK</strong> и <strong>AAB</strong>. Для AAB подпись настраивается до загрузки. После загрузки — описание, скриншоты, privacy policy → отправка на модерацию (ориентир ~1 ч, закладывайте 1–3 дня).</p>
+
+<div class="warn">
+  <strong>Keystore</strong> — файл подписи и пароли храните отдельно от git. Потеря = невозможность обновлять то же приложение.
+</div>
+
+<h2 id="build">Сборка Android (наш проект)</h2>
+
+<pre>cd apps/mobile
+cp .env.example .env.local
+npm run build
+npx cap sync android
+npx cap open android</pre>
+
+<p>В Android Studio: <strong>Build → Generate Signed Bundle / APK</strong> → рекомендуется <strong>AAB</strong>.</p>
+<p>Capacitor: <a href="https://capacitorjs.com/docs/android" target="_blank" rel="noopener">capacitorjs.com/docs/android ↗</a></p>
+
+<h2 id="materials">Материалы для модерации</h2>
+
+<ul class="checklist">
+  <li>Иконка 512×512, adaptive icon</li>
+  <li>Скриншоты (мин. 2): главная, запись, статья</li>
+  <li>Краткое и полное описание</li>
+  <li>Категория: здоровье / медицина</li>
+  <li>URL политики конфиденциальности</li>
+  <li>Контакты поддержки (телефон/email клиники)</li>
+  <li>Согласие на ПДн в форме записи в приложении</li>
+</ul>
+
+<h2 id="auth">Тест входа и записи</h2>
+
+<ol>
+  <li>Пользователь открывает <a href="https://t.me/VPract_bot?start=link">бота с start=link</a> → «Поделиться номером»</li>
+  <li>В приложении: телефон → код в Telegram → JWT</li>
+  <li>Запись через API <code>/api/mobile/v1/.../booking/requests</code> (после deploy server, миграция 019)</li>
+</ol>
+
+<h2 id="progress">Прогресс разработки</h2>
+
+<table>
+  <tr><th>Этап</th><th>Статус</th></tr>
+  <tr><td>M0 — API + auth OTP</td><td>в коде, ждёт deploy server</td></tr>
+  <tr><td>M1 — shell (splash, tabs, главная)</td><td>в коде</td></tr>
+  <tr><td>Статьи, auth UI, booking flow</td><td>backlog</td></tr>
+  <tr><td>Первая публикация RuStore</td><td>после M2 + материалы</td></tr>
+</table>
+
+<p>Техническая архитектура: <a href="mobile.html">mobile.html</a> · Roadmap: <a href="roadmap.html">roadmap.html</a></p>
+
+<p style="margin-top:32px;color:#888;font-size:12px;">Источник: <code>docs/md/mobile/rustore-guide.md</code></p>
+
+</body>
+</html>
