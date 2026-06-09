@@ -8,8 +8,13 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  if (config.data instanceof FormData) {
-    delete config.headers['Content-Type'];
+  if (config.data instanceof FormData && config.headers) {
+    // Axios 1.x: AxiosHeaders.delete — иначе boundary не подставится (часто на мобильном Safari)
+    if (typeof config.headers.delete === 'function') {
+      config.headers.delete('Content-Type');
+    } else {
+      delete config.headers['Content-Type'];
+    }
   }
   return config;
 });

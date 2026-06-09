@@ -12,6 +12,7 @@ import {
   getClinicInfo, updateClinicInfo, uploadClinicLogo, uploadClinicBanner,
 } from '../../data/source/clinic_info';
 import type { ClinicInfoInput } from '../../data/source/clinic_info';
+import { prepareImageForUpload } from '../../shared/lib/prepareImageForUpload';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -93,18 +94,30 @@ export function ClinicInfoScreen() {
     setIsDirty(true);
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setLogoPreview(URL.createObjectURL(file));
-    logoMutation.mutate(file);
+    e.target.value = '';
+    try {
+      const prepared = await prepareImageForUpload(file);
+      setLogoPreview(URL.createObjectURL(prepared));
+      logoMutation.mutate(prepared);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Не удалось обработать изображение', 'error');
+    }
   };
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setBannerPreview(URL.createObjectURL(file));
-    bannerMutation.mutate(file);
+    e.target.value = '';
+    try {
+      const prepared = await prepareImageForUpload(file);
+      setBannerPreview(URL.createObjectURL(prepared));
+      bannerMutation.mutate(prepared);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Не удалось обработать изображение', 'error');
+    }
   };
 
   const logoSrc = logoPreview ?? (data?.logo_url ? `${BASE_URL}${data.logo_url}` : undefined);
@@ -221,7 +234,7 @@ export function ClinicInfoScreen() {
               </Box>
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 ref={logoInputRef}
                 style={{ display: 'none' }}
                 onChange={handleLogoChange}
@@ -276,7 +289,7 @@ export function ClinicInfoScreen() {
               )}
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 ref={bannerInputRef}
                 style={{ display: 'none' }}
                 onChange={handleBannerChange}

@@ -24,6 +24,7 @@ import {
   uploadDoctorPhoto, getDoctorSchedule, addScheduleSlot, deleteScheduleSlot,
   getExceptions, upsertException, deleteException, addVacationRange,
 } from '../../data/source/doctors';
+import { prepareImageForUpload } from '../../shared/lib/prepareImageForUpload';
 import { DAY_NAMES } from '../../modules/doctors/domain/types';
 import type { DoctorScheduleSlot, DoctorScheduleException } from '../../modules/doctors/domain/types';
 
@@ -129,11 +130,17 @@ export function DoctorEditorScreen() {
     },
   });
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhotoPreview(URL.createObjectURL(file));
-    photoMutation.mutate(file);
+    e.target.value = '';
+    try {
+      const prepared = await prepareImageForUpload(file);
+      setPhotoPreview(URL.createObjectURL(prepared));
+      photoMutation.mutate(prepared);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Не удалось обработать фото', 'error');
+    }
   };
 
   // ── Слоты расписания ─────────────────────────────────────────────────────────
@@ -302,7 +309,7 @@ export function DoctorEditorScreen() {
               <>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                   ref={photoInputRef}
                   style={{ display: 'none' }}
                   onChange={handlePhotoChange}
