@@ -1,4 +1,5 @@
 import axiosInstance from './axiosInstance';
+import { postFormData } from './uploadFormData';
 import type {
   Doctor,
   DoctorFormValues,
@@ -36,13 +37,7 @@ export async function updateDoctorStatus(id: number, status: 'draft' | 'publishe
 }
 
 export async function uploadDoctorPhoto(id: number, file: File): Promise<{ photo_url: string }> {
-  const form = new FormData();
-  form.append('photo', file);
-  const { data } = await axiosInstance.post<{ photo_url: string }>(
-    `/api/admin/doctors/${id}/photo`,
-    form,
-  );
-  return data;
+  return postFormData<{ photo_url: string }>(`/api/admin/doctors/${id}/photo`, 'photo', file);
 }
 
 export async function deleteDoctor(id: number): Promise<void> {

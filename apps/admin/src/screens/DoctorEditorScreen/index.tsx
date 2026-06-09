@@ -114,6 +114,7 @@ export function DoctorEditorScreen() {
   // ── Загрузка фото ───────────────────────────────────────────────────────────
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoPreparing, setPhotoPreparing] = useState(false);
 
   const photoMutation = useMutation({
     mutationFn: (file: File) => uploadDoctorPhoto(Number(id), file),
@@ -134,12 +135,15 @@ export function DoctorEditorScreen() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
+    setPhotoPreparing(true);
     try {
       const prepared = await prepareImageForUpload(file);
       setPhotoPreview(URL.createObjectURL(prepared));
       photoMutation.mutate(prepared);
     } catch (err) {
       notify(err instanceof Error ? err.message : 'Не удалось обработать фото', 'error');
+    } finally {
+      setPhotoPreparing(false);
     }
   };
 
@@ -319,9 +323,9 @@ export function DoctorEditorScreen() {
                   size="small"
                   startIcon={<PhotoCameraIcon />}
                   onClick={() => photoInputRef.current?.click()}
-                  disabled={photoMutation.isPending}
+                  disabled={photoPreparing || photoMutation.isPending}
                 >
-                  {photoMutation.isPending ? 'Загрузка…' : 'Загрузить фото'}
+                  {photoPreparing ? 'Сжатие…' : photoMutation.isPending ? 'Загрузка…' : 'Загрузить фото'}
                 </Button>
                 <Typography variant="caption" display="block" color="text.secondary" mt={1}>
                   JPG, PNG, WebP · до 5 МБ

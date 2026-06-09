@@ -1,6 +1,18 @@
-const MAX_BYTES = 5 * 1024 * 1024;
-const MAX_DIMENSION = 2048;
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+/** Лимит сервера — оставляем запас, чтобы multipart не упирался в 5 МБ */
+const SERVER_MAX_BYTES = 5 * 1024 * 1024;
+
+function isCoarseMobile(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+function getCompressionLimits() {
+  const mobile = isCoarseMobile();
+  return {
+    maxDimension: mobile ? 1200 : 1600,
+    targetBytes: mobile ? 1.8 * 1024 * 1024 : 3 * 1024 * 1024,
+  };
+}
 
 function isHeic(file: File): boolean {
   const type = file.type.toLowerCase();
@@ -13,10 +25,6 @@ function isHeic(file: File): boolean {
   );
 }
 
-function needsProcessing(file: File): boolean {
-  return isHeic(file) || !ALLOWED_TYPES.has(file.type) || file.size > MAX_BYTES;
-}
-
 function loadImageElement(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -27,23 +35,47 @@ function loadImageElement(file: File): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Не удалось прочитать изображение'));
+      reject(new Error('Не удалось открыть фото. Попробуйте другое изображение.'));
     };
     img.src = url;
   });
 }
 
 async function loadImageSource(file: File): Promise<{ source: CanvasImageSource; width: number; height: number }> {
+  // На iOS HEIC надёжнее через <img>, чем через createImageBitmap
+  if (isHeic(file) || isCoarseMobile()) {
+    try {
+      const img = await loadImageElement(file);
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        return { source: img, width: img.naturalWidth, height: img.naturalHeight };
+      }
+    } catch {
+      // fallback ниже
+    }
+  }
+
   if (typeof createImageBitmap === 'function') {
     try {
       const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
       return { source: bitmap, width: bitmap.width, height: bitmap.height };
     } catch {
-      // Safari / старые браузеры — fallback ниже
+      try {
+        const bitmap = await createImageBitmap(file);
+        return { source: bitmap, width: bitmap.width, height: bitmap.height };
+      } catch {
+        // fallback ниже
+      }
     }
   }
+
   const img = await loadImageElement(file);
   return { source: img, width: img.naturalWidth, height: img.naturalHeight };
+}
+
+function closeSource(source: CanvasImageSource) {
+  if ('close' in source && typeof source.close === 'function') {
+    source.close();
+  }
 }
 
 function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
@@ -56,52 +88,72 @@ function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<B
   });
 }
 
-async function resizeToJpeg(file: File): Promise<File> {
+async function compressToJpeg(file: File): Promise<File> {
+  const { maxDimension, targetBytes } = getCompressionLimits();
   const { source, width: srcW, height: srcH } = await loadImageSource(file);
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(srcW, srcH));
-  let width = Math.max(1, Math.round(srcW * scale));
-  let height = Math.max(1, Math.round(srcH * scale));
 
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Не удалось обработать изображение');
+  try {
+    let dimLimit = maxDimension;
+    let bestBlob: Blob | null = null;
 
-  const draw = () => {
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(source, 0, 0, width, height);
-  };
+    for (let round = 0; round < 10; round++) {
+      const scale = Math.min(1, dimLimit / Math.max(srcW, srcH));
+      const width = Math.max(1, Math.round(srcW * scale));
+      const height = Math.max(1, Math.round(srcH * scale));
 
-  draw();
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Не удалось обработать изображение');
+      ctx.drawImage(source, 0, 0, width, height);
 
-  let quality = 0.9;
-  let blob = await canvasToJpegBlob(canvas, quality);
-  while (blob.size > MAX_BYTES && quality > 0.45) {
-    quality -= 0.08;
-    blob = await canvasToJpegBlob(canvas, quality);
+      for (const quality of [0.85, 0.78, 0.7, 0.62, 0.54, 0.46, 0.38]) {
+        const blob = await canvasToJpegBlob(canvas, quality);
+        bestBlob = blob;
+        if (blob.size <= targetBytes) {
+          const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
+          return new File([blob], `${baseName}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+        }
+      }
+
+      if (bestBlob && bestBlob.size <= SERVER_MAX_BYTES) {
+        break;
+      }
+      dimLimit = Math.round(dimLimit * 0.72);
+      if (dimLimit < 400) break;
+    }
+
+    if (!bestBlob || bestBlob.size > SERVER_MAX_BYTES) {
+      throw new Error('Не удалось ужать фото до 5 МБ. Попробуйте кадрировать снимок.');
+    }
+
+    const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
+    return new File([bestBlob], `${baseName}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  } finally {
+    closeSource(source);
   }
-
-  while (blob.size > MAX_BYTES && width > 320) {
-    width = Math.round(width * 0.85);
-    height = Math.round(height * 0.85);
-    draw();
-    blob = await canvasToJpegBlob(canvas, 0.82);
-  }
-
-  if (blob.size > MAX_BYTES) {
-    throw new Error('Файл слишком большой (макс 5 МБ). Попробуйте другое фото.');
-  }
-
-  if ('close' in source && typeof source.close === 'function') {
-    source.close();
-  }
-
-  const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
-  return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
 }
 
-/** Приводит фото к jpg/png/webp ≤5 МБ — для HEIC и снимков с телефона. */
+/**
+ * Сжимает и конвертирует фото в JPEG перед загрузкой.
+ * На телефоне сжимаем всегда (HEIC, большие снимки с камеры).
+ */
 export async function prepareImageForUpload(file: File): Promise<File> {
-  if (!needsProcessing(file)) return file;
-  return resizeToJpeg(file);
+  const { targetBytes } = getCompressionLimits();
+  const skipCompress =
+    !isCoarseMobile()
+    && !isHeic(file)
+    && file.type === 'image/jpeg'
+    && file.size <= targetBytes
+    && /\.jpe?g$/i.test(file.name);
+
+  if (skipCompress) return file;
+  return compressToJpeg(file);
 }

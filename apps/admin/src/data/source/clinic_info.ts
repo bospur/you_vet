@@ -1,4 +1,5 @@
 import axiosInstance from './axiosInstance';
+import { postFormData } from './uploadFormData';
 import type { ClinicInfo, ClinicInfoInput } from '@you-vet/types';
 
 export type { ClinicInfo, ClinicInfoInput };
@@ -14,15 +15,9 @@ export async function updateClinicInfo(input: ClinicInfoInput): Promise<ClinicIn
 }
 
 export async function uploadClinicLogo(file: File): Promise<ClinicInfo> {
-  const form = new FormData();
-  form.append('image', file);
-  const { data } = await axiosInstance.post<ClinicInfo>('/api/admin/clinic-info/logo', form);
-  return data;
+  return postFormData<ClinicInfo>('/api/admin/clinic-info/logo', 'image', file);
 }
 
 export async function uploadClinicBanner(file: File): Promise<ClinicInfo> {
-  const form = new FormData();
-  form.append('image', file);
-  const { data } = await axiosInstance.post<ClinicInfo>('/api/admin/clinic-info/banner', form);
-  return data;
+  return postFormData<ClinicInfo>('/api/admin/clinic-info/banner', 'image', file);
 }
