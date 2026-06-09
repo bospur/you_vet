@@ -9,7 +9,7 @@
 | [research.md](./research.md) | Аналитика: варианты, auth, сторы, риски |
 | [roadmap.md](./roadmap.md) | План реализации на Capacitor, фазы, монорепо |
 
-HTML-портал: [mobile.html](../mobile.html)
+HTML-портал: [mobile.html](../../html/mobile.html)
 
 ## Решение
 

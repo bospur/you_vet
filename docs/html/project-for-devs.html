@@ -438,7 +438,7 @@ feature/*, fix/*, chore/*  ← рабочие ветки</code></pre>
   <tr><td><code>deploy-server.yml</code></td><td><code>apps/server/**</code></td><td>Сборка Docker образа → push в GHCR → SSH на VPS → <code>docker compose pull && up -d</code></td></tr>
   <tr><td><code>deploy-admin.yml</code></td><td><code>apps/admin/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
   <tr><td><code>deploy-app.yml</code></td><td><code>apps/app/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → build → scp <code>dist/</code> на VPS</td></tr>
-  <tr><td><code>deploy-docs.yml</code></td><td><code>docs/**</code></td><td>scp <code>docs/*.html</code> → docs.snzbeachvolleyball25.ru</td></tr>
+  <tr><td><code>deploy-docs.yml</code></td><td><code>docs/**</code></td><td>scp <code>docs/html/*</code> → docs.snzbeachvolleyball25.ru</td></tr>
 </table>
 
 <div class="warn">
@@ -536,15 +536,15 @@ const info = useOutletContext&lt;ClinicInfo | null&gt;();</code></pre>
 
 <table>
   <tr><th>Файл</th><th>Описание</th></tr>
-  <tr><td><code>docs/architecture.md</code></td><td>Системная архитектура, схема взаимодействия</td></tr>
-  <tr><td><code>docs/server/api.md</code></td><td>Полный справочник API (все эндпоинты)</td></tr>
-  <tr><td><code>docs/audit.md</code></td><td>Технический аудит + <code>docs/context/</code> для AI handoff</td></tr>
-  <tr><td><code>docs/data-model.md</code></td><td>Схема БД, конвенции полей</td></tr>
-  <tr><td><code>docs/roles.md</code></td><td>Ролевая матрица прав</td></tr>
-  <tr><td><code>docs/deployment.md</code></td><td>Деплой, VPS, Nginx, SSL</td></tr>
-  <tr><td><code>docs/development.md</code></td><td>Локальная разработка, git workflow</td></tr>
-  <tr><td><code>docs/phase-5-appointments.md</code></td><td>Детальный план Фазы 5 (запись)</td></tr>
-  <tr><td><code>docs/monorepo.md</code></td><td>Устройство монорепо, Turborepo</td></tr>
+  <tr><td><code>docs/md/general/architecture.md</code></td><td>Системная архитектура, схема взаимодействия</td></tr>
+  <tr><td><code>docs/md/server/api.md</code></td><td>Полный справочник API (все эндпоинты)</td></tr>
+  <tr><td><code>docs/md/general/audit.md</code></td><td>Технический аудит + <code>docs/context/</code> для AI handoff</td></tr>
+  <tr><td><code>docs/md/general/data-model.md</code></td><td>Схема БД, конвенции полей</td></tr>
+  <tr><td><code>docs/md/general/roles.md</code></td><td>Ролевая матрица прав</td></tr>
+  <tr><td><code>docs/md/general/deployment.md</code></td><td>Деплой, VPS, Nginx, SSL</td></tr>
+  <tr><td><code>docs/md/general/development.md</code></td><td>Локальная разработка, git workflow</td></tr>
+  <tr><td><code>docs/md/phases/phase-5-appointments.md</code></td><td>Детальный план Фазы 5 (запись)</td></tr>
+  <tr><td><code>docs/md/general/monorepo.md</code></td><td>Устройство монорепо, Turborepo</td></tr>
 </table>
 
 <hr>

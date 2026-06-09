@@ -56,14 +56,15 @@ npm run dev   # запускает admin и app параллельно
 | Документ | Описание |
 |---|---|
 | [docs/README.md](docs/README.md) | Индекс всей документации |
-| [docs/architecture.md](docs/architecture.md) | Системная архитектура и схема взаимодействия |
-| [docs/server/api.md](docs/server/api.md) | Полный справочник API |
-| [docs/development.md](docs/development.md) | Локальная разработка и git workflow |
-| [docs/deployment.md](docs/deployment.md) | Деплой и инфраструктура |
-| [docs/roles.md](docs/roles.md) | Ролевая модель и права доступа |
-| [docs/data-model.md](docs/data-model.md) | Схема базы данных |
-| [docs/monorepo.md](docs/monorepo.md) | Устройство монорепо |
-| [docs/audit.md](docs/audit.md) | Технический аудит (2026-05-30) |
+| [docs/md/README.md](docs/md/README.md) | Markdown по разделам (server, admin, app…) |
+| [docs/md/general/architecture.md](docs/md/general/architecture.md) | Системная архитектура и схема взаимодействия |
+| [docs/md/server/api.md](docs/md/server/api.md) | Полный справочник API |
+| [docs/md/general/development.md](docs/md/general/development.md) | Локальная разработка и git workflow |
+| [docs/md/general/deployment.md](docs/md/general/deployment.md) | Деплой и инфраструктура |
+| [docs/md/general/roles.md](docs/md/general/roles.md) | Ролевая модель и права доступа |
+| [docs/md/general/data-model.md](docs/md/general/data-model.md) | Схема базы данных |
+| [docs/md/general/monorepo.md](docs/md/general/monorepo.md) | Устройство монорепо |
+| [docs/md/general/audit.md](docs/md/general/audit.md) | Технический аудит (2026-05-30) |
 | [docs/context/](docs/context/) | Контекст для AI-сессий (handoff между чатами) |
 
 ## Git workflow

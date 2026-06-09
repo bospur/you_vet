@@ -1,80 +1,57 @@
 # YouVet — документация
 
-SaaS-платформа для ветеринарных клиник. Telegram Mini App + веб-панель управления + Go API.
+SaaS-платформа для ветеринарных клиник. Telegram Mini App + веб-панель + Go API.
 
----
+## Структура
 
-## Навигация
+```
+docs/
+├── CODEWORDS.md      # кодовые слова AI: контекст · портал · передача
+├── README.md         # этот файл
+├── context/          # память между AI-сессиями (handoff)
+├── md/               # markdown для разработчиков и AI (не деплоится)
+│   ├── general/      # архитектура, деплой, роли, аудит…
+│   ├── server/       # Go API, бот
+│   ├── admin/        # веб-панель
+│   ├── app/          # Mini App
+│   ├── mobile/       # нативное приложение (planned)
+│   ├── phases/       # фазы продукта (запись и т.д.)
+│   ├── adr/          # architecture decision records
+│   └── frontend/     # шаблоны модулей admin
+└── html/             # портал для команды и клиники → docs.snz…
+```
 
-### Общее
+| Каталог | Кто читает | Деплой на VPS |
+|---------|------------|---------------|
+| `context/` | AI, вы | нет |
+| `md/` | разработчики, AI | нет |
+| `html/` | команда, клиника | да (`deploy-docs.yml`) |
 
-| Документ | Описание |
-|---|---|
-| [architecture.md](./architecture.md) | Схема системы, монорепо, CI/CD |
-| [data-model.md](./data-model.md) | Схема базы данных, миграции |
-| [roles.md](./roles.md) | Ролевая модель (admin, manager, editor, groomer) |
-| [deployment.md](./deployment.md) | Инфраструктура, деплой, env-переменные |
-| [development.md](./development.md) | Локальная разработка |
-| [monorepo.md](./monorepo.md) | Устройство монорепо, Turborepo |
-| [audit.md](./audit.md) | Технический аудит проекта |
-| [phase-5-appointments.md](./phase-5-appointments.md) | Фаза 5 — запись на приём (детальный план) |
-| [context/](./context/) | Контекст для AI-сессий (handoff) |
-| [CODEWORDS.md](./CODEWORDS.md) | **Кодовые слова:** `контекст` · `портал` · `передача` |
+Полный индекс markdown: [md/README.md](./md/README.md)  
+Кодовые слова: [CODEWORDS.md](./CODEWORDS.md)
 
-### HTML-портал (deploy → docs.snzbeachvolleyball25.ru)
+## HTML-портал
 
-> Обновление для людей: скажите AI **`портал`** (+ маршрут, напр. `портал запись`). См. [CODEWORDS.md](./CODEWORDS.md).
+> https://docs.snzbeachvolleyball25.ru · обновление: **`портал`** (+ маршрут)
 
 | Страница | Аудитория |
-|---|---|
-| [index.html](./index.html) | Навигация по документам |
-| [project-for-devs.html](./project-for-devs.html) | Разработчики |
-| [roadmap.html](./roadmap.html) | Roadmap проекта |
-| [booking-for-clinic.html](./booking-for-clinic.html) | **Для клиники** — запись на приём, решения простым языком |
-| [phase-5-appointments.html](./phase-5-appointments.html) | **Фаза 5** — запись на приём (технический план) |
-| [design-brief.html](./design-brief.html) | Дизайнеры |
-| [audit.html](./audit.html) | Технический аудит |
-| [mobile.html](./mobile.html) | Мобильное приложение (Capacitor, research, roadmap) |
-### Мобильное приложение (`apps/mobile` — planned)
+|----------|-----------|
+| [html/index.html](./html/index.html) | Навигация |
+| [html/project-for-devs.html](./html/project-for-devs.html) | Разработчики |
+| [html/roadmap.html](./html/roadmap.html) | Roadmap |
+| [html/booking-for-clinic.html](./html/booking-for-clinic.html) | **Клиника** — запись |
+| [html/phase-5-appointments.html](./html/phase-5-appointments.html) | Фаза 5 (тех.) |
+| [html/design-brief.html](./html/design-brief.html) | Дизайнеры |
+| [html/audit.html](./html/audit.html) | Аудит |
+| [html/mobile.html](./html/mobile.html) | Mobile (planned) |
 
-| Документ | Описание |
-|---|---|
-| [mobile/overview.md](./mobile/overview.md) | Обзор, решения |
-| [mobile/research.md](./mobile/research.md) | Аналитика и варианты |
-| [mobile/roadmap.md](./mobile/roadmap.md) | Roadmap, монорепо |
-
-### Бэкенд (`apps/server`)
-
-| Документ | Описание |
-|---|---|
-| [server/overview.md](./server/overview.md) | Архитектура, структура кода, env |
-| [server/api.md](./server/api.md) | Полный API reference |
-
-### Админ-панель (`apps/admin`)
-
-| Документ | Описание |
-|---|---|
-| [admin/architecture.md](./admin/architecture.md) | Архитектура фронтенда, паттерны, роутинг |
-| [admin/user-guide.md](./admin/user-guide.md) | Инструкция для пользователей |
-
-### Telegram Mini App (`apps/app`)
-
-| Документ | Описание |
-|---|---|
-| [app/overview.md](./app/overview.md) | Структура приложения, экраны, компоненты |
-
----
-
-## Быстрый старт
+## Быстрый старт (разработка)
 
 ```bash
-# Клонировать репо
 git clone https://github.com/Bospur/you_vet.git
 cd you_vet
-
-# Запустить всё (бэкенд + фронты параллельно)
 npm install
 npm run dev
 ```
 
-Подробнее → [development.md](./development.md)
+Подробнее → [md/general/development.md](./md/general/development.md)

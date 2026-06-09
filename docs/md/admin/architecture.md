@@ -1,6 +1,6 @@
 # Архитектура Admin Panel
 
-> **Общий стандарт фронтенда:** `FRONTEND_ARCHITECTURE_GUIDE.md` (корень репо) · шаблоны: `docs/frontend/templates/`
+> **Общий стандарт фронтенда:** `FRONTEND_ARCHITECTURE_GUIDE.md` (корень репо) · шаблоны: `docs/md/frontend/templates/`
 
 `apps/admin` — React SPA на Vite + MUI. Использует FSD-like структуру модулей.
 

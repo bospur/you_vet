@@ -51,4 +51,4 @@ Smoke:
 
 ## Фаза 5
 
-[phase-5-appointments.md](../phase-5-appointments.md) · [booking-for-clinic.html](../booking-for-clinic.html)
+[phase-5-appointments.md](../md/phases/phase-5-appointments.md) · [booking-for-clinic.html](../html/booking-for-clinic.html)

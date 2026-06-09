@@ -18,19 +18,19 @@ alwaysApply: true
 3. `you_vet/docs/context/ISSUES.md`
 4. `you_vet/docs/context/PROJECT.md`
 
-Маршрут → доп. файлы (`you_vet/docs/…`):
+Маршрут → доп. файлы (`you_vet/docs/md/…`):
 
 | Маршрут | Файлы |
 |---------|--------|
-| запись, booking, фаза5 | `phase-5-appointments.md` |
-| деплой, deploy, ci | `deployment.md` |
-| роли | `roles.md` |
+| запись, booking, фаза5 | `phases/phase-5-appointments.md` |
+| деплой, deploy, ci | `general/deployment.md` |
+| роли | `general/roles.md` |
 | admin | `admin/architecture.md` |
 | app, мини | `app/overview.md` |
 | server, api | `server/overview.md`, `server/api.md` |
 | mobile | `mobile/overview.md` |
-| аудит | `audit.md` |
-| дизайн | `design-brief.md` |
+| аудит | `general/audit.md` |
+| дизайн | `general/design-brief.md` |
 
 Ответ: краткое резюме «где мы» + следующий шаг. Не тащить весь репозиторий.
 
@@ -38,9 +38,9 @@ alwaysApply: true
 
 Синхронизировать **markdown ↔ HTML** в `you_vet/docs/` для https://docs.snzbeachvolleyball25.ru
 
-- Prod получает только `docs/*.html` (workflow `deploy-docs.yml` после push `dev`).
-- Обновить **и** `.md` (источник), **и** парный `.html` в стиле соседних страниц.
-- Проверить ссылки `index.html`, блок «← Все документы».
+- Prod получает только `docs/html/*` (workflow `deploy-docs.yml` после push `dev`).
+- Обновить **и** `docs/md/` (источник), **и** парный `docs/html/*.html` в стиле соседних страниц.
+- Проверить ссылки `html/index.html`, блок «← Все документы».
 
 Пары: `phase-5-appointments` · `audit` · `design-brief` · `mobile` · `booking-for-clinic.html` · `roadmap.html` · `project-for-devs.html` — см. таблицу в `CODEWORDS.md`.
 
@@ -59,4 +59,4 @@ alwaysApply: true
 ## Комбинации
 
 - `передача портал запись` — HANDOFF + phase-5 md/html (+ clinic html при необходимости)
-- `контекст деплой` — память + deployment.md
+- `контекст деплой` — память + `md/general/deployment.md`

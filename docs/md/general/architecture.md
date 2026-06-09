@@ -100,7 +100,7 @@ GitHub Actions (path-based триггеры)
        ├── apps/server/**  → build image → GHCR → SSH → docker compose pull/up
        ├── apps/admin/**   → npm build → scp → /var/www/vp-bot-admin/
        ├── apps/app/**     → npm build → scp → /var/www/vp-bot-app/
-       └── docs/**         → scp *.html → /var/www/you-vet-docs/
+       └── docs/html/**    → scp → /var/www/you-vet-docs/
 ```
 
 Workflows: `.github/workflows/deploy-{server,admin,app,docs}.yml`
