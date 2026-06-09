@@ -49,3 +49,6 @@ jobs:
 
       - name: Build app
         run: npm run build --workspace=apps/app
+
+      - name: Build mobile
+        run: npm run build --workspace=@you-vet/mobile

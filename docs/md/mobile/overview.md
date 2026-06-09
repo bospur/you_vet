@@ -6,6 +6,10 @@
 
 | Документ | Содержание |
 |---|---|
+| [design-mvp.md](./design-mvp.md) | **MVP RuStore v1:** scope, экраны, UI, auth, API, структура |
+| [screen-specs.md](./screen-specs.md) | Детальные wireframes: поля, API, навигация по экранам |
+| [app-id-and-stores.md](./app-id-and-stores.md) | Обучение: appId, RuStore, подпись APK |
+| [multi-tenant-notes.md](./multi-tenant-notes.md) | 1 клиника на сборку + задел на SaaS |
 | [research.md](./research.md) | Аналитика: варианты, auth, сторы, риски |
 | [roadmap.md](./roadmap.md) | План реализации на Capacitor, фазы, монорепо |
 

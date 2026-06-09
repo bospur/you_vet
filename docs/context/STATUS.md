@@ -1,33 +1,35 @@
 # Текущий статус проекта
 
-> Последнее обновление: 2026-06-01 (передача)
+> Последнее обновление: 2026-06-09 (передача)
 
 ## Prod
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | 🟡 | вопросы + ответ врача — после **Deploy server**; Group Privacy off |
-| Mini App | 🟡 | C1 polish + «Задать вопрос» — после **Deploy app** |
-| Admin | ✅ / 🟡 | запись без изменений в этой сессии |
-| API | 🟡 | 016, 017, отмена, questions — **Deploy server** |
-| Docs portal | ✅ | phase-5 + booking-for-clinic sync 2026-06-01 |
-| VPS | ✅ | SSH `vps`, миграции 016+017 с deploy server |
+| Telegram-бот | 🟡 | C1+вопросы — deploy; + mobile link/contact/OTP — **после push этой сессии** |
+| Mini App | 🟡 | C1 + вопросы — deploy app (если не выкатано) |
+| Admin | ✅ / 🟡 | без изменений в mobile-сессии |
+| API | 🟡 | 016–017 + **019 mobile** — deploy server |
+| **Mobile app** | 🟡 | M0+M1 sprint1 **в коде**, не в RuStore |
+| Docs portal | ✅ | восстановлен 2026-06-09 на VPS `213.176.65.71` |
+| VPS | 🟡 | новый хост; проверить `VPS_HOST` в GitHub Secrets |
 
 ## Функциональность (MVP)
 
-| Модуль | Admin | Mini App | API / бот |
-|---|---|---|---|
-| B1–B4 запись | 🟡 | 🟡 | 🟡 deploy |
-| C1 запись UI | — | 🟡 | 🟡 |
-| **Вопросы клиенту** | — | 🟡 код | 🟡 код |
+| Модуль | Admin | Mini App | API / бот | Mobile |
+|---|---|---|---|---|
+| B1–B4 запись | 🟡 | 🟡 | 🟡 | — |
+| C1 запись UI | — | 🟡 | 🟡 | — |
+| Вопросы клиенту | — | 🟡 | 🟡 | v1.1 |
+| **Mobile RuStore** | — | — | 🟡 M0 код | 🟡 M1 shell |
 
 ## Фокус
 
-1. Push `dev` → deploy **server + app**
-2. VPS: **016** + **017**; BotFather privacy для группы врачей
-3. Smoke: запись (отмена, слоты, вкладки) + вопрос → ответ в боте
-4. Backlog: ADM-02, очередь на слот
+1. Push `dev` → deploy **server** (миграция **019**)
+2. Smoke mobile auth (бот link → OTP → JWT → booking API)
+3. Mobile sprints 2–5 (`screen-specs.md`)
+4. Backlog: C1 smoke, ADM-02
 
 ## CI
 
-`ci.yml` на push `dev`: Go test + lint/build + admin/app.
+`ci.yml`: Go test + lint/build admin/app/**mobile**.

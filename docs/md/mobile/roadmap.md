@@ -128,6 +128,9 @@ Mini App и бот **не блокируются** — параллельные 
 
 ## Следующий шаг
 
-1. PR / design: структура `apps/mobile` в монорепо  
+Детальный дизайн: **[design-mvp.md](./design-mvp.md)** (2026-06-09).
+
+1. ~~Утвердить scope~~ + [screen-specs.md](./screen-specs.md)  
 2. M0: `/api/mobile/v1` + bot contact handler  
-3. M1: 4 экрана + internal APK
+3. Scaffold `apps/mobile` — sprint 1–6 по screen-specs  
+4. Internal APK → RuStore

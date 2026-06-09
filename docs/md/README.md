@@ -45,6 +45,9 @@
 
 | Документ | Описание |
 |----------|----------|
+| [design-mvp.md](./mobile/design-mvp.md) | MVP RuStore v1: экраны, API, UI |
+| [app-id-and-stores.md](./mobile/app-id-and-stores.md) | App ID, RuStore, подпись (обучение) |
+| [multi-tenant-notes.md](./mobile/multi-tenant-notes.md) | 1 клиника / сборку, задел SaaS |
 | [overview.md](./mobile/overview.md) | Обзор, решения |
 | [research.md](./mobile/research.md) | Аналитика |
 | [roadmap.md](./mobile/roadmap.md) | План Capacitor |

@@ -107,14 +107,22 @@ func main() {
 		appURL = "https://app.snzbeachvolleyball25.ru"
 	}
 
-	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo, questionRepo)
+	mobileAuthRepo := repository.NewMobileAuthRepository(database)
+
+	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo, questionRepo, mobileAuthRepo, telegramUserRepo)
 	if err != nil {
 		log.Fatalf("ошибка инициализации бота: %v", err)
 	}
 	go tgBot.Start()
 
+	mobileJWTSecret := handler.MobileJWTSecretFromEnv()
+	if mobileJWTSecret == "" {
+		log.Fatal("JWT_SECRET или JWT_MOBILE_SECRET не задан")
+	}
+
 	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
 	questionHandler := handler.NewClientQuestionHandler(questionRepo, tgBot)
+	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, clinicID, mobileJWTSecret)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
@@ -133,6 +141,33 @@ func main() {
 	http.HandleFunc("POST /api/clinics/{clinicSlug}/booking/requests", miniApp(bookingHandler.CreatePublicRequest))
 	http.HandleFunc("PATCH /api/clinics/{clinicSlug}/booking/requests/{id}", miniApp(bookingHandler.CancelPublicRequest))
 	http.HandleFunc("POST /api/clinics/{clinicSlug}/questions", miniApp(questionHandler.CreatePublicQuestion))
+
+	// ── Mobile API (Capacitor, без initData) ───────────────────────────────────
+	mobilePublic := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.IPRateLimit(120, time.Minute, h)
+	}
+	mobileAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.IPRateLimit(60, time.Minute, middleware.MobileAuth(mobileJWTSecret, h))
+	}
+
+	http.HandleFunc("POST /api/mobile/v1/auth/request", middleware.LoginRateLimit(10, 15*time.Minute, mobileAuthHandler.RequestCode))
+	http.HandleFunc("POST /api/mobile/v1/auth/verify", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.VerifyCode))
+	http.HandleFunc("POST /api/mobile/v1/auth/refresh", middleware.LoginRateLimit(30, 15*time.Minute, mobileAuthHandler.Refresh))
+
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/clinic-info", mobilePublic(clinicInfoHandler.GetPublicClinicInfo))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/animals", mobilePublic(animalHandler.GetAnimals))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/articles/featured", mobilePublic(articleHandler.GetFeaturedArticles))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/animals/{animalSlug}/articles", mobilePublic(articleHandler.GetArticles))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/articles/{slug}", mobilePublic(articleHandler.GetArticle))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/doctors", mobilePublic(doctorHandler.GetPublicDoctors))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/schedule", mobilePublic(doctorHandler.GetPublicSchedule))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/grooming/breeds", mobilePublic(groomingHandler.GetPublicBreeds))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/grooming/schedule", mobilePublic(groomingHandler.GetPublicSchedule))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/service-types", mobilePublic(bookingHandler.GetPublicServiceTypes))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/availability", mobilePublic(bookingHandler.GetPublicAvailability))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.ListPublicRequests))
+	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.CreatePublicRequest))
+	http.HandleFunc("PATCH /api/mobile/v1/clinics/{clinicSlug}/booking/requests/{id}", mobileAuth(bookingHandler.CancelPublicRequest))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))

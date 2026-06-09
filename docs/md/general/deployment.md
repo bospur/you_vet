@@ -6,7 +6,7 @@
 
 | Параметр | Значение |
 |---|---|
-| IP | 194.87.0.94 |
+| IP | **213.176.65.71** (переезд 2026-06; ранее 194.87.0.94) |
 | OS | Ubuntu |
 | Deploy пользователь | `deploy` |
 | SSH ключ (локально) | `~/.ssh/vp_bot_deploy` |
@@ -98,6 +98,8 @@ VPS **не собирает** образ локально и **не делает
 
 Markdown (`docs/md/`, `docs/context/`) в HTML-портал не деплоится — только через GitHub.
 
+> **Если docs.snz… отдаёт admin или SSL-ошибка** — см. [docs-portal-restore.md](./docs-portal-restore.md) (диагностика и починка Nginx + cert на VPS).
+
 ### GitHub Secrets
 
 | Secret | Значение |
@@ -136,6 +138,12 @@ cd apps/admin   # или apps/app
 VITE_API_URL=https://api.snzbeachvolleyball25.ru VITE_CLINIC_SLUG=default npm run build
 scp -r dist/* vps:/var/www/vp-bot-admin/   # или vp-bot-app
 ```
+
+## Docs-портал: если сломан
+
+Симптомы: `docs.snzbeachvolleyball25.ru` показывает admin, SSL-ошибка в браузере.
+
+Пошаговое восстановление: **[docs-portal-restore.md](./docs-portal-restore.md)**.
 
 ## SSL сертификаты
 
