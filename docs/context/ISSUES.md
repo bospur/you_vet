@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-01 (передача, C1 polish + вопросы)
+> Последнее обновление: 2026-06-09 (передача, admin bugs)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -63,6 +63,11 @@
 |---|---|---|---|
 | ADM-01 | — | Все новые экраны admin: адаптация `< sm` | **правило** — `BookingScreen` 2026-05-31 |
 | ADM-02 | ⚪ | Форма создания заявки в admin (сейчас только API) | backlog |
+| ADM-03 | 🟡 | Загрузка фото врача в admin на мобильном (HEIC, размер, axios multipart) | **fixed 2026-06-09** — `prepareImageForUpload` + `postFormData` |
+| ADM-04 | 🟡 | Создание услуги записи: кнопка «Создать» без запроса | **fixed 2026-06-09** — `mapRuleFields` в `ServiceTypeFormDialog` |
+| ADM-05 | ⚪ | Safari: label на бордере в форме услуги | **fixed 2026-06-09** — shrink + bgcolor label |
+| ADM-06 | ⚪ | Пароль при создании пользователя вручную | **fixed 2026-06-09** — автогенерация + копировать |
+| ADM-07 | ⚪ | Отпуск врача по диапазону дат | **fixed 2026-06-09** — UI + `addVacationRange` |
 
 ## Запись / API (фаза 5)
 
@@ -73,19 +78,18 @@
 | BOOK-03 | 🟡 | Admin: «Сохранить шаблон» без объяснения | **fixed 2026-05-31** — сравнение черновика + Alert |
 | BOOK-04 | ⚪ | Admin: селект «Услуга» на вкладке заявок сжат | **fixed 2026-05-31** — FormControl+Select |
 | INF-05 | 🟡 | CI lint падает, deploy всё равно идёт | **fixed 2026-06-01** — React Hooks v7 в admin |
-| BOOK-05 | 🟡 | C1 Mini App — запись, слоты, отмена, UX | **fixed в коде 2026-06-01** — ждёт deploy app |
-| BOOK-06 | 🟡 | Миграция `016_booking_schedule_style` | **в коде** — применить на VPS с deploy server |
+| BOOK-05 | 🟡 | C1 Mini App — запись, слоты, отмена, UX | **fixed 2026-06-01** — prod |
+| BOOK-06 | 🟡 | Миграция `016_booking_schedule_style` | **fixed** — prod |
 | BOOK-07 | 🟡 | Бот без времени в уведомлениях | **fixed 2026-06-01** — deploy server |
 | BOOK-08 | 🔴 | Отмена заявки из Mini App → 500 (`handled_by_user_id=0`) | **fixed 2026-06-01** — deploy server |
 | BOOK-09 | ⚪ | C1: прошедшие слоты на сегодня; вкладки «Мои заявки» | **fixed 2026-06-01** — deploy app |
-| QST-01 | ⚪ | «Задать вопрос» Mini App → чат врачей → ответ в бот | **fixed в коде 2026-06-01** — миграция **017**, deploy server+app |
+| QST-01 | ⚪ | «Задать вопрос» Mini App → чат врачей → ответ в бот | **fixed 2026-06-01** — prod, миграция **017** |
 | INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../md/general/deployment.md) § Идеи |
 | INF-07 | ⚪ | Упрощённый error tracking (свой «мини-Sentry») | planned — fingerprint, booking/auth/upload |
 | INF-08 | ⚪ | Роль `superadmin` (разработчик платформы) | planned — отдельно от `admin` клиники |
 
 ## Следующие шаги
 
-1. **Deploy server + app** (BOOK-01, 005–009, 016, QST-01 / 017)
-2. Smoke C1 + вопросы; BotFather Group Privacy off
-3. **ADM-02** форма заявки в admin
-4. PRD-04 — `analytics_events`
+1. **ADM-02** — форма заявки в admin
+2. Очередь на слот (phase-5 backlog)
+3. PRD-04 — `analytics_events`
