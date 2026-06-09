@@ -18,12 +18,14 @@ import {
   useTheme,
 } from '@mui/material';
 import { NumericTextField } from '../../../../shared/ui/NumericTextField';
+import { useNotification } from '../../../../shared/ui/Notification/NotificationContext';
 import type { BookingServiceType, BookingServiceTypeInput } from '../../../../data/source/booking';
 import {
   buildBookingRules,
   DEFAULT_MAX_PER_DAY,
   parseBookingRules,
   rulesToFormFields,
+  type BookingServiceRules,
 } from '../../domain/bookingRules';
 import {
   SCHEDULE_STYLE_LABELS,
@@ -80,6 +82,29 @@ interface Props {
   onSubmit: (values: BookingServiceTypeInput) => void;
 }
 
+function mapRuleFields(rules: BookingServiceRules, scheduleStyle: ScheduleStyle) {
+  const f = rulesToFormFields(rules, scheduleStyle);
+  return {
+    pet_age_collect: f.petAgeCollect,
+    pet_age_required: f.petAgeRequired,
+    pet_age_warn_years: f.petAgeWarnYears,
+    pet_age_warn_message: f.petAgeWarnMessage,
+    confirm_default: f.confirmDefault,
+    reject_default: f.rejectDefault,
+    max_per_service_date: f.maxPerServiceDate,
+    max_per_day: f.maxPerDay,
+  };
+}
+
+const selectLabelProps = { inputLabel: { shrink: true } } as const;
+
+const outlinedFieldSx = {
+  '& .MuiInputLabel-root.MuiInputLabel-shrink': {
+    bgcolor: 'background.paper',
+    px: 0.5,
+  },
+} as const;
+
 function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput {
   const seed = values.seed_max_per_day;
   const capacityGroup = values.category === 'surgery' ? 'cat_surgery' : null;
@@ -109,6 +134,7 @@ function toInput(values: FormValues, isCreate: boolean): BookingServiceTypeInput
 }
 
 export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmit }: Props) {
+  const { notify } = useNotification();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: valibotResolver(schema),
@@ -163,7 +189,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
   useEffect(() => {
     if (open) {
       const style = (initial?.schedule_style ?? 'day_capacity') as ScheduleStyle;
-      const ruleFields = rulesToFormFields(parseBookingRules(initial?.rules), style);
+      const rulesForm = mapRuleFields(parseBookingRules(initial?.rules), style);
       reset(
         initial
           ? {
@@ -175,7 +201,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               schedule_style: initial.schedule_style,
               seed_max_per_day: undefined,
               instructions_client: initial.instructions_client ?? '',
-              ...ruleFields,
+              ...rulesForm,
               is_active: initial.is_active,
               sort_order: initial.sort_order,
             }
@@ -188,7 +214,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
               schedule_style: 'day_capacity',
               seed_max_per_day: undefined,
               instructions_client: '',
-              ...ruleFields,
+              ...rulesForm,
               pet_age_collect: false,
               pet_age_required: false,
               is_active: true,
@@ -202,19 +228,27 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>{initial ? 'Редактировать услугу' : 'Новая услуга'}</DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
+        <Stack spacing={2} sx={{ mt: 1, ...outlinedFieldSx }}>
           <Controller
             name="name"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label="Название" fullWidth autoFocus error={!!errors.name} helperText={errors.name?.message} />
+              <TextField
+                {...field}
+                label="Название"
+                fullWidth
+                autoFocus
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                slotProps={{ inputLabel: { shrink: !!field.value } }}
+              />
             )}
           />
           <Controller
             name="category"
             control={control}
             render={({ field }) => (
-              <TextField {...field} select label="Категория" fullWidth>
+              <TextField {...field} select label="Категория" fullWidth slotProps={selectLabelProps}>
                 <MenuItem value="uzi">УЗИ</MenuItem>
                 <MenuItem value="surgery">Операции</MenuItem>
                 <MenuItem value="xray">Рентген</MenuItem>
@@ -225,7 +259,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
             name="species_filter"
             control={control}
             render={({ field }) => (
-              <TextField {...field} select label="Кого принимаем" fullWidth>
+              <TextField {...field} select label="Кого принимаем" fullWidth slotProps={selectLabelProps}>
                 <MenuItem value="any">Любые животные</MenuItem>
                 <MenuItem value="cats_only">Только кошки</MenuItem>
               </TextField>
@@ -235,7 +269,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
             name="schedule_style"
             control={control}
             render={({ field }) => (
-              <TextField {...field} select label="Тип расписания" fullWidth>
+              <TextField {...field} select label="Тип расписания" fullWidth slotProps={selectLabelProps}>
                 {(Object.keys(SCHEDULE_STYLE_LABELS) as ScheduleStyle[]).map((key) => (
                   <MenuItem key={key} value={key}>{SCHEDULE_STYLE_LABELS[key]}</MenuItem>
                 ))}
@@ -282,7 +316,7 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
             name="booking_mode"
             control={control}
             render={({ field }) => (
-              <TextField {...field} select label="После заявки клиента" fullWidth>
+              <TextField {...field} select label="После заявки клиента" fullWidth slotProps={selectLabelProps}>
                 <MenuItem value="pending_request">Ждёт подтверждения (место резервируется)</MenuItem>
                 <MenuItem value="instant">Сразу подтверждено</MenuItem>
               </TextField>
@@ -380,7 +414,11 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
                 fullWidth
                 min={1}
                 allowEmpty={false}
-                helperText="Разные клички — отдельные заявки. Для записи по времени обычно 1."
+                error={!!errors.max_per_service_date}
+                helperText={
+                  errors.max_per_service_date?.message
+                  ?? 'Разные клички — отдельные заявки. Для записи по времени обычно 1.'
+                }
               />
             )}
           />
@@ -395,7 +433,10 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
                 fullWidth
                 min={1}
                 allowEmpty={false}
-                helperText="Защита от злоупотреблений (по умолчанию 5)."
+                error={!!errors.max_per_day}
+                helperText={
+                  errors.max_per_day?.message ?? 'Защита от злоупотреблений (по умолчанию 5).'
+                }
               />
             )}
           />
@@ -439,7 +480,14 @@ export function ServiceTypeFormDialog({ open, initial, loading, onClose, onSubmi
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>Отмена</Button>
-        <Button variant="contained" disabled={loading} onClick={handleSubmit((v) => onSubmit(toInput(v, !initial)))}>
+        <Button
+          variant="contained"
+          disabled={loading}
+          onClick={handleSubmit(
+            (v) => onSubmit(toInput(v, !initial)),
+            () => notify('Проверьте поля формы', 'error'),
+          )}
+        >
           {initial ? 'Сохранить' : 'Создать'}
         </Button>
       </DialogActions>

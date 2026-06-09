@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, Button, Chip, CircularProgress, Dialog, DialogActions,
-  DialogContent, DialogTitle, FormControl, IconButton, InputLabel,
-  MenuItem, Paper, Select, Stack, Table, TableBody, TableCell,
+  DialogContent, DialogTitle, FormControl, IconButton, InputAdornment,
+  InputLabel, MenuItem, Paper, Select, Stack, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, TextField, Tooltip, Typography,
   useMediaQuery, useTheme,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useForm, Controller } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import * as v from 'valibot';
@@ -26,6 +28,13 @@ const schema = v.object({
 });
 
 type FormValues = { login: string; password: string; role: 'admin' | 'editor' | 'groomer' | 'manager' };
+
+function generatePassword(length = 8): string {
+  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+}
 
 const roleChip = (role: User['role']) => {
   if (role === 'admin') return <Chip label="Админ" size="small" color="primary" variant="outlined" />;
@@ -74,16 +83,36 @@ export function UsersScreen() {
     onError: () => notify('Ошибка удаления', 'error'),
   });
 
+  const handleOpenCreate = () => {
+    form.reset({ login: '', password: generatePassword(), role: 'editor' });
+    setDialogOpen(true);
+  };
+
+  const handleGeneratePassword = () => {
+    form.setValue('password', generatePassword(), { shouldValidate: true, shouldDirty: true });
+  };
+
+  const handleCopyPassword = async () => {
+    const password = form.getValues('password');
+    if (!password) return;
+    try {
+      await navigator.clipboard.writeText(password);
+      notify('Пароль скопирован', 'success');
+    } catch {
+      notify('Не удалось скопировать', 'error');
+    }
+  };
+
   return (
     <Layout title="Пользователи">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" fontWeight={600}>Пользователи</Typography>
         {isMobile ? (
           <Tooltip title="Добавить">
-            <IconButton color="primary" onClick={() => setDialogOpen(true)}><AddIcon /></IconButton>
+            <IconButton color="primary" onClick={handleOpenCreate}><AddIcon /></IconButton>
           </Tooltip>
         ) : (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
             Добавить
           </Button>
         )}
@@ -170,10 +199,29 @@ export function UsersScreen() {
                 <TextField
                   {...field}
                   label="Пароль"
-                  type="password"
+                  type="text"
                   fullWidth
+                  autoComplete="new-password"
                   error={!!form.formState.errors.password}
-                  helperText={form.formState.errors.password?.message}
+                  helperText={form.formState.errors.password?.message ?? '6–8 символов, можно сгенерировать'}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Tooltip title="Сгенерировать">
+                            <IconButton size="small" onClick={handleGeneratePassword} edge="end">
+                              <RefreshIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Скопировать">
+                            <IconButton size="small" onClick={handleCopyPassword} edge="end" disabled={!field.value}>
+                              <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
                 />
               )}
             />

@@ -41,7 +41,6 @@ export async function uploadDoctorPhoto(id: number, file: File): Promise<{ photo
   const { data } = await axiosInstance.post<{ photo_url: string }>(
     `/api/admin/doctors/${id}/photo`,
     form,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return data;
 }
@@ -87,6 +86,25 @@ export async function upsertException(
     ex,
   );
   return data;
+}
+
+function eachDateInRange(from: string, to: string): string[] {
+  const dates: string[] = [];
+  const cur = new Date(`${from}T12:00:00`);
+  const end = new Date(`${to}T12:00:00`);
+  while (cur <= end) {
+    dates.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
+export async function addVacationRange(id: number, dateFrom: string, dateTo: string): Promise<number> {
+  const dates = eachDateInRange(dateFrom, dateTo);
+  for (const date of dates) {
+    await upsertException(id, { date, is_day_off: true, time_from: null, time_to: null });
+  }
+  return dates.length;
 }
 
 export async function deleteException(doctorId: number, exceptionId: number): Promise<void> {
