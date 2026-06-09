@@ -41,9 +41,9 @@ docs/
 | [html/roadmap.html](./html/roadmap.html) | Roadmap |
 | [html/booking-for-clinic.html](./html/booking-for-clinic.html) | **Клиника** — запись |
 | [html/phase-5-appointments.html](./html/phase-5-appointments.html) | Фаза 5 (тех.) |
-| [html/design-brief.html](./html/design-brief.html) | Дизайнеры |
+| [html/rustore-app.html](./html/rustore-app.html) | **RuStore** — Ветпрактика |
 | [html/audit.html](./html/audit.html) | Аудит |
-| [html/mobile.html](./html/mobile.html) | Mobile (planned) |
+| [html/mobile.html](./html/mobile.html) | Mobile (тех.) |
 
 ## Быстрый старт (разработка)
 

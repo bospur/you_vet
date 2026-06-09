@@ -168,13 +168,13 @@
 </head>
 <body>
 
-<p class="doc-back"><a href="index.html">← Все документы</a></p>
+<p class="doc-back"><a href="index.html">← Все документы</a> · <a href="rustore-app.html">RuStore</a> · <a href="mobile.html">Mobile</a></p>
 
 <div class="header">
   <h1>YouVet — Roadmap</h1>
   <div class="subtitle">Состояние проекта · что сделано · что планируется</div>
   <div class="meta">
-    <span style="color:#888; font-size:12px;">Обновлено: 31 мая 2026 (техдолг закрыт · план Фазы 5)</span>
+    <span style="color:#888; font-size:12px;">Обновлено: 9 июня 2026 (Фаза 5 в коде · Mobile RuStore M0+M1)</span>
   </div>
 </div>
 
@@ -182,7 +182,7 @@
 <h2>О проекте</h2>
 
 <p>
-  <strong>YouVet</strong> — Telegram Mini App для ветеринарных клиник. Владельцы питомцев получают доступ к информации о клинике, статьям по первой помощи, расписанию врачей и услугам груминга прямо в Telegram. Клиника управляет всем через веб-панель администратора.
+  <strong>YouVet</strong> — Telegram Mini App для ветеринарных клиник. Владельцы питомцев получают доступ к информации о клинике, статьям по первой помощи, расписанию врачей и услугам груминга прямо в Telegram. Клиника управляет всем через веб-панель администратора. Параллельно — Android-приложение <strong>Ветпрактика</strong> для RuStore (<a href="rustore-app.html">раздел RuStore</a>).
 </p>
 
 <p>
@@ -191,11 +191,11 @@
 
 <div class="stats">
   <div class="stat">
-    <div class="stat-num">3</div>
-    <div class="stat-label">приложения в монорепо</div>
+    <div class="stat-num">4</div>
+    <div class="stat-label">клиента в монорепо</div>
   </div>
   <div class="stat">
-    <div class="stat-num">12</div>
+    <div class="stat-num">19</div>
     <div class="stat-label">миграций БД</div>
   </div>
   <div class="stat">
@@ -203,8 +203,8 @@
     <div class="stat-label">экранов в админке</div>
   </div>
   <div class="stat">
-    <div class="stat-num">3</div>
-    <div class="stat-label">роли пользователей</div>
+    <div class="stat-num">4</div>
+    <div class="stat-label">роли (вкл. manager)</div>
   </div>
 </div>
 
@@ -481,98 +481,122 @@
   </div>
 </div>
 
-<!-- M0 АНАЛИТИКА -->
-<div class="phase">
-  <div class="phase-header">
-    <div class="phase-dot dot-done"></div>
-    <div class="phase-title">M0 — Аналитика (базовая)</div>
-    <span class="phase-badge badge-done">В prod</span>
-  </div>
-
-  <div class="note">
-    Subset PRD-04 / упреждает Фазу 6: учёт уникальных посетителей Mini App без событий по экранам.
-  </div>
-
-  <div class="items">
-    <div class="item done">
-      <div class="item-icon">✅</div>
-      <div class="item-body">
-        <div class="item-title">Таблица telegram_users</div>
-        <div class="item-desc">Миграция 012: <code>clinic_id</code>, <code>telegram_user_id</code>, <code>first_seen</code>, <code>last_seen</code>, username, first_name</div>
-      </div>
-      <span class="item-tag tag-infra">Infra</span>
-    </div>
-    <div class="item done">
-      <div class="item-icon">✅</div>
-      <div class="item-body">
-        <div class="item-title">Сбор из initData</div>
-        <div class="item-desc">После валидации initData — upsert на каждом запросе <code>/api/clinics/...</code></div>
-      </div>
-      <span class="item-tag tag-infra">Infra</span>
-    </div>
-    <div class="item done">
-      <div class="item-icon">✅</div>
-      <div class="item-body">
-        <div class="item-title">Дашборд «Обзор» в admin</div>
-        <div class="item-desc"><code>GET /api/admin/stats/summary</code> + <code>/stats/users</code>; экран <code>/dashboard</code> — карточки и таблица посетителей; только admin</div>
-      </div>
-      <span class="item-tag tag-ux">UX</span>
-    </div>
-  </div>
-</div>
-
 <!-- ФАЗА 5 -->
 <div class="phase">
   <div class="phase-header">
-    <div class="phase-dot dot-planned"></div>
+    <div class="phase-dot dot-active"></div>
     <div class="phase-title">Фаза 5 — Запись на приём</div>
-    <span class="phase-badge badge-planned">Запланировано</span>
+    <span class="phase-badge badge-active">В коде · deploy</span>
   </div>
 
   <div class="note">
-    Узкий каталог (УЗИ, операции кошек с общим лимитом, рентген). Слоты на 2 недели; при pending место резервируется. Роль <strong>manager</strong>, уведомления в общий чат врачей. План: <a href="phase-5-appointments.html"><strong>Фаза 5 — спецификация v2</strong></a>.
+    Узкий каталог (УЗИ, операции кошек с общим лимитом, рентген). Слоты на 2 недели; при pending место резервируется. Роль <strong>manager</strong>, уведомления в общий чат врачей. Миграции <strong>016–017</strong>. План: <a href="phase-5-appointments.html"><strong>Фаза 5 — спецификация v2</strong></a> · памятка: <a href="booking-for-clinic.html">для клиники</a>.
   </div>
 
   <div class="items">
-    <div class="item planned">
-      <div class="item-icon">🗄</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">B1 — Услуги + роль manager</div>
         <div class="item-desc"><code>booking_service_types</code>, admin «Запись → Услуги»</div>
       </div>
       <span class="item-tag tag-infra">Infra</span>
     </div>
-    <div class="item planned">
-      <div class="item-icon">📅</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">B2 — Расписание и ёмкость</div>
         <div class="item-desc">Шаблон недели + окна, общий лимит кошек-операций, 2 недели вперёд</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
-    <div class="item planned">
-      <div class="item-icon">🖥</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">B3 — Заявки</div>
         <div class="item-desc">Резерв при pending, confirm/reject; admin очередь</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
-    <div class="item planned">
-      <div class="item-icon">💬</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">B4 — Бот: чат врачей + клиент</div>
-        <div class="item-desc">Один групповой чат; личные уведомления клиенту</div>
+        <div class="item-desc">Групповой чат врачей; личные уведомления клиенту; <code>/link_staff</code></div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+    <div class="item active">
+      <div class="item-icon">📱</div>
+      <div class="item-body">
+        <div class="item-title">C1 — Mini App</div>
+        <div class="item-desc">CTA, выбор услуги/даты, «мои заявки» — в коде, smoke после deploy app</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
+      <div class="item-body">
+        <div class="item-title">Q1 — «Задать вопрос»</div>
+        <div class="item-desc">Карточка на главной, лимит 5/день, ответ врача через бот; миграция 017</div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">🖥</div>
+      <div class="item-body">
+        <div class="item-title">ADM-02 — заявка из admin</div>
+        <div class="item-desc">Создание заявки менеджером из панели; очередь на слот — backlog</div>
+      </div>
+      <span class="item-tag tag-core">Core</span>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE RUSTORE -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-dot dot-active"></div>
+    <div class="phase-title">Mobile — Ветпрактика (RuStore)</div>
+    <span class="phase-badge badge-active">M0+M1 в коде</span>
+  </div>
+
+  <div class="note">
+    Отдельный Android-клиент на Capacitor, appId <code>ru.snzbeachvolleyball25.vetpraktika</code>. Auth: телефон + OTP в Telegram. v1 = контент + запись. Гайд: <a href="rustore-app.html"><strong>Ветпрактика → RuStore</strong></a> · техника: <a href="mobile.html">mobile.html</a>.
+  </div>
+
+  <div class="items">
+    <div class="item active">
+      <div class="item-icon">🔐</div>
+      <div class="item-body">
+        <div class="item-title">M0 — Mobile API + auth</div>
+        <div class="item-desc">Миграция 019, <code>/api/mobile/v1</code>, OTP через бота, JWT для booking — ждёт deploy server</div>
+      </div>
+      <span class="item-tag tag-infra">Infra</span>
+    </div>
+    <div class="item active">
+      <div class="item-icon">📱</div>
+      <div class="item-body">
+        <div class="item-title">M1 — Shell приложения</div>
+        <div class="item-desc">Splash, tab bar, главная (clinic-info), booking hub — <code>apps/mobile/</code></div>
+      </div>
+      <span class="item-tag tag-ux">UX</span>
+    </div>
+    <div class="item planned">
+      <div class="item-icon">📄</div>
+      <div class="item-body">
+        <div class="item-title">M2 — Контент + запись</div>
+        <div class="item-desc">Статьи, врачи/груминг, auth UI, flow записи (sprints 2–5)</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
     <div class="item planned">
-      <div class="item-icon">📱</div>
+      <div class="item-icon">🛒</div>
       <div class="item-body">
-        <div class="item-title">C1 — Mini App</div>
-        <div class="item-desc">CTA, выбор услуги/даты, «мои заявки»</div>
+        <div class="item-title">M3 — Первая публикация RuStore</div>
+        <div class="item-desc">Keystore, AAB, скриншоты, модерация</div>
       </div>
-      <span class="item-tag tag-ux">UX</span>
+      <span class="item-tag tag-infra">Infra</span>
     </div>
   </div>
 </div>
@@ -590,33 +614,6 @@
       <div class="item-body">
         <div class="item-title">Концепция баннера</div>
         <div class="item-desc">Формат: только текст · текст + картинка · превью → info-страница. Не блокирует Фазу 5</div>
-      </div>
-      <span class="item-tag tag-ux">UX</span>
-    </div>
-  </div>
-</div>
-
-<!-- ФАЗА 6 -->
-<div class="phase">
-  <div class="phase-header">
-    <div class="phase-dot dot-planned"></div>
-    <div class="phase-title">Фаза 6 — Аналитика</div>
-    <span class="phase-badge badge-planned">Запланировано</span>
-  </div>
-  <div class="items">
-    <div class="item planned">
-      <div class="item-icon">📊</div>
-      <div class="item-body">
-        <div class="item-title">Сбор событий</div>
-        <div class="item-desc">Middleware записывает события (открытие разделов, просмотр врача и т.д.) в таблицу analytics_events. Можно добавить раньше UI — начать копить данные</div>
-      </div>
-      <span class="item-tag tag-infra">Infra</span>
-    </div>
-    <div class="item done">
-      <div class="item-icon">✅</div>
-      <div class="item-body">
-        <div class="item-title">Дашборд уникальных пользователей</div>
-        <div class="item-desc">M0: экран «Обзор» — today / 7d / 30d / total. Популярные разделы — позже</div>
       </div>
       <span class="item-tag tag-ux">UX</span>
     </div>
@@ -685,7 +682,10 @@
       <span class="item-tag tag-core">Core</span>
     </div>
     <div class="item future">
-        <div class="item-desc">История визитов, предстоящие записи, уведомления. Идентификация через Telegram — без регистрации</div>
+      <div class="item-icon">🔵</div>
+      <div class="item-body">
+        <div class="item-title">Личный кабинет клиента</div>
+        <div class="item-desc">История визитов, предстоящие записи, уведомления. Идентификация через Telegram / телефон</div>
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
@@ -875,11 +875,11 @@
       </div>
       <span class="item-tag tag-core">Core</span>
     </div>
-    <div class="item planned">
-      <div class="item-icon">💡</div>
+    <div class="item done">
+      <div class="item-icon">✅</div>
       <div class="item-body">
         <div class="item-title">Вопрос врачу</div>
-        <div class="item-desc">Быстрая форма «задать вопрос» — сообщение уходит в Telegram дежурному. Снижает звонки по пустякам и создаёт лояльность</div>
+        <div class="item-desc">Реализовано в Фазе 5 (Q1): Mini App + ответ через бот</div>
       </div>
       <span class="item-tag tag-ux">UX</span>
     </div>
