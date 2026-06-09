@@ -43,10 +43,10 @@
 |---|---|---|---|
 | PRD-01 | 🔴 | Скрыть груминг если раздел пустой | **fixed** (work-audit-clear) |
 | PRD-02 | 🟡 | Пересмотр архитектуры статей | **fixed** — животное → статьи, slug auto, prod |
-| PRD-03 | ⚪ | Запись на приём | **in progress** — C1 в коде на `dev`, prod после deploy app; [phase-5-appointments.md](../phase-5-appointments.md) |
+| PRD-03 | ⚪ | Запись на приём | **in progress** — C1 в коде на `dev`, prod после deploy app; [phase-5-appointments.md](../md/phases/phase-5-appointments.md) |
 | PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
-| PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../mobile/) |
+| PRD-06 | ⚪ | Mobile app (Capacitor, отдельный клиент) | research — см. [mobile/](../md/mobile/) |
 | PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
 | PRD-08 | ⚪ | Polish главной (haptic, сегодня в клинике, sticky звонок, skeleton/fallback) | **fixed 2026-05-30** — в prod |
 | PRD-09 | ⚪ | Карточка клиента со штрихкодом (бот + Mini App → mobile) | planned — **Фаза 8**; интеграция с БД клиники по запросу |
@@ -79,7 +79,7 @@
 | BOOK-08 | 🔴 | Отмена заявки из Mini App → 500 (`handled_by_user_id=0`) | **fixed 2026-06-01** — deploy server |
 | BOOK-09 | ⚪ | C1: прошедшие слоты на сегодня; вкладки «Мои заявки» | **fixed 2026-06-01** — deploy app |
 | QST-01 | ⚪ | «Задать вопрос» Mini App → чат врачей → ответ в бот | **fixed в коде 2026-06-01** — миграция **017**, deploy server+app |
-| INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../deployment.md) § Идеи |
+| INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../md/general/deployment.md) § Идеи |
 | INF-07 | ⚪ | Упрощённый error tracking (свой «мини-Sentry») | planned — fingerprint, booking/auth/upload |
 | INF-08 | ⚪ | Роль `superadmin` (разработчик платформы) | planned — отдельно от `admin` клиники |
 

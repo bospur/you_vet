@@ -79,7 +79,7 @@ PostgreSQL
 | Admin API | `clinic_id` из JWT; RBAC + scoping в update/delete |
 | Telegram бот | `CLINIC_SLUG` из env |
 
-**Production:** один VPS = одна клиника. Схема multi-tenant ready. См. [roles.md](../roles.md), [audit.md](../audit.md).
+**Production:** один VPS = одна клиника. Схема multi-tenant ready. См. [roles.md](../general/roles.md), [audit.md](../general/audit.md).
 
 ## Переменные окружения
 
@@ -101,7 +101,7 @@ PostgreSQL
 ## Авторизация
 
 JWT middleware проверяет **валидность токена**, не роль. Role checks — выборочно в handlers.
-Матрица: [roles.md](../roles.md).
+Матрица: [roles.md](../general/roles.md).
 
 JWT: `Authorization: Bearer <token>`, 24ч, claims `user_id`, `clinic_id`, `role`. Пароли — bcrypt.
 

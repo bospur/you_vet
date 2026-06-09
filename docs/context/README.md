@@ -8,7 +8,7 @@
 | Слово | Действие |
 |--------|----------|
 | **`контекст`** | AI читает HANDOFF → STATUS → ISSUES → PROJECT (+ маршрут) |
-| **`портал`** | Синхрон markdown ↔ `docs/*.html` для docs.snz… |
+| **`портал`** | Синхрон markdown ↔ `docs/html/*.html` для docs.snz… |
 | **`передача`** | Обновить эту папку в конце сессии |
 
 Подробно: [../CODEWORDS.md](../CODEWORDS.md)
@@ -25,14 +25,14 @@
 ## Как использовать (для AI)
 
 1. В начале сессии прочитать `HANDOFF.md` → `STATUS.md` → `ISSUES.md`
-2. Фаза 5 (запись) — [../phase-5-appointments.md](../phase-5-appointments.md)
-3. Полный аудит — [../audit.md](../audit.md)
+2. Фаза 5 (запись) — [../md/phases/phase-5-appointments.md](../md/phases/phase-5-appointments.md)
+3. Полный аудит — [../md/general/audit.md](../md/general/audit.md)
 3. Markdown-документация — [../README.md](../README.md)
 4. HTML-портал для команды — https://docs.snzbeachvolleyball25.ru
 
 ## Правило синхронизации
 
-Если меняется поведение кода — обнови соответствующий markdown-док и при необходимости HTML-портал (`docs/*.html`).
+Если меняется поведение кода — обнови соответствующий markdown в `docs/md/` и при необходимости HTML-портал (`docs/html/`).
 Расхождение docs ↔ code — известная проблема; этот каталог помогает её не накапливать.
 
 ## Admin — мобильная вёрстка

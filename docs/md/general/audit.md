@@ -1,7 +1,7 @@
 # Технический аудит YouVet
 
 > Дата: 2026-05-30 · Автор: Cursor (сессия аудита)  
-> Контекст для AI: [context/](./context/) · Handoff: [context/HANDOFF.md](./context/HANDOFF.md)
+> Контекст для AI: [context/](../../context/) · Handoff: [context/HANDOFF.md](../../context/HANDOFF.md)
 
 ## Резюме
 
@@ -107,7 +107,7 @@ Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS �
 
 | Было | Стало |
 |---|---|
-| README → `docs/api.md` | → `docs/server/api.md` |
+| README → `docs/api.md` | → `docs/md/server/api.md` |
 | `deployment.md`: git pull + docker build на VPS | GHCR pull (см. `deploy-server.yml`) |
 | `roles.md`: полный backend RBAC | Честная матрица: UI + частичный backend |
 | `architecture.md`: git pull в CI | GHCR workflow |
@@ -115,7 +115,7 @@ Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS �
 | `monorepo.md`: только `packages/types` | + `packages/cat` |
 | `apps/admin/README.md`: битые ссылки на docs | `../../docs/...` |
 
-Полный трекер: [context/ISSUES.md](./context/ISSUES.md)
+Полный трекер: [context/ISSUES.md](../../context/ISSUES.md)
 
 ---
 
@@ -153,4 +153,4 @@ Admin хранит токен в `localStorage` (`vp_admin_token`). При XSS �
 - [roles.md](./roles.md) — роли и фактическое состояние RBAC
 - [architecture.md](./architecture.md) — схема системы
 - [deployment.md](./deployment.md) — инфраструктура и CI/CD
-- [roadmap.html](./roadmap.html) — продуктовый roadmap (HTML-портал)
+- [roadmap.html](../../html/roadmap.html) — продуктовый roadmap (HTML-портал)

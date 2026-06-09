@@ -46,7 +46,7 @@ Admin: **`/booking`**. Миграции **013–017**.
 
 ## Ключевые документы
 
-- [phase-5-appointments.md](../phase-5-appointments.md)
-- [booking-for-clinic.html](../booking-for-clinic.html)
-- [roles.md](../roles.md)
+- [phase-5-appointments.md](../md/phases/phase-5-appointments.md)
+- [booking-for-clinic.html](../html/booking-for-clinic.html)
+- [roles.md](../md/general/roles.md)
 - [context/](./)

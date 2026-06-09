@@ -5,7 +5,7 @@
 
 **Связанные документы (опционально):**
 - `FRONTEND_ARCHITECTURE_AUDIT.md` — детальный аудит эталонного проекта postfire (источник идей)
-- `docs/frontend/templates/` — готовые файлы-шаблоны для копирования
+- `docs/md/frontend/templates/` — готовые файлы-шаблоны для копирования
 
 ---
 
@@ -38,7 +38,7 @@ Route → Screen → Module (domain + feature) → shared UI
 1. Прочитай GUIDE целиком + заполненный PROJECT CONTEXT (§12).
 2. Просканируй репозиторий: package.json, src/, роутинг, state, data layer.
 3. Gap-analysis: что есть vs §3–§8, DoD §11.
-4. План по фазам §13; реализация — эталоны §9 и docs/frontend/templates/.
+4. План по фазам §13; реализация — эталоны §9 и docs/md/frontend/templates/.
 5. Спорные решения — ADR (§14), не ломай без записи.
 
 Правила state (§6):
@@ -605,7 +605,7 @@ export const DEFAULT_CACHE_LIFETIME_MS = 30_000;
 | Обязательно | Опционально |
 |-------------|-------------|
 | `FRONTEND_ARCHITECTURE_GUIDE.md` | `FRONTEND_ARCHITECTURE_AUDIT.md` (reference project) |
-| Заполненный §12 PROJECT CONTEXT | `docs/frontend/templates/` |
+| Заполненный §12 PROJECT CONTEXT | `docs/md/frontend/templates/` |
 | Название пилот-модуля | Swagger / OpenAPI |
 | Ограничения («не трогать X») | Существующие ADR |
 
@@ -665,14 +665,14 @@ Barrel `index.ts` с re-export **не мешает** AI и людям, если:
 
 | Назначение | Шаблон |
 |------------|--------|
-| Source HTTP | `docs/frontend/templates/bookingSource.template.ts` |
-| Repository class | `docs/frontend/templates/BookingRepository.template.ts` |
-| Query keys | `docs/frontend/templates/queryKeys.template.ts` |
-| Query hook | `docs/frontend/templates/useBookingServiceTypesQuery.template.ts` |
-| Mutation hook | `docs/frontend/templates/useCreateBookingServiceTypeMutation.template.ts` |
-| Feature + useLogic | `docs/frontend/templates/BookingServicesPanel.template/` |
-| Screen | `docs/frontend/templates/BookingScreen.template/` |
-| Module barrels | `docs/frontend/templates/module-index.template.ts` |
+| Source HTTP | `docs/md/frontend/templates/bookingSource.template.ts` |
+| Repository class | `docs/md/frontend/templates/BookingRepository.template.ts` |
+| Query keys | `docs/md/frontend/templates/queryKeys.template.ts` |
+| Query hook | `docs/md/frontend/templates/useBookingServiceTypesQuery.template.ts` |
+| Mutation hook | `docs/md/frontend/templates/useCreateBookingServiceTypeMutation.template.ts` |
+| Feature + useLogic | `docs/md/frontend/templates/BookingServicesPanel.template/` |
+| Screen | `docs/md/frontend/templates/BookingScreen.template/` |
+| Module barrels | `docs/md/frontend/templates/module-index.template.ts` |
 
 ---
 

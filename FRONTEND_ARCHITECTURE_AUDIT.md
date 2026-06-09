@@ -602,7 +602,7 @@ export const createUIStore = () => new UIStore(domainStoreInstance);
 
 ## 18. ADR — журнал архитектурных решений
 
-В целевом проекте завести `docs/adr/NNN-title.md`. Минимальный шаблон:
+В целевом проекте завести `docs/md/adr/NNN-title.md`. Минимальный шаблон:
 
 ```markdown
 # ADR-NNN: Заголовок
@@ -700,7 +700,7 @@ export const createUIStore = () => new UIStore(domainStoreInstance);
 3. Составь gap-analysis: что уже есть vs §3, §15, чеклист §11.
 4. Предложи план по фазам §11 + приоритетам §19.
 5. При реализации: целевая модель §15 (hooks→repository), эталоны §16, DoD §15.6.
-6. Спорные места — ADR в docs/adr/, не ломать без записи.
+6. Спорные места — ADR в docs/md/adr/, не ломать без записи.
 
 Не копируй домен postfire (маршруты polls/plan/…), только паттерны.
 Уточни у меня: [модуль-пилот], [onboarding steps], [оставляем MUI?].

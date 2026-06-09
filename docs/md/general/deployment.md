@@ -1,6 +1,6 @@
 # Деплой и инфраструктура
 
-> AI: загрузка памяти — **`контекст деплой`** · обновление HTML — **`портал`** (см. [CODEWORDS.md](./CODEWORDS.md)).
+> AI: загрузка памяти — **`контекст деплой`** · обновление HTML — **`портал`** (см. [CODEWORDS.md](../../CODEWORDS.md)).
 
 ## Сервер
 
@@ -28,7 +28,7 @@
 | `/home/deploy/you_vet/apps/server` | Docker compose (Go + PostgreSQL), `.env` |
 | `/var/www/vp-bot-admin` | Статика админ-панели |
 | `/var/www/vp-bot-app` | Статика Mini App |
-| `/var/www/you-vet-docs` | HTML-документация (`docs/*.html`) |
+| `/var/www/you-vet-docs` | HTML-документация (`docs/html/*`) |
 | `/etc/nginx/sites-available/` | Nginx конфиги |
 | `/etc/letsencrypt/live/` | SSL сертификаты |
 
@@ -94,9 +94,9 @@ VPS **не собирает** образ локально и **не делает
 
 Триггер: `docs/**`
 
-1. `scp docs/*.html` → `/var/www/you-vet-docs/`
+1. `scp docs/html/*` → `/var/www/you-vet-docs/`
 
-Markdown (`docs/*.md`, `docs/context/`) в HTML-портал не деплоится — только через GitHub.
+Markdown (`docs/md/`, `docs/context/`) в HTML-портал не деплоится — только через GitHub.
 
 ### GitHub Secrets
 
@@ -223,4 +223,4 @@ error_events (id, source, level, fingerprint, message, context_json, clinic_id?,
 4. Webhook GitHub Actions → событие `deploy.succeeded` / `deploy.failed`.
 5. Агент метрик VPS (опционально).
 
-Завести трекинг: **INF-06** (мониторинг), **INF-07** (error_events) — см. [context/ISSUES.md](./context/ISSUES.md).
+Завести трекинг: **INF-06** (мониторинг), **INF-07** (error_events) — см. [context/ISSUES.md](../../context/ISSUES.md).

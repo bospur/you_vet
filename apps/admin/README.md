@@ -43,7 +43,7 @@ npm run dev
 | `groomer` | Только `/grooming` (редирект в UI) |
 | `manager` | Только `/booking` (запись на приём) |
 
-> RBAC на бэкенде — см. [docs/roles.md](../../docs/roles.md)
+> RBAC на бэкенде — см. [docs/md/general/roles.md](../../docs/md/general/roles.md)
 
 ## Мобильная адаптация (обязательно для новых экранов)
 
@@ -74,9 +74,9 @@ Breakpoint: MUI `theme.breakpoints.down('sm')`.
 
 ## Документация
 
-- [Архитектура admin](../../docs/admin/architecture.md)
-- [Инструкция для пользователя](../../docs/admin/user-guide.md)
-- [Системная архитектура](../../docs/architecture.md)
-- [Разработка](../../docs/development.md)
-- [Деплой](../../docs/deployment.md)
-- [Аудит](../../docs/audit.md)
+- [Архитектура admin](../../docs/md/admin/architecture.md)
+- [Инструкция для пользователя](../../docs/md/admin/user-guide.md)
+- [Системная архитектура](../../docs/md/general/architecture.md)
+- [Разработка](../../docs/md/general/development.md)
+- [Деплой](../../docs/md/general/deployment.md)
+- [Аудит](../../docs/md/general/audit.md)

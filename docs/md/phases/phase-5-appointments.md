@@ -1,8 +1,8 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
 > Статус: **C1 + вопросы в коде на `dev`** · deploy server+app · миграции **016–017** · Обновлено: 2026-06-01 (передача)  
-> Для клиники (простым языком): [booking-for-clinic.html](./booking-for-clinic.html)  
-> Связанные документы: [roadmap.html](./roadmap.html) · [roles.md](./roles.md) · [mobile/roadmap.md](./mobile/roadmap.md)
+> Для клиники (простым языком): [booking-for-clinic.html](../../html/booking-for-clinic.html)  
+> Связанные документы: [roadmap.html](../../html/roadmap.html) · [roles.md](../general/roles.md) · [mobile/roadmap.md](../mobile/roadmap.md)
 
 ## Суть (уточнено с клиникой)
 
@@ -69,7 +69,7 @@
 | `editor` | Редактор | контент, **без** записи |
 | `groomer` | Грумер | только груминг |
 
-См. [roles.md](./roles.md).
+См. [roles.md](../general/roles.md).
 
 ---
 
@@ -264,7 +264,7 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 | Симптом | Частая причина |
 |---|---|
-| Календарь / POST заявки → 500 | Лог: `column d.name does not exist` → в SQL должно быть `d.full_name` ([BOOK-01](./context/ISSUES.md)) |
+| Календарь / POST заявки → 500 | Лог: `column d.name does not exist` → в SQL должно быть `d.full_name` ([BOOK-01](../../context/ISSUES.md)) |
 | Сообщение про миграции 013–015 в admin | Общий fallback; смотреть лог `docker compose logs app` и Network |
 | Календарь пустой, без ошибки | Нет открытых дней в шаблоне или не нажато «Сохранить шаблон» |
 | Заявок нет — календарь должен работать | `booked_slots = 0`; заявки не обязательны |
