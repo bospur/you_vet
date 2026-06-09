@@ -22,7 +22,7 @@ import { useAuth } from '../../shared/config/AuthContext';
 import {
   getDoctor, createDoctor, updateDoctor, updateDoctorStatus,
   uploadDoctorPhoto, getDoctorSchedule, addScheduleSlot, deleteScheduleSlot,
-  getExceptions, upsertException, deleteException,
+  getExceptions, upsertException, deleteException, addVacationRange,
 } from '../../data/source/doctors';
 import { DAY_NAMES } from '../../modules/doctors/domain/types';
 import type { DoctorScheduleSlot, DoctorScheduleException } from '../../modules/doctors/domain/types';
@@ -122,7 +122,11 @@ export function DoctorEditorScreen() {
       notify('Фото обновлено', 'success');
       setPhotoPreview(null);
     },
-    onError: () => notify('Ошибка загрузки фото', 'error'),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: string } })?.response?.data;
+      notify(typeof msg === 'string' && msg ? msg : 'Ошибка загрузки фото', 'error');
+      setPhotoPreview(null);
+    },
   });
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,6 +149,19 @@ export function DoctorEditorScreen() {
     mutationFn: (slotId: number) => deleteScheduleSlot(Number(id), slotId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['doctor-schedule', id] }),
     onError: () => notify('Ошибка удаления слота', 'error'),
+  });
+
+  // ── Отпуск ────────────────────────────────────────────────────────────────────
+  const [vacation, setVacation] = useState({ date_from: '', date_to: '' });
+
+  const vacationMutation = useMutation({
+    mutationFn: () => addVacationRange(Number(id), vacation.date_from, vacation.date_to),
+    onSuccess: (days) => {
+      queryClient.invalidateQueries({ queryKey: ['doctor-exceptions', id] });
+      setVacation({ date_from: '', date_to: '' });
+      notify(`Отпуск добавлен (${days} дн.)`, 'success');
+    },
+    onError: () => notify('Ошибка добавления отпуска', 'error'),
   });
 
   // ── Исключения ────────────────────────────────────────────────────────────────
@@ -390,11 +407,56 @@ export function DoctorEditorScreen() {
           </Grid>
         )}
 
+        {/* ── Отпуск (только для существующего врача) ── */}
+        {isEdit && (
+          <Grid size={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="subtitle1" fontWeight={600} mb={1}>Отпуск</Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Врач не будет отображаться в расписании на выбранные даты.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <TextField
+                  label="С"
+                  type="date"
+                  size="small"
+                  value={vacation.date_from}
+                  onChange={(e) => setVacation((s) => ({ ...s, date_from: e.target.value }))}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  sx={{ width: 160 }}
+                />
+                <TextField
+                  label="По"
+                  type="date"
+                  size="small"
+                  value={vacation.date_to}
+                  onChange={(e) => setVacation((s) => ({ ...s, date_to: e.target.value }))}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  sx={{ width: 160 }}
+                />
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => vacationMutation.mutate()}
+                  disabled={
+                    !vacation.date_from
+                    || !vacation.date_to
+                    || vacation.date_to < vacation.date_from
+                    || vacationMutation.isPending
+                  }
+                >
+                  {vacationMutation.isPending ? 'Сохранение…' : 'Добавить отпуск'}
+                </Button>
+              </Box>
+            </Paper>
+          </Grid>
+        )}
+
         {/* ── Исключения (только для существующего врача) ── */}
         {isEdit && (
           <Grid size={12}>
             <Paper sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>Исключения</Typography>
+              <Typography variant="subtitle1" fontWeight={600} mb={2}>Исключения на день</Typography>
 
               <Stack spacing={1} mb={2}>
                 {exceptions.length === 0 && (
@@ -404,7 +466,7 @@ export function DoctorEditorScreen() {
                   <Box key={ex.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Typography variant="body2" sx={{ minWidth: 110 }}>{ex.date}</Typography>
                     {ex.is_day_off ? (
-                      <Chip size="small" label="Выходной" color="warning" />
+                      <Chip size="small" label="Отпуск / выходной" color="warning" />
                     ) : (
                       <Typography variant="body2">
                         {ex.time_from?.slice(0, 5)} – {ex.time_to?.slice(0, 5)}

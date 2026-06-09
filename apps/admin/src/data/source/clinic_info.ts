@@ -16,17 +16,13 @@ export async function updateClinicInfo(input: ClinicInfoInput): Promise<ClinicIn
 export async function uploadClinicLogo(file: File): Promise<ClinicInfo> {
   const form = new FormData();
   form.append('image', file);
-  const { data } = await axiosInstance.post<ClinicInfo>('/api/admin/clinic-info/logo', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await axiosInstance.post<ClinicInfo>('/api/admin/clinic-info/logo', form);
   return data;
 }
 
 export async function uploadClinicBanner(file: File): Promise<ClinicInfo> {
   const form = new FormData();
   form.append('image', file);
-  const { data } = await axiosInstance.post<ClinicInfo>('/api/admin/clinic-info/banner', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await axiosInstance.post<ClinicInfo>('/api/admin/clinic-info/banner', form);
   return data;
 }
