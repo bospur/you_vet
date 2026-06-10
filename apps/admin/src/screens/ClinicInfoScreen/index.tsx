@@ -12,7 +12,7 @@ import {
   getClinicInfo, updateClinicInfo, uploadClinicLogo, uploadClinicBanner,
 } from '../../data/source/clinic_info';
 import type { ClinicInfoInput } from '../../data/source/clinic_info';
-import { prepareImageForUpload } from '../../shared/lib/prepareImageForUpload';
+import { prepareImageForUpload, prepareLogoForUpload } from '../../shared/lib/prepareImageForUpload';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -99,7 +99,7 @@ export function ClinicInfoScreen() {
     if (!file) return;
     e.target.value = '';
     try {
-      const prepared = await prepareImageForUpload(file);
+      const prepared = await prepareLogoForUpload(file);
       setLogoPreview(URL.createObjectURL(prepared));
       logoMutation.mutate(prepared);
     } catch (err) {

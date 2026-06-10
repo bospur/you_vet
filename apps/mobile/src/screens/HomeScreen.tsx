@@ -6,6 +6,7 @@ import type { ClinicInfo } from '@you-vet/types';
 import { fetchClinicInfo } from '../api/clinic';
 import { useAuth } from '../auth/AuthContext';
 import { AuthGuestBanner } from '../components/AuthGuestBanner';
+import { ClinicPromoBanner } from '../components/ClinicPromoBanner';
 import { FeaturedArticles } from '../components/FeaturedArticles';
 import { HomeClinicBlock } from '../components/HomeClinicBlock';
 import {
@@ -146,6 +147,7 @@ export default function HomeScreen() {
 
       <TodayAtClinic />
       <FeaturedArticles />
+      <ClinicPromoBanner clinic={clinic} />
     </div>
   );
 }
