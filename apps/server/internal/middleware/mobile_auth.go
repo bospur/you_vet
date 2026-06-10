@@ -16,7 +16,9 @@ const MobileClaimsKey mobileContextKey = "mobile_claims"
 type MobileClaims struct {
 	MobileUserID   int64
 	TelegramUserID int64
+	VkUserID       int64
 	Phone          string
+	DisplayName    string
 	ClinicID       int
 }
 
@@ -71,10 +73,20 @@ func MobileAuth(secret string, next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		claims := &MobileClaims{
-			MobileUserID:   int64(mapClaims["sub"].(float64)),
-			TelegramUserID: int64(mapClaims["tg_id"].(float64)),
-			Phone:          mapClaims["phone"].(string),
-			ClinicID:       int(mapClaims["clinic_id"].(float64)),
+			MobileUserID: int64(mapClaims["sub"].(float64)),
+			ClinicID:     int(mapClaims["clinic_id"].(float64)),
+		}
+		if v, ok := mapClaims["tg_id"].(float64); ok {
+			claims.TelegramUserID = int64(v)
+		}
+		if v, ok := mapClaims["phone"].(string); ok {
+			claims.Phone = v
+		}
+		if v, ok := mapClaims["vk_id"].(float64); ok {
+			claims.VkUserID = int64(v)
+		}
+		if v, ok := mapClaims["name"].(string); ok {
+			claims.DisplayName = v
 		}
 
 		ctx := context.WithValue(r.Context(), MobileClaimsKey, claims)

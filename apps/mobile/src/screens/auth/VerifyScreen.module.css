@@ -1,0 +1,50 @@
+.wrap {
+  padding: var(--vet-page-padding);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.hint {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--vet-text-secondary);
+  line-height: 1.5;
+}
+
+.input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 10px;
+  font-size: 24px;
+  letter-spacing: 0.3em;
+  text-align: center;
+  background: var(--vet-bg);
+  color: var(--vet-text-body);
+}
+
+.submit {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--vet-accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 13px;
+}

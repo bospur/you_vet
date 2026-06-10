@@ -31,6 +31,7 @@ type BookingRequest struct {
 	PetSpecies       *string         `json:"pet_species"`
 	PetAgeYears      *int            `json:"pet_age_years"`
 	TelegramUserID   *int64          `json:"telegram_user_id"`
+	MobileUserID     *int64          `json:"mobile_user_id,omitempty"`
 	Status           string          `json:"status"`
 	StaffNote        *string         `json:"staff_note"`
 	RejectReason     *string         `json:"reject_reason"`
@@ -51,6 +52,7 @@ type BookingRequestInput struct {
 	PetSpecies     *string         `json:"pet_species"`
 	PetAgeYears    *int            `json:"pet_age_years"`
 	TelegramUserID *int64          `json:"telegram_user_id"`
+	MobileUserID   *int64          `json:"mobile_user_id"`
 	RulesAck       json.RawMessage `json:"rules_ack"`
 }
 
@@ -70,6 +72,7 @@ type BookingRequestFilters struct {
 	From           string
 	To             string
 	TelegramUserID *int64
+	MobileUserID   *int64
 }
 
 func scanBookingRequest(row interface{ Scan(dest ...any) error }) (*BookingRequest, error) {
@@ -78,6 +81,7 @@ func scanBookingRequest(row interface{ Scan(dest ...any) error }) (*BookingReque
 	var petSpecies sql.NullString
 	var petAge sql.NullInt64
 	var tgID sql.NullInt64
+	var mobileID sql.NullInt64
 	var staffNote, rejectReason sql.NullString
 	var handledBy sql.NullInt64
 	var rules []byte
@@ -87,7 +91,7 @@ func scanBookingRequest(row interface{ Scan(dest ...any) error }) (*BookingReque
 		&req.ID, &req.ClinicID, &req.ServiceTypeID, &req.ServiceName,
 		&req.RequestedDate, &slotTime,
 		&req.ClientName, &req.ClientPhone, &req.PetName, &petSpecies, &petAge,
-		&tgID, &req.Status, &staffNote, &rejectReason, &handledBy, &rules,
+		&tgID, &mobileID, &req.Status, &staffNote, &rejectReason, &handledBy, &rules,
 		&createdAt, &updatedAt,
 	)
 	if err != nil {
@@ -103,6 +107,9 @@ func scanBookingRequest(row interface{ Scan(dest ...any) error }) (*BookingReque
 	}
 	if tgID.Valid {
 		req.TelegramUserID = &tgID.Int64
+	}
+	if mobileID.Valid {
+		req.MobileUserID = &mobileID.Int64
 	}
 	if staffNote.Valid {
 		req.StaffNote = &staffNote.String
@@ -128,7 +135,7 @@ const bookingRequestSelect = `
 	SELECT br.id, br.clinic_id, br.service_type_id, st.name,
 	       br.requested_date::text, br.slot_time::text,
 	       br.client_name, br.client_phone, br.pet_name, br.pet_species, br.pet_age_years,
-	       br.telegram_user_id, br.status, br.staff_note, br.reject_reason,
+	       br.telegram_user_id, br.mobile_user_id, br.status, br.staff_note, br.reject_reason,
 	       br.handled_by_user_id, br.rules_ack,
 	       br.created_at, br.updated_at
 	FROM booking_requests br
@@ -529,16 +536,16 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 		INSERT INTO booking_requests (
 			clinic_id, service_type_id, requested_date, slot_time,
 			client_name, client_phone, pet_name, pet_species, pet_age_years,
-			telegram_user_id, status, rules_ack
-		) VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			telegram_user_id, mobile_user_id, status, rules_ack
+		) VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, clinic_id, service_type_id,
 		          requested_date::text, slot_time::text,
 		          client_name, client_phone, pet_name, pet_species, pet_age_years,
-		          telegram_user_id, status, staff_note, reject_reason,
+		          telegram_user_id, mobile_user_id, status, staff_note, reject_reason,
 		          handled_by_user_id, rules_ack, created_at, updated_at
 	`, clinicID, input.ServiceTypeID, input.RequestedDate, slotTimeArg,
 		strings.TrimSpace(input.ClientName), phone, strings.TrimSpace(input.PetName),
-		input.PetSpecies, input.PetAgeYears, input.TelegramUserID, status,
+		input.PetSpecies, input.PetAgeYears, input.TelegramUserID, input.MobileUserID, status,
 		normalizeRules(input.RulesAck))
 
 	var req BookingRequest
@@ -546,6 +553,7 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 	var petSpecies sql.NullString
 	var petAge sql.NullInt64
 	var tgID sql.NullInt64
+	var mobileID sql.NullInt64
 	var staffNote, rejectReason sql.NullString
 	var handledBy sql.NullInt64
 	var rules []byte
@@ -555,7 +563,7 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 		&req.ID, &req.ClinicID, &req.ServiceTypeID,
 		&req.RequestedDate, &slotTime,
 		&req.ClientName, &req.ClientPhone, &req.PetName, &petSpecies, &petAge,
-		&tgID, &req.Status, &staffNote, &rejectReason, &handledBy, &rules,
+		&tgID, &mobileID, &req.Status, &staffNote, &rejectReason, &handledBy, &rules,
 		&createdAt, &updatedAt,
 	)
 	if err != nil {
@@ -577,6 +585,9 @@ func (r *BookingRepository) CreateRequest(clinicID int, input BookingRequestInpu
 	}
 	if tgID.Valid {
 		req.TelegramUserID = &tgID.Int64
+	}
+	if mobileID.Valid {
+		req.MobileUserID = &mobileID.Int64
 	}
 	if len(rules) == 0 {
 		req.RulesAck = json.RawMessage("[]")
@@ -623,6 +634,11 @@ func (r *BookingRepository) ListRequests(clinicID int, f BookingRequestFilters) 
 		args = append(args, *f.TelegramUserID)
 		n++
 	}
+	if f.MobileUserID != nil {
+		q += ` AND br.mobile_user_id = $` + strconv.Itoa(n)
+		args = append(args, *f.MobileUserID)
+		n++
+	}
 	q += ` ORDER BY br.requested_date DESC, br.created_at DESC LIMIT 500`
 
 	rows, err := r.db.Query(q, args...)
@@ -649,6 +665,25 @@ func (r *BookingRepository) GetRequestByID(clinicID int, id string) (*BookingReq
 		return nil, nil
 	}
 	return req, err
+}
+
+// CancelRequestByMobileUser — отмена заявки пользователем mobile app (VK и др.).
+func (r *BookingRepository) CancelRequestByMobileUser(clinicID int, id string, mobileUserID int64) (*BookingRequest, error) {
+	existing, err := r.GetRequestByID(clinicID, id)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, ErrBookingNotFound
+	}
+	if existing.MobileUserID == nil || *existing.MobileUserID != mobileUserID {
+		return nil, ErrBookingNotFound
+	}
+	if existing.Status != "pending" && existing.Status != "confirmed" {
+		return nil, ErrBookingInvalidStatus
+	}
+	cancelled := "cancelled"
+	return r.UpdateRequest(clinicID, 0, id, BookingRequestPatch{Status: &cancelled})
 }
 
 // CancelRequestByTelegramUser — отмена клиентом своей заявки (pending или confirmed).
@@ -733,7 +768,7 @@ func (r *BookingRepository) UpdateRequest(clinicID, userID int, id string, patch
 		RETURNING id, clinic_id, service_type_id,
 		          requested_date::text, slot_time::text,
 		          client_name, client_phone, pet_name, pet_species, pet_age_years,
-		          telegram_user_id, status, staff_note, reject_reason,
+		          telegram_user_id, mobile_user_id, status, staff_note, reject_reason,
 		          handled_by_user_id, rules_ack, created_at, updated_at
 	`, id, clinicID, newStatus, patch.StaffNote, patch.RejectReason, newDate, patch.SlotTime, userID)
 
@@ -742,6 +777,7 @@ func (r *BookingRepository) UpdateRequest(clinicID, userID int, id string, patch
 	var petSpecies sql.NullString
 	var petAge sql.NullInt64
 	var tgID sql.NullInt64
+	var mobileID sql.NullInt64
 	var staffNote, rejectReason sql.NullString
 	var handledBy sql.NullInt64
 	var rules []byte
@@ -751,7 +787,7 @@ func (r *BookingRepository) UpdateRequest(clinicID, userID int, id string, patch
 		&req.ID, &req.ClinicID, &req.ServiceTypeID,
 		&req.RequestedDate, &slotTime,
 		&req.ClientName, &req.ClientPhone, &req.PetName, &petSpecies, &petAge,
-		&tgID, &req.Status, &staffNote, &rejectReason, &handledBy, &rules,
+		&tgID, &mobileID, &req.Status, &staffNote, &rejectReason, &handledBy, &rules,
 		&createdAt, &updatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -775,6 +811,9 @@ func (r *BookingRepository) UpdateRequest(clinicID, userID int, id string, patch
 	}
 	if tgID.Valid {
 		req.TelegramUserID = &tgID.Int64
+	}
+	if mobileID.Valid {
+		req.MobileUserID = &mobileID.Int64
 	}
 	if staffNote.Valid {
 		req.StaffNote = &staffNote.String

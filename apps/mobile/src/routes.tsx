@@ -5,6 +5,8 @@ import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import BookingHubScreen from './screens/booking/BookingHubScreen';
 import LoginScreen from './screens/auth/LoginScreen';
+import VerifyScreen from './screens/auth/VerifyScreen';
+import LinkTelegramScreen from './screens/auth/LinkTelegramScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 
 export function AppRoutes() {
@@ -22,6 +24,8 @@ export function AppRoutes() {
           <Route path="doctors" element={<PlaceholderScreen title="Наши врачи" />} />
           <Route path="schedule" element={<PlaceholderScreen title="Расписание" />} />
           <Route path="auth/login" element={<LoginScreen />} />
+          <Route path="auth/verify" element={<VerifyScreen />} />
+          <Route path="auth/link-telegram" element={<LinkTelegramScreen />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/splash" replace />} />

@@ -13,6 +13,7 @@ import (
 
 	"go-server/internal/phone"
 	"go-server/internal/repository"
+	"go-server/internal/vkid"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -32,6 +33,7 @@ type AuthCodeSender interface {
 type MobileAuthHandler struct {
 	repo     *repository.MobileAuthRepository
 	sender   AuthCodeSender
+	vk       *vkid.Client
 	clinicID int
 	secret   string
 }
@@ -39,10 +41,11 @@ type MobileAuthHandler struct {
 func NewMobileAuthHandler(
 	repo *repository.MobileAuthRepository,
 	sender AuthCodeSender,
+	vk *vkid.Client,
 	clinicID int,
 	secret string,
 ) *MobileAuthHandler {
-	return &MobileAuthHandler{repo: repo, sender: sender, clinicID: clinicID, secret: secret}
+	return &MobileAuthHandler{repo: repo, sender: sender, vk: vk, clinicID: clinicID, secret: secret}
 }
 
 type authRequestBody struct {
@@ -56,6 +59,13 @@ type authVerifyBody struct {
 
 type authRefreshBody struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+type authVKBody struct {
+	Code         string `json:"code"`
+	CodeVerifier string `json:"code_verifier"`
+	DeviceID     string `json:"device_id"`
+	RedirectURI  string `json:"redirect_uri"`
 }
 
 type tokenResponse struct {
@@ -188,7 +198,7 @@ func (h *MobileAuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	userID := int64(mapClaims["sub"].(float64))
 	user, err := h.repo.GetByID(userID)
-	if err != nil || user == nil || !user.TelegramUserID.Valid {
+	if err != nil || user == nil {
 		writeAPIError(w, http.StatusUnauthorized, "INVALID_TOKEN", "недействительный refresh token")
 		return
 	}
@@ -202,16 +212,84 @@ func (h *MobileAuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tokens)
 }
 
+// AuthVK — POST /api/mobile/v1/auth/vk (обмен code VK ID → JWT)
+func (h *MobileAuthHandler) AuthVK(w http.ResponseWriter, r *http.Request) {
+	if h.vk == nil {
+		writeAPIError(w, http.StatusServiceUnavailable, "VK_NOT_CONFIGURED", "вход через VK временно недоступен")
+		return
+	}
+
+	var body authVKBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_BODY", "неверный формат запроса")
+		return
+	}
+	if body.Code == "" || body.CodeVerifier == "" || body.DeviceID == "" {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_INPUT", "code, code_verifier и device_id обязательны")
+		return
+	}
+
+	tok, err := h.vk.ExchangeCode(body.Code, body.CodeVerifier, body.DeviceID, body.RedirectURI)
+	if err != nil {
+		log.Printf("mobile auth vk exchange: %v", err)
+		writeAPIError(w, http.StatusUnauthorized, "VK_AUTH_FAILED", "не удалось войти через VK")
+		return
+	}
+
+	info, err := h.vk.FetchUserInfo(tok.AccessToken)
+	if err != nil {
+		log.Printf("mobile auth vk user_info: %v", err)
+		writeAPIError(w, http.StatusUnauthorized, "VK_AUTH_FAILED", "не удалось получить профиль VK")
+		return
+	}
+
+	vkID := info.UserID
+	if vkID == 0 && tok.UserID > 0 {
+		vkID = tok.UserID
+	}
+
+	normalizedPhone := phone.Normalize(info.Phone)
+	if normalizedPhone != "" && !phone.IsValidRF(normalizedPhone) {
+		normalizedPhone = ""
+	}
+
+	user, err := h.repo.UpsertVKUser(h.clinicID, vkID, info.DisplayName(), normalizedPhone)
+	if err != nil {
+		log.Printf("mobile auth vk upsert: %v", err)
+		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
+		return
+	}
+
+	tokens, err := h.issueTokenPair(user)
+	if err != nil {
+		log.Printf("mobile auth vk issue tokens: %v", err)
+		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, tokens)
+}
+
 func (h *MobileAuthHandler) issueTokenPair(user *repository.MobileUser) (tokenResponse, error) {
 	now := time.Now()
 	accessClaims := jwt.MapClaims{
 		"typ":       "access",
 		"sub":       user.ID,
-		"tg_id":     user.TelegramUserID.Int64,
-		"phone":     user.Phone,
 		"clinic_id": user.ClinicID,
 		"iat":       now.Unix(),
 		"exp":       now.Add(accessTokenTTL).Unix(),
+	}
+	if user.TelegramUserID.Valid && user.TelegramUserID.Int64 > 0 {
+		accessClaims["tg_id"] = user.TelegramUserID.Int64
+	}
+	if user.Phone != "" {
+		accessClaims["phone"] = user.Phone
+	}
+	if user.VkUserID.Valid && user.VkUserID.Int64 > 0 {
+		accessClaims["vk_id"] = user.VkUserID.Int64
+	}
+	if user.DisplayName.Valid && user.DisplayName.String != "" {
+		accessClaims["name"] = user.DisplayName.String
 	}
 	refreshClaims := jwt.MapClaims{
 		"typ": "refresh",

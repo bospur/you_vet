@@ -13,6 +13,8 @@ type MobileUser struct {
 	ClinicID       int
 	Phone          string
 	TelegramUserID sql.NullInt64
+	VkUserID       sql.NullInt64
+	DisplayName    sql.NullString
 	LinkedAt       sql.NullTime
 }
 
@@ -23,6 +25,27 @@ type MobileAuthRepository struct {
 func NewMobileAuthRepository(db *sql.DB) *MobileAuthRepository {
 	return &MobileAuthRepository{db: db}
 }
+
+func scanMobileUser(row interface{ Scan(dest ...any) error }) (*MobileUser, error) {
+	var u MobileUser
+	var phone sql.NullString
+	err := row.Scan(
+		&u.ID, &u.ClinicID, &phone, &u.TelegramUserID,
+		&u.VkUserID, &u.DisplayName, &u.LinkedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if phone.Valid {
+		u.Phone = phone.String
+	}
+	return &u, nil
+}
+
+const mobileUserSelect = `
+	SELECT id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, linked_at
+	FROM mobile_users
+`
 
 // LinkPhone привязывает телефон к telegram_user_id (бот: contact).
 func (r *MobileAuthRepository) LinkPhone(clinicID int, phone string, telegramUserID int64) error {
@@ -40,38 +63,42 @@ func (r *MobileAuthRepository) LinkPhone(clinicID int, phone string, telegramUse
 	return err
 }
 
+// UpsertVKUser создаёт или обновляет пользователя по VK ID.
+func (r *MobileAuthRepository) UpsertVKUser(clinicID int, vkUserID int64, displayName, phone string) (*MobileUser, error) {
+	if vkUserID == 0 {
+		return nil, errors.New("vk_user_id required")
+	}
+	row := r.db.QueryRow(`
+		INSERT INTO mobile_users (clinic_id, vk_user_id, display_name, phone, linked_at)
+		VALUES ($1, $2, NULLIF($3, ''), NULLIF($4, ''), NOW())
+		ON CONFLICT (clinic_id, vk_user_id)
+		DO UPDATE SET
+			display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), mobile_users.display_name),
+			phone = COALESCE(NULLIF(EXCLUDED.phone, ''), mobile_users.phone),
+			linked_at = NOW()
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, linked_at
+	`, clinicID, vkUserID, displayName, phone)
+	return scanMobileUser(row)
+}
+
 // GetByPhone возвращает mobile user или nil.
 func (r *MobileAuthRepository) GetByPhone(clinicID int, phone string) (*MobileUser, error) {
-	var u MobileUser
-	err := r.db.QueryRow(`
-		SELECT id, clinic_id, phone, telegram_user_id, linked_at
-		FROM mobile_users
-		WHERE clinic_id = $1 AND phone = $2
-	`, clinicID, phone).Scan(&u.ID, &u.ClinicID, &u.Phone, &u.TelegramUserID, &u.LinkedAt)
+	row := r.db.QueryRow(mobileUserSelect+` WHERE clinic_id = $1 AND phone = $2`, clinicID, phone)
+	u, err := scanMobileUser(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
-	if err != nil {
-		return nil, err
-	}
-	return &u, nil
+	return u, err
 }
 
 // GetByID возвращает mobile user по id.
 func (r *MobileAuthRepository) GetByID(id int64) (*MobileUser, error) {
-	var u MobileUser
-	err := r.db.QueryRow(`
-		SELECT id, clinic_id, phone, telegram_user_id, linked_at
-		FROM mobile_users
-		WHERE id = $1
-	`, id).Scan(&u.ID, &u.ClinicID, &u.Phone, &u.TelegramUserID, &u.LinkedAt)
+	row := r.db.QueryRow(mobileUserSelect+` WHERE id = $1`, id)
+	u, err := scanMobileUser(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
-	if err != nil {
-		return nil, err
-	}
-	return &u, nil
+	return u, err
 }
 
 // SaveAuthCode сохраняет хеш OTP.

@@ -775,14 +775,17 @@ func (h *BookingHandler) ListPublicRequests(w http.ResponseWriter, r *http.Reque
 	if !ok {
 		return
 	}
-	tgID, ok := middleware.ClientTelegramUserID(r)
-	if !ok {
+	filters := repository.BookingRequestFilters{}
+	if claims := middleware.MobileClaimsFromContext(r); claims != nil && claims.MobileUserID > 0 {
+		mid := claims.MobileUserID
+		filters.MobileUserID = &mid
+	} else if tgID, ok := middleware.ClientTelegramUserID(r); ok {
+		filters.TelegramUserID = &tgID
+	} else {
 		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
 		return
 	}
-	list, err := h.bookingRepo.ListRequests(clinicID, repository.BookingRequestFilters{
-		TelegramUserID: &tgID,
-	})
+	list, err := h.bookingRepo.ListRequests(clinicID, filters)
 	if err != nil {
 		log.Printf("ошибка списка заявок клиента: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -816,7 +819,14 @@ func (h *BookingHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if tgID, ok := middleware.ClientTelegramUserID(r); ok {
+	if claims := middleware.MobileClaimsFromContext(r); claims != nil && claims.MobileUserID > 0 {
+		mid := claims.MobileUserID
+		input.MobileUserID = &mid
+		if claims.TelegramUserID > 0 {
+			tg := claims.TelegramUserID
+			input.TelegramUserID = &tg
+		}
+	} else if tgID, ok := middleware.ClientTelegramUserID(r); ok {
 		input.TelegramUserID = &tgID
 	}
 
@@ -841,11 +851,6 @@ func (h *BookingHandler) CancelPublicRequest(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	tgID, ok := middleware.ClientTelegramUserID(r)
-	if !ok {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
-		return
-	}
 	id := r.PathValue("id")
 	if id == "" {
 		http.Error(w, "id обязателен", http.StatusBadRequest)
@@ -864,7 +869,15 @@ func (h *BookingHandler) CancelPublicRequest(w http.ResponseWriter, r *http.Requ
 	}
 	prevStatus := existing.Status
 
-	req, err := h.bookingRepo.CancelRequestByTelegramUser(clinicID, id, tgID)
+	var req *repository.BookingRequest
+	if claims := middleware.MobileClaimsFromContext(r); claims != nil && claims.MobileUserID > 0 {
+		req, err = h.bookingRepo.CancelRequestByMobileUser(clinicID, id, claims.MobileUserID)
+	} else if tgID, ok := middleware.ClientTelegramUserID(r); ok {
+		req, err = h.bookingRepo.CancelRequestByTelegramUser(clinicID, id, tgID)
+	} else {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
 	if err != nil {
 		if bookingRequestError(w, err) {
 			return
