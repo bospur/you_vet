@@ -2,68 +2,75 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-06-09 (Mobile «Ветпрактика», M0+M1, docs-портал)
+## Сессия 2026-06-10 (Mobile auth: VK ID + APK, docs-портал)
 
-### Сделано в коде (локально — **ждёт push `dev`**)
+### Ветка
 
-**Mobile — проектирование (`docs/md/mobile/`)**
-- [x] `design-mvp.md` — scope RuStore v1, IA, UI-kit, auth, API M0, структура monorepo
-- [x] `screen-specs.md` — 21 экран (wireframes, API, навигация)
-- [x] `app-id-and-stores.md` — обучение: appId, RuStore, keystore
-- [x] `multi-tenant-notes.md` — 1 клиника/сборку, задел SaaS
-- [x] Решения: название **Ветпрактика**, appId `ru.snzbeachvolleyball25.vetpraktika`, запись в v1.0
+**`work-mobile`** — merge в **`dev`** обязателен для prod (VK `/auth/vk`, миграция **020**, фикс кнопки бота).
 
-**Server — M0 mobile API**
-- [x] Миграция **019** `mobile_users`, `auth_codes`
-- [x] `POST /api/mobile/v1/auth/{request,verify,refresh}`
-- [x] `GET /api/mobile/v1/clinics/{slug}/…` — без initData, rate limit
-- [x] Booking GET/POST/PATCH через **mobile JWT** (`ClientTelegramUserID`)
-- [x] Бот: `/start link`, `OnContact`, `SendAuthCode` (OTP в TG)
-- [x] `JWT_MOBILE_SECRET` (fallback → `JWT_SECRET`)
+Коммиты (верх ветки):
+- `488e40b` — LoginScreen (VK + телефон), Verify, LinkTelegram, `POST /auth/vk`, миграция 020
+- `274d5e3` — бот: `menu.Reply` для кнопки «Поделиться номером»
+- `8cca642` — docs-портал: `rustore-app.html`, roadmap, без design-brief/аналитики
 
-**Mobile app — M1 sprint 1 (`apps/mobile/`)**
-- [x] Capacitor 7 + Vite + React 18, `capacitor.config.ts`
-- [x] Shell: splash, tab bar, AppBar, главная (clinic-info), booking hub (soft gate)
-- [x] API client → `/api/mobile/v1`, auth context + token storage
-- [x] CI: build `@you-vet/mobile` в `ci.yml`
+### Сделано
 
-**Инфра / docs**
-- [x] Восстановлен **docs.snzbeachvolleyball25.ru** на новом VPS (`213.176.65.71`) — nginx + certbot
-- [x] `docs-portal-restore.md`, обновлён `deployment.md`
-- [x] `html/mobile.html` — MVP + appId (портал)
+**Server**
+- [x] Миграция **020** — `vk_user_id`, `mobile_user_id` в booking
+- [x] `POST /api/mobile/v1/auth/vk` — обмен code VK → JWT (`VK_APP_ID`, `VK_APP_SECRET`, `VK_REDIRECT_URI`)
+- [x] Booking list/cancel по `mobile_user_id` (VK без Telegram)
+- [x] Фикс бота: кнопка контакта при `/start link` (был пустой `reply_markup`)
 
-### Деплой
+**Mobile (`apps/mobile/`)**
+- [x] Экран **Вход**: VK ID (`@vkid/sdk`) + телефон/OTP/TG
+- [x] `/auth/verify`, `/auth/link-telegram`
+- [x] Первый **debug APK** на телефон пользователя (shell работает)
 
-Push `dev` → **Deploy server** (миграция **019**, mobile API, бот).  
-**Deploy app/admin** — только если трогали paths (в этой сессии — нет).
+**Docs-портал** (push в `dev` — выкатился)
+- [x] `html/rustore-app.html`, обновлённые index + roadmap
+- [x] `CODEWORDS.md` — маршрут `rustore`
 
-На VPS после server: миграция **019**.
+**VPS (пользователь)**
+- [x] `VK_APP_*` добавлены в `/home/deploy/you_vet/apps/server/.env`
+- [x] `docker compose up -d --force-recreate app` (ручной `pull` → `denied` без GHCR login — нормально)
 
-Проверить **GitHub Secret `VPS_HOST`** = `213.176.65.71` (если ещё старый IP — CI docs/admin/app не попадут на новый хост).
+### Prod / проверки
 
-Smoke mobile API (после deploy):
-1. Бот: `t.me/VPract_bot?start=link` → поделиться контактом
-2. `POST /api/mobile/v1/auth/request` `{ "phone": "+79…" }` → код в TG
-3. `POST …/auth/verify` → JWT
-4. `GET …/clinics/default/clinic-info` без auth
-5. `GET …/booking/requests` с `Authorization: Bearer …`
+| Проверка | Результат |
+|---|---|
+| `GET …/clinic-info` | ✅ 200 |
+| `POST …/auth/request` | ✅ (PHONE_NOT_LINKED если не привязан) |
+| `POST …/auth/vk` | 🟡 после deploy — **не 404** (ожидаем 400/401 на фейковом code) |
+| VK вход в APK | 🔴 «Не удалось войти» — см. блокеры ниже |
 
-Локально mobile: `npm run dev --workspace=@you-vet/mobile` → http://localhost:5175
+### Блокеры (следующая сессия)
+
+1. **`work-mobile` → `dev`** + зелёный **Deploy server** (020, `/auth/vk`, фикс бота)
+2. **`VITE_VK_APP_ID`** в `.env.local` — только **числовой ID** из кабинета VK, не защищённый ключ  
+   (было `fNnR7akAtHzjNczMNCrB` — неверно)
+3. **APK:** перед Build APK всегда `npm run build` → `npx cap sync android`  
+   (без sync в APK попадает старый JS — «sprint 4» на экране входа)
+4. Удалить старое приложение на телефоне → установить новый APK
+
+### Smoke VK (после merge + APK)
+
+1. Запись → Записаться → **Войти через VK ID**
+2. Или телефон: бот `?start=link` → контакт → код в TG
+3. `curl -X POST …/auth/vk` — не `404`
 
 ### Следующая сессия
 
-1. Push `dev` + deploy server (019) + smoke auth
-2. Mobile **sprint 2** — статьи (animals → articles → article) + «Ещё»
-3. Mobile **sprint 4** — auth screens (login / verify / link-telegram) — можно раньше booking
-4. Параллельно backlog: prod smoke C1+вопросы (если ещё не закрыто), **ADM-02**
+1. Merge `work-mobile` → `dev`, deploy server, проверить `/auth/vk`
+2. Исправить `VITE_VK_APP_ID`, пересобрать APK
+3. Smoke VK login на телефоне
+4. Mobile **sprint 2** — статьи (animals → articles)
+5. Backlog: **ADM-02**, C1 smoke
 
 ### Правило admin UI
 
 Эталон: `BookingScreen`, `GroomingScreen` — `< sm`: карточки, `fullScreen` диалоги, scrollable tabs.
 
----
-
-## Фаза 5 + Mobile
+### Ссылки
 
 - Запись: [phase-5-appointments.md](../md/phases/phase-5-appointments.md)
-- Mobile: [design-mvp.md](../md/mobile/design-mvp.md) · [screen-specs.md](../md/mobile/screen-specs.md) · [mobile.html](../html/mobile.html)
+- Mobile: [design-mvp.md](../md/mobile/design-mvp.md) · [rustore-guide.md](../md/mobile/rustore-guide.md) · [rustore-app.html](../html/rustore-app.html)

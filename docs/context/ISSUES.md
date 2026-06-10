@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-09 (передача, mobile M0+M1)
+> Последнее обновление: 2026-06-10 (передача, VK auth + APK)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -47,7 +47,7 @@
 | PRD-03 | ⚪ | Запись на приём | **in progress** — C1 в коде на `dev`, prod после deploy app; [phase-5-appointments.md](../md/phases/phase-5-appointments.md) |
 | PRD-04 | ⚪ | Аналитика (полная) | planned — **Фаза 6**; **M0 subset fixed в коде** — `telegram_users` + дашборд «Обзор» |
 | PRD-05 | ⚪ | Концепция баннера (текст / текст+картинка / превью → info-страница) | planned |
-| PRD-06 | ⚪ | Mobile app (Capacitor, «Ветпрактика», RuStore) | **in progress** — M0 API + M1 shell в коде; [design-mvp.md](../md/mobile/design-mvp.md) |
+| PRD-06 | ⚪ | Mobile app (Capacitor, «Ветпрактика», RuStore) | **in progress** — M0+M1+auth UI+VK в `work-mobile`; [design-mvp.md](../md/mobile/design-mvp.md) |
 | PRD-07 | ⚪ | Featured-статьи на главной (до 3) | **fixed** — миграция 011, фаза 4 |
 | PRD-08 | ⚪ | Polish главной (haptic, сегодня в клинике, sticky звонок, skeleton/fallback) | **fixed 2026-05-30** — в prod |
 | PRD-09 | ⚪ | Карточка клиента со штрихкодом (бот + Mini App → mobile) | planned — **Фаза 8**; интеграция с БД клиники по запросу |
@@ -89,15 +89,18 @@
 
 | ID | Pri | Задача | Статус |
 |---|---|---|---|
-| MOB-01 | 🟡 | M0: `/api/mobile/v1`, миграция 019, бот OTP | **fixed в коде 2026-06-09** — deploy server |
-| MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed в коде 2026-06-09** — sprints 2–5 backlog |
-| MOB-03 | ⚪ | Auth UI (login / verify / link-telegram) | backlog sprint 4 |
-| MOB-04 | ⚪ | Booking flow в mobile | backlog sprint 5 |
-| MOB-05 | ⚪ | RuStore release (M3) | backlog |
+| MOB-01 | 🟡 | M0: `/api/mobile/v1`, миграция 019, бот OTP | **fixed** — prod; фикс кнопки contact в `work-mobile` |
+| MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed в коде** — debug APK проверен |
+| MOB-03 | 🟡 | Auth UI (login / verify / link-telegram) | **fixed в коде 2026-06-10** — merge `dev` + APK rebuild |
+| MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed в коде** — merge `dev`; `VK_APP_*` на VPS |
+| MOB-05 | ⚪ | Booking flow в mobile | backlog sprint 5 |
+| MOB-06 | ⚪ | RuStore release (M3) | backlog |
+| MOB-07 | 🟡 | APK без `cap sync` → старый UI («sprint 4») | **doc** — всегда `npm run build` → `cap sync` перед APK |
+| MOB-08 | 🟡 | `VITE_VK_APP_ID` — нужен числовой ID, не secret | **open** — проверить `.env.local` |
 
 ## Следующие шаги
 
-1. Push `dev` → **Deploy server** (019, mobile API, бот)
-2. Smoke mobile auth + при необходимости C1/вопросы
-3. Mobile sprint 2 (статьи) или sprint 4 (auth UI)
-4. **ADM-02** · PRD-04 `analytics_events`
+1. Merge `work-mobile` → `dev` → Deploy server (020, VK, бот)
+2. Исправить `VITE_VK_APP_ID`, пересобрать APK, smoke VK
+3. Mobile sprint 2 (статьи)
+4. **ADM-02** · C1 smoke
