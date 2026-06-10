@@ -1,6 +1,6 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
-> Статус: **C1 + вопросы на `dev`** · mobile auth (TG ✅ APK) · deploy server (VK `user_info`, 020) · Обновлено: **2026-06-10**  
+> Статус: **C1 + вопросы** · mobile: auth ✅, контент ✅, ЛК ✅, запись sprint 5 · Обновлено: **2026-06-10**  
 > Для клиники (простым языком): [booking-for-clinic.html](../../html/booking-for-clinic.html)  
 > Связанные документы: [roadmap.html](../../html/roadmap.html) · [roles.md](../general/roles.md) · [mobile/roadmap.md](../mobile/roadmap.md) · [rustore-guide.md](../mobile/rustore-guide.md)
 
@@ -10,7 +10,7 @@
 
 | Принцип | Решение |
 |---|---|
-| Каналы клиента v1 | **Mini App** (запись + **задать вопрос**); **мобильное приложение** «Ветпрактика» — auth в APK, запись sprint 5; бот — уведомления + чат врачей |
+| Каналы клиента v1 | **Mini App** (запись + вопрос); **«Ветпрактика»** (APK) — контент + вопрос (ответ в TG) + ЛК; **запись в APK** — sprint 5; бот — уведомления + чат врачей |
 | Ёмкость | Слоты/места на день, гибко **по услуге** (шаблон недели + разовые окна) |
 | Подтверждение | **На услугу:** `instant` или `pending`; при pending место **резервируется**, статус «ожидает подтверждения» |
 | Горизонт | **2 недели** вперёд |
@@ -221,10 +221,12 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 | Что | Статус |
 |---|---|
 | Shell, tabs, главная | ✅ M1 |
-| Вход Telegram OTP | ✅ smoke на APK (`CapacitorHttp`, `setTokens` в verify) |
-| Вход VK ID | 🟡 Web-приложение VK + `https://app…/vk-callback.html` → deep link; **deploy server** (`user_info` + `client_id`) |
-| Профиль / выход | ✅ вкладка «Ещё» |
-| Запись на приём | ⏳ sprint 5 |
+| Вход Telegram OTP + VK ID | ✅ smoke на APK |
+| Контент: статьи, врачи, расписание, груминг | ✅ parity с Mini App |
+| Вопрос клиента | ✅ APK (ответ в Telegram-боте; нужна привязка TG) |
+| Личный кабинет (имя, фото) | ✅ `/profile`, миграция **021** |
+| Admin: пользователи APK | ✅ «Обзор» → вкладка «Приложение» |
+| Запись на приём | ⏳ **sprint 5** (следующий) |
 | RuStore | ⏳ M3 |
 
 **VK кабинет:** тип **Web**, домен `app.snzbeachvolleyball25.ru`, redirect `https://app.snzbeachvolleyball25.ru/vk-callback.html`. Страница в `apps/app/public/` — статический хостинг на домене Mini App.
@@ -273,10 +275,9 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ## Следующий шаг
 
-1. Push `dev` → deploy **server** (016–017, **020**, VK `/auth/vk`, `user_info`) + **app** (C1, вопросы, `vk-callback.html`)
-2. Smoke Mini App: запись + вопрос → ответ в боте; BotFather Group Privacy **off**
-3. Smoke **mobile**: VK login на APK после deploy server; пересборка APK (`cap sync`)
-4. **ADM-02**; mobile sprint 5 (booking); backlog — очередь на слот, история вопросов
+1. Deploy **server** (**021** profile) + **admin** (вкладка «Приложение»), если не на prod
+2. **Mobile sprint 5** — booking (`/booking/new`, «Мои заявки»)
+3. **ADM-02**; C1 smoke Mini App; backlog — Q&A inbox без TG, очередь на слот
 
 ## Отладка prod (2026-05-31)
 

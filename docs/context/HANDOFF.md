@@ -2,64 +2,52 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-06-10 (Mobile auth: TG ✅, VK почти, профиль в «Ещё»)
+## Сессия 2026-06-10 (контент mobile + ЛК + admin «Приложение»)
 
-### Ветка / деплой
-
-Локальные изменения в **`work-mobile`** (и связанные правки server/mobile/app). **Merge в `dev` + Deploy server** нужны для:
-
-- миграция **020**, `/auth/vk`, фикс `user_info` (`client_id`)
-- `apps/app/public/vk-callback.html` на prod (мост VK → APK)
-- CORS `https://localhost` (опционально для WebView)
-
-### Сделано
-
-**Mobile auth (APK на телефоне)**
-- [x] **Telegram OTP** — работает: `CapacitorHttp`, фикс `setTokens` в `VerifyScreen` (без него сбрасывало на login)
-- [x] **VK ID** — до экрана разрешений; redirect через `https://app…/vk-callback.html` → deep link в APK; `@capacitor/browser`
-- [x] Новое **Web-приложение VK** (старый `54639803` был `DELETED` в API VK)
-- [x] Экран **«Ещё»**: профиль пользователя + **Выйти**; на «Записи» — «Вы вошли как …»
-
-**Server**
-- [x] `FetchUserInfo`: добавлен **`client_id`** в `POST /oauth2/user_info` + fallback на `user_id` из токена
-- [x] CORS: `localhost:5175`, `https://localhost` (для dev/APK)
-
-**Инфра / docs**
-- [x] `vk-callback.html` в `apps/app/public/` (HTTPS-мост для VK Web-приложения)
-- [x] Портал: phase-5 + booking-for-clinic — канал **мобильное приложение**
-
-### Prod / smoke (пользователь)
+### Prod / smoke
 
 | Проверка | Результат |
 |---|---|
-| TG: код в бот → verify → вход | ✅ |
-| VK: форма разрешений | ✅ |
-| VK: после redirect → профиль | 🟡 «не удалось получить профиль VK» → **фикс server, ждёт deploy** |
-| Экран «Ещё» / выход | ✅ после фикса verify |
+| TG + VK auth на APK | ✅ (deploy + smoke пользователя) |
+| Статьи / врачи / расписание / груминг | ✅ в APK (mobile API) |
+| Вопрос из APK → ответ в боте | ✅ (нужен привязанный TG) |
+| Личный кабинет: имя + фото | ✅ в коде; **миграция 021** — deploy server |
+| Admin «Обзор» → вкладка «Приложение» | ✅ в коде; deploy admin |
 
-### Блокеры / следующий шаг
+### Сделано
 
-1. **Push `dev` → Deploy server** (обязательно: `vkid/client.go` + `user_info`)
-2. Убедиться: `vk-callback.html` на prod (`deploy-app` после push)
-3. **VK кабинет (Web):** базовый домен `app.snzbeachvolleyball25.ru`, redirect `https://app.snzbeachvolleyball25.ru/vk-callback.html`, живой `VK_APP_ID` / secret на VPS и в `.env.local`
-4. Пересборка APK: `npm run build` → `npx cap sync android`
-5. Smoke VK end-to-end после deploy server
+**Mobile (`apps/mobile`)**
+- [x] Контент до записи: статьи, врачи, расписание, груминг, «Задать вопрос»
+- [x] **Личный кабинет** `/profile`: имя, фото (сжатие JPEG перед upload), привязка TG
+- [x] «Ещё»: аватар, ссылка в ЛК
 
-### Дальше по продукту
+**Server**
+- [x] `POST /api/mobile/v1/clinics/{slug}/questions` (JWT + TG)
+- [x] `GET/PATCH /api/mobile/v1/profile`, `POST …/profile/photo`
+- [x] Миграция **021** — `mobile_users.photo_url`
+- [x] `GET /api/admin/stats/mobile/summary|users`
 
-1. Mobile **sprint 2** — статьи (`/animals`)
-2. Mobile **sprint 5** — booking flow (запись в APK)
-3. Admin: вкладка **«Приложение»** в «Обзор» (`mobile_users`) — обсуждено, не в коде
-4. **ADM-02**, C1 smoke Mini App
+**Admin**
+- [x] «Обзор»: вкладки **Mini App** | **Приложение** (список `mobile_users`)
 
-### Сборка APK (напоминание)
+### Деплой (если ещё не на prod)
 
-- Имя: `appName` в `capacitor.config.ts` → `npx cap sync`
-- Версия: `versionCode` / `versionName` в `android/app/build.gradle`
-- Иконка: Android Studio → Image Asset → `ic_launcher`
-- Всегда: `npm run build` → `cap sync` перед APK
+1. **Server** — миграции **020–021**, profile + mobile questions + admin mobile stats
+2. **Admin** — вкладка «Приложение»
+3. APK: `npm run build` → `npx cap sync android`
+
+### Следующий шаг
+
+1. **Mobile sprint 5** — booking flow (`/booking/new`, «Мои заявки»)
+2. UI-полировка mobile — после логики записи
+3. **ADM-02**, C1 smoke Mini App
+4. Backlog: Q&A без TG (inbox в приложении) · staff-режим в APK — не v1
+
+### Сборка APK
+
+`npm run build` → `npx cap sync android` → Android Studio. Версия в `build.gradle`.
 
 ### Ссылки
 
-- Запись: [phase-5-appointments.md](../md/phases/phase-5-appointments.md) · [booking-for-clinic.html](../html/booking-for-clinic.html)
-- Mobile: [design-mvp.md](../md/mobile/design-mvp.md) · [rustore-guide.md](../md/mobile/rustore-guide.md)
+- [phase-5-appointments.md](../md/phases/phase-5-appointments.md) · [booking-for-clinic.html](../html/booking-for-clinic.html)
+- [design-mvp.md](../md/mobile/design-mvp.md)

@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-10 (передача, TG auth ✅, VK user_info fix)
+> Последнее обновление: 2026-06-10 (передача, mobile контент + ЛК + admin)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -92,18 +92,20 @@
 | MOB-01 | 🟡 | M0: `/api/mobile/v1`, миграция 019, бот OTP | **fixed** — prod; contact-кнопка в `work-mobile` |
 | MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed** — APK на телефоне |
 | MOB-03 | 🟡 | Auth UI (login / verify / link-telegram) | **fixed 2026-06-10** — TG smoke ✅; `setTokens` в VerifyScreen |
-| MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed в коде** — redirect + bridge; **user_info** — deploy server |
-| MOB-05 | ⚪ | Booking flow в mobile | backlog sprint 5 |
+| MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed** — smoke ✅ на APK |
+| MOB-05 | ⚪ | Booking flow в mobile | backlog **sprint 5** (следующий) |
 | MOB-06 | ⚪ | RuStore release (M3) | backlog |
 | MOB-07 | 🟡 | APK без `cap sync` → старый UI | **doc** — `npm run build` → `cap sync` |
-| MOB-08 | 🟡 | VK app ID / кабинет | **fixed** — новое Web-приложение VK (старый 54639803 = DELETED) |
-| MOB-09 | 🟡 | CORS / API из APK WebView | **fixed** — `CapacitorHttp` enabled |
-| MOB-10 | 🟡 | VK `user_info` без `client_id` | **fixed в коде 2026-06-10** — deploy server |
-| MOB-11 | ⚪ | Admin: вкладка пользователей mobile в «Обзор» | backlog |
+| MOB-08 | 🟡 | VK app ID / кабинет | **fixed** |
+| MOB-09 | 🟡 | CORS / API из APK WebView | **fixed** — `CapacitorHttp` |
+| MOB-10 | 🟡 | VK `user_info` без `client_id` | **fixed** — prod |
+| MOB-11 | 🟡 | Admin: вкладка mobile в «Обзор» | **fixed 2026-06-10** — deploy admin |
+| MOB-12 | 🟡 | Контент mobile (статьи, врачи, груминг…) | **fixed 2026-06-10** |
+| MOB-13 | 🟡 | Вопрос из APK (ответ в TG) | **fixed** — `POST …/questions` mobile JWT |
+| MOB-14 | 🟡 | ЛК: имя + фото (`photo_url`, 021) | **fixed** — deploy server |
 
 ## Следующие шаги
 
-1. Deploy **server** (020, VK `user_info`) + **app** (`vk-callback.html`)
-2. Smoke VK login на APK
-3. Mobile sprint 2 (статьи) · sprint 5 (booking)
-4. **ADM-02** · C1 smoke
+1. Deploy **server 021** + **admin** (если не на prod)
+2. **Mobile sprint 5** — booking
+3. **ADM-02** · C1 smoke
