@@ -11,6 +11,7 @@ import (
 	"go-server/internal/handler"
 	"go-server/internal/middleware"
 	"go-server/internal/repository"
+	"go-server/internal/vkid"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -122,7 +123,12 @@ func main() {
 
 	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
 	questionHandler := handler.NewClientQuestionHandler(questionRepo, tgBot)
-	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, clinicID, mobileJWTSecret)
+	vkClient := vkid.NewClientFromEnv()
+	if vkClient == nil {
+		log.Println("VK ID: VK_APP_ID/VK_APP_SECRET не заданы — вход через VK отключён")
+	}
+
+	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, vkClient, clinicID, mobileJWTSecret)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
@@ -153,6 +159,7 @@ func main() {
 	http.HandleFunc("POST /api/mobile/v1/auth/request", middleware.LoginRateLimit(10, 15*time.Minute, mobileAuthHandler.RequestCode))
 	http.HandleFunc("POST /api/mobile/v1/auth/verify", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.VerifyCode))
 	http.HandleFunc("POST /api/mobile/v1/auth/refresh", middleware.LoginRateLimit(30, 15*time.Minute, mobileAuthHandler.Refresh))
+	http.HandleFunc("POST /api/mobile/v1/auth/vk", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.AuthVK))
 
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/clinic-info", mobilePublic(clinicInfoHandler.GetPublicClinicInfo))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/animals", mobilePublic(animalHandler.GetAnimals))

@@ -34,7 +34,9 @@ export default function BookingHubScreen() {
           </span>
         </button>
         {!isAuthenticated && (
-          <p className={styles.hint}>Войдите по номеру телефона (код в Telegram), чтобы записаться.</p>
+          <p className={styles.hint}>
+            Войдите через VK ID или по телефону (код в Telegram), чтобы записаться.
+          </p>
         )}
       </div>
     </>

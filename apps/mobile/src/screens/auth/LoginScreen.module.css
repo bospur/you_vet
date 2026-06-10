@@ -1,0 +1,125 @@
+.wrap {
+  padding: var(--vet-page-padding);
+  padding-bottom: calc(var(--vet-page-padding) + var(--vet-safe-bottom));
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.lead {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--vet-text-secondary);
+  line-height: 1.5;
+}
+
+.vkBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #0077ff;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vkBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.vkIcon {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 20px;
+  color: var(--vet-text-hint);
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--vet-tab-bar-border);
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vet-text-body);
+}
+
+.sectionHint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--vet-text-hint);
+  line-height: 1.45;
+}
+
+.phoneRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 10px;
+  font-size: 16px;
+  background: var(--vet-bg);
+  color: var(--vet-text-body);
+}
+
+.secondaryBtn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 10px;
+  background: var(--vet-bg);
+  color: var(--vet-accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.6;
+}
+
+.linkBtn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--vet-accent);
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 13px;
+}
