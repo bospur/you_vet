@@ -42,12 +42,12 @@
 
 <div class="header">
   <h1>Фаза 5 — Запись на приём</h1>
-  <div class="subtitle">PRD-03 · слоты · Mini App · вопросы клиентам</div>
-  <p style="margin-top:12px;"><span class="badge">код на dev</span> <span class="badge-warn">prod после deploy</span> <span class="badge-new">Q1 вопросы</span> <span style="color:#888;font-size:12px;">обновлено 1 июня 2026</span></p>
+  <div class="subtitle">PRD-03 · Mini App · mobile «Ветпрактика» · вопросы</div>
+  <p style="margin-top:12px;"><span class="badge">mobile контент + ЛК</span> <span class="badge-warn">запись в APK — sprint 5</span> <span class="badge-new">admin «Приложение»</span> <span style="color:#888;font-size:12px;">обновлено 10 июня 2026</span></p>
 </div>
 
 <div class="tip">
-  Клиент: <strong>запись</strong> (услуга → дата → время) и <strong>задать вопрос</strong> в Mini App. Staff: admin «Запись» + <strong>один чат врачей</strong> (заявки и вопросы). Ответ на вопрос — кнопка «Ответить» или reply в чате → личка клиента в боте.
+  Клиент: <strong>запись</strong> и <strong>вопрос</strong> в Mini App; APK «Ветпрактика» — статьи, врачи, груминг, вопрос (ответ в боте), личный кабинет; <strong>запись в APK</strong> — следующий этап. Staff: admin «Запись» + чат врачей; в «Обзор» — вкладка пользователей приложения.
 </div>
 
 <h2>Этапы</h2>
@@ -57,6 +57,7 @@
   <tr><td>C1</td><td>🟡</td><td>Запись, «Мои заявки» (вкладки), отмена, слоты на сегодня — deploy app</td></tr>
   <tr><td>Q1</td><td>🟡</td><td>«Задать вопрос», ответ врача в бот — deploy server+app, миграция <strong>017</strong></td></tr>
   <tr><td>B5</td><td>частично</td><td>ADM-02; тесты; история вопросов в admin</td></tr>
+  <tr><td>M-mobile</td><td>🟡</td><td>Auth ✅, контент ✅, ЛК ✅, вопрос (TG); запись — sprint 5</td></tr>
 </table>
 
 <h2>Mini App — запись (C1)</h2>
@@ -76,18 +77,31 @@
 </ul>
 <p><strong>BotFather:</strong> Group Privacy → <em>Disable</em> (чтобы бот видел reply в группе).</p>
 
+<h2>Мобильное приложение (M-mobile)</h2>
+<ul>
+  <li>Отдельный канал RuStore «Ветпрактика» — не Mini App</li>
+  <li><strong>Вход:</strong> Telegram OTP и VK ID ✅</li>
+  <li><strong>Контент:</strong> статьи, врачи, расписание, груминг (как Mini App)</li>
+  <li><strong>Вопрос:</strong> из APK → ответ врача в Telegram-боте (нужна привязка TG)</li>
+  <li><strong>Личный кабинет:</strong> имя, фото профиля (миграция <strong>021</strong>)</li>
+  <li><strong>Admin:</strong> «Обзор» → вкладка «Приложение» — список пользователей APK</li>
+  <li><strong>Запись на приём</strong> — sprint 5 (следующий этап)</li>
+</ul>
+
 <h2>Миграции на VPS</h2>
 <table>
   <tr><th>#</th><th>Содержание</th></tr>
   <tr><td>016</td><td><code>schedule_style</code> (time_slots)</td></tr>
   <tr><td>017</td><td><code>client_questions</code></td></tr>
+  <tr><td>019–020</td><td><code>mobile_users</code>, VK auth</td></tr>
+  <tr><td>021</td><td><code>photo_url</code> профиля mobile</td></tr>
 </table>
 
 <h2>Деплой и smoke</h2>
 <ol>
-  <li>Push <code>dev</code> → deploy <strong>server</strong> + <strong>app</strong></li>
-  <li>Миграции <strong>016</strong>, <strong>017</strong></li>
-  <li>Smoke: УЗИ со временем, отмена, вкладки заявок; вопрос → ответ в боте</li>
+  <li>Push <code>dev</code> → deploy <strong>server</strong> (021) + <strong>admin</strong></li>
+  <li>Smoke mobile: контент, ЛК, вопрос → ответ в боте</li>
+  <li>Следующее: <strong>booking</strong> в APK (sprint 5)</li>
 </ol>
 
 <h2>Backlog</h2>

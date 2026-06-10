@@ -1,0 +1,46 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 12px;
+  background: var(--vet-accent-soft-subtle);
+  text-align: left;
+  cursor: pointer;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.doctors {
+  display: block;
+  font-size: 15px;
+  color: var(--vet-text-body);
+  margin-top: 4px;
+}
+
+.arrow {
+  color: var(--vet-text-hint);
+  font-size: 18px;
+}
+
+.skeleton {
+  height: 72px;
+  border-radius: 12px;
+  background: var(--vet-skeleton);
+  margin-bottom: 16px;
+}

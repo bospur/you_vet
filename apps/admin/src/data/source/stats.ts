@@ -20,3 +20,20 @@ export const fetchStatsSummary = () =>
 
 export const fetchTelegramAppUsers = () =>
   axiosInstance.get<TelegramAppUser[]>('/api/admin/stats/users').then((r) => r.data ?? []);
+
+export interface MobileAppUser {
+  id: number;
+  display_name: string;
+  phone: string;
+  telegram_user_id?: number;
+  vk_user_id?: number;
+  photo_url: string;
+  linked_at?: string;
+  created_at: string;
+}
+
+export const fetchMobileStatsSummary = () =>
+  axiosInstance.get<StatsSummary>('/api/admin/stats/mobile/summary').then((r) => r.data);
+
+export const fetchMobileAppUsers = () =>
+  axiosInstance.get<MobileAppUser[]>('/api/admin/stats/mobile/users').then((r) => r.data ?? []);

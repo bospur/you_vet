@@ -92,7 +92,7 @@ func main() {
 	doctorHandler := handler.NewDoctorHandler(doctorRepo, uploadsDir)
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
-	statsHandler := handler.NewStatsHandler(telegramUserRepo)
+	mobileAuthRepo := repository.NewMobileAuthRepository(database)
 
 	clinicID, err := bookingRepo.GetClinicIDBySlug(clinicSlug)
 	if err != nil {
@@ -108,8 +108,6 @@ func main() {
 		appURL = "https://app.snzbeachvolleyball25.ru"
 	}
 
-	mobileAuthRepo := repository.NewMobileAuthRepository(database)
-
 	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo, questionRepo, mobileAuthRepo, telegramUserRepo)
 	if err != nil {
 		log.Fatalf("ошибка инициализации бота: %v", err)
@@ -122,13 +120,14 @@ func main() {
 	}
 
 	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
-	questionHandler := handler.NewClientQuestionHandler(questionRepo, tgBot)
+	questionHandler := handler.NewClientQuestionHandler(questionRepo, mobileAuthRepo, tgBot)
 	vkClient := vkid.NewClientFromEnv()
 	if vkClient == nil {
 		log.Println("VK ID: VK_APP_ID/VK_APP_SECRET не заданы — вход через VK отключён")
 	}
 
-	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, vkClient, clinicID, mobileJWTSecret)
+	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, vkClient, clinicID, mobileJWTSecret, uploadsDir)
+	statsHandler := handler.NewStatsHandler(telegramUserRepo, mobileAuthRepo)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
@@ -160,6 +159,9 @@ func main() {
 	http.HandleFunc("POST /api/mobile/v1/auth/verify", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.VerifyCode))
 	http.HandleFunc("POST /api/mobile/v1/auth/refresh", middleware.LoginRateLimit(30, 15*time.Minute, mobileAuthHandler.Refresh))
 	http.HandleFunc("POST /api/mobile/v1/auth/vk", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.AuthVK))
+	http.HandleFunc("GET /api/mobile/v1/profile", mobileAuth(mobileAuthHandler.GetProfile))
+	http.HandleFunc("PATCH /api/mobile/v1/profile", mobileAuth(mobileAuthHandler.UpdateProfile))
+	http.HandleFunc("POST /api/mobile/v1/profile/photo", mobileAuth(mobileAuthHandler.UploadProfilePhoto))
 
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/clinic-info", mobilePublic(clinicInfoHandler.GetPublicClinicInfo))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/animals", mobilePublic(animalHandler.GetAnimals))
@@ -175,6 +177,7 @@ func main() {
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.ListPublicRequests))
 	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.CreatePublicRequest))
 	http.HandleFunc("PATCH /api/mobile/v1/clinics/{clinicSlug}/booking/requests/{id}", mobileAuth(bookingHandler.CancelPublicRequest))
+	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/questions", mobileAuth(questionHandler.CreateMobileQuestion))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
@@ -210,6 +213,8 @@ func main() {
 	// Stats (только admin)
 	http.HandleFunc("GET /api/admin/stats/summary", adminAuth(statsHandler.GetSummary))
 	http.HandleFunc("GET /api/admin/stats/users", adminAuth(statsHandler.ListUsers))
+	http.HandleFunc("GET /api/admin/stats/mobile/summary", adminAuth(statsHandler.GetMobileSummary))
+	http.HandleFunc("GET /api/admin/stats/mobile/users", adminAuth(statsHandler.ListMobileUsers))
 
 	// Users (только admin)
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))

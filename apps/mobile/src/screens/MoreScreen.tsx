@@ -1,4 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '../api/client';
+import { fetchProfile } from '../api/profile';
 import { NestedAppBar } from '../components/shell/AppBar';
 import { useAuth } from '../auth/AuthContext';
 import { authMethodLabel, displayUserName, maskPhone } from '../auth/mobileUser';
@@ -8,9 +11,18 @@ export default function MoreScreen() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, user, logout } = useAuth();
 
+  const { data: profile } = useQuery({
+    queryKey: ['mobile-profile'],
+    queryFn: fetchProfile,
+    enabled: isAuthenticated,
+  });
+
   const handleLogout = async () => {
     await logout();
   };
+
+  const photoSrc = profile?.photo_url ? `${API_URL}${profile.photo_url}` : null;
+  const name = profile?.display_name || (user ? displayUserName(user) : '');
 
   return (
     <>
@@ -22,12 +34,25 @@ export default function MoreScreen() {
           <p className={styles.muted}>Загрузка…</p>
         ) : isAuthenticated && user ? (
           <div className={styles.card}>
-            <div className={styles.avatar} aria-hidden>
-              {displayUserName(user).charAt(0).toUpperCase()}
-            </div>
-            <p className={styles.name}>{displayUserName(user)}</p>
-            {user.phone && <p className={styles.meta}>{maskPhone(user.phone)}</p>}
+            {photoSrc ? (
+              <img src={photoSrc} alt="" className={styles.avatarImg} />
+            ) : (
+              <div className={styles.avatar} aria-hidden>
+                {name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <p className={styles.name}>{name}</p>
+            {(profile?.phone || user.phone) && (
+              <p className={styles.meta}>{maskPhone(profile?.phone || user.phone!)}</p>
+            )}
             <p className={styles.badge}>{authMethodLabel(user)}</p>
+            <button
+              type="button"
+              className={styles.profileBtn}
+              onClick={() => navigate('/profile')}
+            >
+              Личный кабинет
+            </button>
             <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
               Выйти
             </button>
@@ -36,7 +61,7 @@ export default function MoreScreen() {
           <div className={styles.card}>
             <p className={styles.muted}>Вы не вошли в аккаунт</p>
             <p className={styles.hint}>
-              Войдите, чтобы записаться на приём и видеть свои заявки.
+              Войдите, чтобы записаться на приём и управлять профилем.
             </p>
             <button
               type="button"

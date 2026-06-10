@@ -10,7 +10,8 @@ const CLINIC_SLUG = import.meta.env.VITE_CLINIC_SLUG ?? 'default';
 
 export const clinicBaseURL = `${API_URL}${API_PREFIX}/clinics/${CLINIC_SLUG}`;
 export const authBaseURL = `${API_URL}${API_PREFIX}/auth`;
-export { API_URL, CLINIC_SLUG };
+export const profileBaseURL = `${API_URL}${API_PREFIX}/profile`;
+export { API_URL, API_PREFIX, CLINIC_SLUG };
 
 export const apiClient = axios.create({
   baseURL: clinicBaseURL,

@@ -31,11 +31,12 @@ type AuthCodeSender interface {
 }
 
 type MobileAuthHandler struct {
-	repo     *repository.MobileAuthRepository
-	sender   AuthCodeSender
-	vk       *vkid.Client
-	clinicID int
-	secret   string
+	repo       *repository.MobileAuthRepository
+	sender     AuthCodeSender
+	vk         *vkid.Client
+	clinicID   int
+	secret     string
+	uploadsDir string
 }
 
 func NewMobileAuthHandler(
@@ -44,8 +45,11 @@ func NewMobileAuthHandler(
 	vk *vkid.Client,
 	clinicID int,
 	secret string,
+	uploadsDir string,
 ) *MobileAuthHandler {
-	return &MobileAuthHandler{repo: repo, sender: sender, vk: vk, clinicID: clinicID, secret: secret}
+	return &MobileAuthHandler{
+		repo: repo, sender: sender, vk: vk, clinicID: clinicID, secret: secret, uploadsDir: uploadsDir,
+	}
 }
 
 type authRequestBody struct {

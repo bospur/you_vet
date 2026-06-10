@@ -1,0 +1,10 @@
+.emptyWrap {
+  padding: var(--vet-page-padding);
+}
+
+.empty {
+  text-align: center;
+  color: var(--vet-text-hint);
+  padding: 32px 0;
+  margin: 0;
+}

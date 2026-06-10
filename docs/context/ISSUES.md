@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-10 (передача, VK auth + APK)
+> Последнее обновление: 2026-06-10 (передача, mobile контент + ЛК + admin)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -89,18 +89,23 @@
 
 | ID | Pri | Задача | Статус |
 |---|---|---|---|
-| MOB-01 | 🟡 | M0: `/api/mobile/v1`, миграция 019, бот OTP | **fixed** — prod; фикс кнопки contact в `work-mobile` |
-| MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed в коде** — debug APK проверен |
-| MOB-03 | 🟡 | Auth UI (login / verify / link-telegram) | **fixed в коде 2026-06-10** — merge `dev` + APK rebuild |
-| MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed в коде** — merge `dev`; `VK_APP_*` на VPS |
-| MOB-05 | ⚪ | Booking flow в mobile | backlog sprint 5 |
+| MOB-01 | 🟡 | M0: `/api/mobile/v1`, миграция 019, бот OTP | **fixed** — prod; contact-кнопка в `work-mobile` |
+| MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed** — APK на телефоне |
+| MOB-03 | 🟡 | Auth UI (login / verify / link-telegram) | **fixed 2026-06-10** — TG smoke ✅; `setTokens` в VerifyScreen |
+| MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed** — smoke ✅ на APK |
+| MOB-05 | ⚪ | Booking flow в mobile | backlog **sprint 5** (следующий) |
 | MOB-06 | ⚪ | RuStore release (M3) | backlog |
-| MOB-07 | 🟡 | APK без `cap sync` → старый UI («sprint 4») | **doc** — всегда `npm run build` → `cap sync` перед APK |
-| MOB-08 | 🟡 | `VITE_VK_APP_ID` — нужен числовой ID, не secret | **open** — проверить `.env.local` |
+| MOB-07 | 🟡 | APK без `cap sync` → старый UI | **doc** — `npm run build` → `cap sync` |
+| MOB-08 | 🟡 | VK app ID / кабинет | **fixed** |
+| MOB-09 | 🟡 | CORS / API из APK WebView | **fixed** — `CapacitorHttp` |
+| MOB-10 | 🟡 | VK `user_info` без `client_id` | **fixed** — prod |
+| MOB-11 | 🟡 | Admin: вкладка mobile в «Обзор» | **fixed 2026-06-10** — deploy admin |
+| MOB-12 | 🟡 | Контент mobile (статьи, врачи, груминг…) | **fixed 2026-06-10** |
+| MOB-13 | 🟡 | Вопрос из APK (ответ в TG) | **fixed** — `POST …/questions` mobile JWT |
+| MOB-14 | 🟡 | ЛК: имя + фото (`photo_url`, 021) | **fixed** — deploy server |
 
 ## Следующие шаги
 
-1. Merge `work-mobile` → `dev` → Deploy server (020, VK, бот)
-2. Исправить `VITE_VK_APP_ID`, пересобрать APK, smoke VK
-3. Mobile sprint 2 (статьи)
-4. **ADM-02** · C1 smoke
+1. Deploy **server 021** + **admin** (если не на prod)
+2. **Mobile sprint 5** — booking
+3. **ADM-02** · C1 smoke
