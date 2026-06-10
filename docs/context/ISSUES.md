@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-10 (передача, mobile контент + ЛК + admin)
+> Последнее обновление: 2026-06-10 (передача, mobile UX + admin delete user)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -103,9 +103,15 @@
 | MOB-12 | 🟡 | Контент mobile (статьи, врачи, груминг…) | **fixed 2026-06-10** |
 | MOB-13 | 🟡 | Вопрос из APK (ответ в TG) | **fixed** — `POST …/questions` mobile JWT |
 | MOB-14 | 🟡 | ЛК: имя + фото (`photo_url`, 021) | **fixed** — deploy server |
+| MOB-15 | 🟡 | Mobile UX polish (хедер, тема, 320px, врачи grid, splash) | **fixed 2026-06-10** — deploy APK |
+| MOB-16 | 🟡 | Гостевой режим: скрыть запись/вопрос, баннер, экран входа | **fixed 2026-06-10** |
+| MOB-17 | 🟡 | Session refresh + 401 → login (удаление user в admin) | **fixed 2026-06-10** — deploy server+mobile |
+| MOB-18 | 🟡 | CI: `set-state-in-effect` в ProfileScreen | **fixed 2026-06-10** |
+| MOB-19 | 🟡 | Android: duplicate `ic_launcher_background` | **fixed 2026-06-10** |
+| MOB-20 | 🟡 | Admin: удаление mobile user | **fixed 2026-06-10** — deploy admin+server |
 
 ## Следующие шаги
 
-1. Deploy **server 021** + **admin** (если не на prod)
+1. Deploy **server + admin** (delete mobile user)
 2. **Mobile sprint 5** — booking
 3. **ADM-02** · C1 smoke

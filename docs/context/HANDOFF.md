@@ -2,52 +2,67 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-06-10 (контент mobile + ЛК + admin «Приложение»)
+## Сессия 2026-06-10 (mobile UX + auth + splash + admin delete user)
 
 ### Prod / smoke
 
 | Проверка | Результат |
 |---|---|
-| TG + VK auth на APK | ✅ (deploy + smoke пользователя) |
-| Статьи / врачи / расписание / груминг | ✅ в APK (mobile API) |
-| Вопрос из APK → ответ в боте | ✅ (нужен привязанный TG) |
-| Личный кабинет: имя + фото | ✅ в коде; **миграция 021** — deploy server |
-| Admin «Обзор» → вкладка «Приложение» | ✅ в коде; deploy admin |
+| Deploy пользователя (server/admin/mobile) | ✅ пользователь подтвердил |
+| CI lint mobile (`ProfileScreen` setState in effect) | ✅ исправлено в коде |
+| APK: splash с картинкой клиники | ✅ в коде; `cap sync` + rebuild |
+| APK: гостевой режим / вход / ЛК | 🟡 smoke после push |
 
 ### Сделано
 
-**Mobile (`apps/mobile`)**
-- [x] Контент до записи: статьи, врачи, расписание, груминг, «Задать вопрос»
-- [x] **Личный кабинет** `/profile`: имя, фото (сжатие JPEG перед upload), привязка TG
-- [x] «Ещё»: аватар, ссылка в ЛК
+**Mobile (`apps/mobile`) — UI/UX**
+- [x] Убрана кнопка «Назад» в `NestedAppBar` (системная навигация)
+- [x] Профиль в хедере; для гостя — иконка входа
+- [x] Убрана sticky «Позвонить» на главной (звонок в хедере)
+- [x] Адаптация **365px / 320px**
+- [x] ЛК: progress при загрузке фото, ✓ в инпуте имени, тема светлая/тёмная
+- [x] Главная: коллапс «О нас» (`HomeClinicBlock`), баннер для гостей
+- [x] Меню: «Запись» и «Вопрос» скрыты без auth
+- [x] Иконки меню как в mini app (`react-icons/fa6`)
+- [x] Врачи: сетка 2×N с крупным фото
+- [x] Экран входа — полноэкранный (VK + телефон, «Продолжить без входа»)
+- [x] «Ещё» упрощён (без дубля аккаунта; выход / подсказка)
+
+**Mobile — splash**
+- [x] Нативный launch screen + веб `/splash` с фоном `src/assets/splash-bg.png`
+- [x] `SplashScreen` plugin: `launchAutoHide: false`, hide при монтировании React
+
+**Mobile — auth/session**
+- [x] Refresh JWT (`/auth/refresh`) в `authenticatedFetch` + axios interceptor
+- [x] При 401 → clear tokens → редирект на `/auth/login` с защищённых маршрутов
 
 **Server**
-- [x] `POST /api/mobile/v1/clinics/{slug}/questions` (JWT + TG)
-- [x] `GET/PATCH /api/mobile/v1/profile`, `POST …/profile/photo`
-- [x] Миграция **021** — `mobile_users.photo_url`
-- [x] `GET /api/admin/stats/mobile/summary|users`
+- [x] `DELETE /api/admin/stats/mobile/users/{id}` — удаление mobile user
+- [x] Профиль удалённого user → **401** (не 404)
 
 **Admin**
-- [x] «Обзор»: вкладки **Mini App** | **Приложение** (список `mobile_users`)
+- [x] «Обзор» → «Приложение»: кнопка удаления пользователя + confirm
 
-### Деплой (если ещё не на prod)
+**Fix**
+- [x] Android build: дубликат `ic_launcher_background` в `colors.xml`
 
-1. **Server** — миграции **020–021**, profile + mobile questions + admin mobile stats
-2. **Admin** — вкладка «Приложение»
-3. APK: `npm run build` → `npx cap sync android`
+### Деплой (после push `dev`)
+
+1. **Server** — delete mobile user + 401 profile
+2. **Admin** — delete в табе «Приложение»
+3. **Mobile APK** — `npm run build` → `npx cap sync android`
 
 ### Следующий шаг
 
 1. **Mobile sprint 5** — booking flow (`/booking/new`, «Мои заявки»)
-2. UI-полировка mobile — после логики записи
+2. Smoke: удаление user в admin → 401 в APK → экран входа
 3. **ADM-02**, C1 smoke Mini App
-4. Backlog: Q&A без TG (inbox в приложении) · staff-режим в APK — не v1
 
 ### Сборка APK
 
-`npm run build` → `npx cap sync android` → Android Studio. Версия в `build.gradle`.
+`npm run build` → `npx cap sync android` → Android Studio (**Clean Project** после смены `res/`).
 
 ### Ссылки
 
-- [phase-5-appointments.md](../md/phases/phase-5-appointments.md) · [booking-for-clinic.html](../html/booking-for-clinic.html)
 - [design-mvp.md](../md/mobile/design-mvp.md)
+- [phase-5-appointments.md](../md/phases/phase-5-appointments.md)

@@ -38,10 +38,6 @@ export default function HomeScreen() {
 
   const clinic: ClinicInfo | null = info ?? cachedInfo ?? null;
 
-  if (isLoading && !clinic) {
-    return <div className={styles.loading}>Загрузка…</div>;
-  }
-
   const navCards = useMemo(() => {
     const cards: Array<{
       key: string;
@@ -118,6 +114,10 @@ export default function HomeScreen() {
     groomingLoading,
     isAuthenticated,
   ]);
+
+  if (isLoading && !clinic) {
+    return <div className={styles.loading}>Загрузка…</div>;
+  }
 
   return (
     <div className={styles.wrap}>

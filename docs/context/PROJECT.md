@@ -1,6 +1,6 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-06-09 (передача)
+> Последнее обновление: 2026-06-10 (передача)
 
 ## Что это
 
@@ -41,9 +41,10 @@ packages/types/  @you-vet/types
 
 | Этап | Статус |
 |---|---|
-| M0 backend API + auth | 🟡 в коде, deploy server |
-| M1 Capacitor shell (sprint 1) | 🟡 в коде |
-| M2 auth UI + booking | backlog |
+| M0 backend API + auth | ✅ prod |
+| M1 Capacitor shell + контент | ✅ APK |
+| M2 auth UX + гостевой режим + polish | 🟡 в коде, deploy APK |
+| M2b booking flow | backlog **sprint 5** |
 | M3 RuStore | backlog |
 
 `appId`: `ru.snzbeachvolleyball25.vetpraktika` · API: `/api/mobile/v1`
