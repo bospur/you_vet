@@ -1,6 +1,7 @@
 package vkid
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -136,7 +138,10 @@ func (c *Client) FetchUserInfo(accessToken string) (*UserInfo, error) {
 		return nil, errors.New("vk client is nil")
 	}
 
-	form := url.Values{"access_token": {accessToken}}
+	form := url.Values{
+		"access_token": {accessToken},
+		"client_id":    {c.AppID},
+	}
 	userEP := c.userInfoURL
 	if userEP == "" {
 		userEP = defaultUserInfoURL
@@ -162,13 +167,54 @@ func (c *Client) FetchUserInfo(accessToken string) (*UserInfo, error) {
 	}
 
 	var wrapper struct {
-		User UserInfo `json:"user"`
+		User struct {
+			UserID    json.RawMessage `json:"user_id"`
+			FirstName string          `json:"first_name"`
+			LastName  string          `json:"last_name"`
+			Phone     string          `json:"phone"`
+			Avatar    string          `json:"avatar"`
+			Email     string          `json:"email"`
+		} `json:"user"`
 	}
 	if err := json.Unmarshal(body, &wrapper); err != nil {
 		return nil, err
 	}
-	if wrapper.User.UserID == 0 {
-		return nil, errors.New("vk user_info: missing user_id")
+	userID, err := parseVKUserID(wrapper.User.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("vk user_info: %w", err)
 	}
-	return &wrapper.User, nil
+	return &UserInfo{
+		UserID:    userID,
+		FirstName: wrapper.User.FirstName,
+		LastName:  wrapper.User.LastName,
+		Phone:     wrapper.User.Phone,
+		Avatar:    wrapper.User.Avatar,
+		Email:     wrapper.User.Email,
+	}, nil
+}
+
+func parseVKUserID(raw json.RawMessage) (int64, error) {
+	if len(raw) == 0 {
+		return 0, errors.New("missing user_id")
+	}
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) > 0 && trimmed[0] == '"' {
+		var s string
+		if err := json.Unmarshal(trimmed, &s); err != nil {
+			return 0, err
+		}
+		id, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return id, nil
+	}
+	var id int64
+	if err := json.Unmarshal(trimmed, &id); err != nil {
+		return 0, err
+	}
+	if id == 0 {
+		return 0, errors.New("missing user_id")
+	}
+	return id, nil
 }

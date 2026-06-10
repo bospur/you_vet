@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { NestedAppBar } from '../../components/shell/AppBar';
 import { useAuth } from '../../auth/AuthContext';
+import { displayUserName } from '../../auth/mobileUser';
 import styles from './BookingHubScreen.module.css';
 
 export default function BookingHubScreen() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const goProtected = (path: string) => {
     if (!isAuthenticated) {
@@ -33,7 +34,11 @@ export default function BookingHubScreen() {
             <span className={styles.rowSub}>Статус ваших записей</span>
           </span>
         </button>
-        {!isAuthenticated && (
+        {isAuthenticated && user ? (
+          <p className={styles.authOk}>
+            Вы вошли как <strong>{displayUserName(user)}</strong>
+          </p>
+        ) : (
           <p className={styles.hint}>
             Войдите через VK ID или по телефону (код в Telegram), чтобы записаться.
           </p>

@@ -239,8 +239,11 @@ func (h *MobileAuthHandler) AuthVK(w http.ResponseWriter, r *http.Request) {
 	info, err := h.vk.FetchUserInfo(tok.AccessToken)
 	if err != nil {
 		log.Printf("mobile auth vk user_info: %v", err)
-		writeAPIError(w, http.StatusUnauthorized, "VK_AUTH_FAILED", "не удалось получить профиль VK")
-		return
+		if tok.UserID == 0 {
+			writeAPIError(w, http.StatusUnauthorized, "VK_AUTH_FAILED", "не удалось получить профиль VK")
+			return
+		}
+		info = &vkid.UserInfo{UserID: tok.UserID}
 	}
 
 	vkID := info.UserID
