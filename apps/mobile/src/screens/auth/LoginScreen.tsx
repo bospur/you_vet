@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { NestedAppBar } from '../../components/shell/AppBar';
-import { useAuth } from '../../auth/AuthContext';
-import { isVkConfigured, loginWithVk } from '../../auth/vkLogin';
+import { isVkConfigured, startVkLogin } from '../../auth/vkLogin';
 import { authRequestCode, parseAuthError } from '../../api/auth';
 import { phone } from '../../utils/phone';
 import styles from './LoginScreen.module.css';
@@ -10,7 +9,6 @@ import styles from './LoginScreen.module.css';
 export default function LoginScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { refreshAuthState } = useAuth();
   const returnUrl = searchParams.get('return') ?? '/';
 
   const [phoneInput, setPhoneInput] = useState('+7');
@@ -18,20 +16,13 @@ export default function LoginScreen() {
   const [loadingPhone, setLoadingPhone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const finishLogin = async () => {
-    await refreshAuthState();
-    navigate(returnUrl, { replace: true });
-  };
-
-  const handleVk = async () => {
+  const handleVk = () => {
     setError(null);
     setLoadingVk(true);
     try {
-      await loginWithVk();
-      await finishLogin();
+      startVkLogin(returnUrl);
     } catch (err) {
       setError(parseAuthError(err));
-    } finally {
       setLoadingVk(false);
     }
   };

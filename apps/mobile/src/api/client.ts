@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { getAccessToken } from '../auth/tokenStorage';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
+// В dev — same-origin + vite proxy, чтобы не упираться в CORS из браузера.
+const API_URL = import.meta.env.DEV
+  ? ''
+  : (import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru');
 const API_PREFIX = import.meta.env.VITE_MOBILE_API_PREFIX ?? '/api/mobile/v1';
 const CLINIC_SLUG = import.meta.env.VITE_CLINIC_SLUG ?? 'default';
 

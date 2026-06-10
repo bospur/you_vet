@@ -59,6 +59,10 @@
 | `APP_URL` | URL Mini App для кнопки в боте (`https://app.snzbeachvolleyball25.ru`) |
 | `ADMIN_LOGIN` | Логин первого admin (только при первом запуске) |
 | `ADMIN_PASSWORD` | Пароль первого admin (только при первом запуске) |
+| `VK_APP_ID` | ID приложения VK ID (число) — mobile `POST /auth/vk` |
+| `VK_APP_SECRET` | **Защищённый ключ** VK (не сервисный ключ) |
+| `VK_REDIRECT_URI` | `https://oauth.vk.com/blank.html` (как в mobile `.env.local`) |
+| `JWT_MOBILE_SECRET` | Опционально; иначе fallback `JWT_SECRET` |
 
 ## CI/CD
 
