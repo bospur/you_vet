@@ -39,3 +39,13 @@
   color: var(--vet-text-hint);
   line-height: 1.5;
 }
+
+.authOk {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--vet-surface-card);
+  font-size: 14px;
+  color: var(--vet-text-secondary);
+  line-height: 1.45;
+}

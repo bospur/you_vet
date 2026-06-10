@@ -17,7 +17,7 @@ func TestExchangeCodeAndUserInfo(t *testing.T) {
 		_, _ = w.Write([]byte(`{"access_token":"tok","user_id":42,"expires_in":3600}`))
 	})
 	mux.HandleFunc("/oauth2/user_info", func(w http.ResponseWriter, r *http.Request) {
-		if r.FormValue("access_token") != "tok" {
+		if r.FormValue("access_token") != "tok" || r.FormValue("client_id") != "1" {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}

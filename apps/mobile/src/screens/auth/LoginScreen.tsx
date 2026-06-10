@@ -16,13 +16,14 @@ export default function LoginScreen() {
   const [loadingPhone, setLoadingPhone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleVk = () => {
+  const handleVk = async () => {
     setError(null);
     setLoadingVk(true);
     try {
-      startVkLogin(returnUrl);
+      await startVkLogin(returnUrl);
     } catch (err) {
       setError(parseAuthError(err));
+    } finally {
       setLoadingVk(false);
     }
   };

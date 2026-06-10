@@ -7,11 +7,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { parseMobileAccessToken, type MobileUserProfile } from './mobileUser';
 import { clearTokens, getAccessToken } from './tokenStorage';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
+  user: MobileUserProfile | null;
   logout: () => Promise<void>;
   refreshAuthState: () => Promise<void>;
 }
@@ -21,33 +23,39 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<MobileUserProfile | null>(null);
+
+  const applyToken = useCallback((token: string | null) => {
+    setIsAuthenticated(Boolean(token));
+    setUser(token ? parseMobileAccessToken(token) : null);
+    setIsLoading(false);
+  }, []);
 
   const refreshAuthState = useCallback(async () => {
     const token = await getAccessToken();
-    setIsAuthenticated(Boolean(token));
-    setIsLoading(false);
-  }, []);
+    applyToken(token);
+  }, [applyToken]);
 
   useEffect(() => {
     let cancelled = false;
     getAccessToken().then((token) => {
       if (cancelled) return;
-      setIsAuthenticated(Boolean(token));
-      setIsLoading(false);
+      applyToken(token);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyToken]);
 
   const logout = useCallback(async () => {
     await clearTokens();
     setIsAuthenticated(false);
+    setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ isAuthenticated, isLoading, logout, refreshAuthState }),
-    [isAuthenticated, isLoading, logout, refreshAuthState],
+    () => ({ isAuthenticated, isLoading, user, logout, refreshAuthState }),
+    [isAuthenticated, isLoading, user, logout, refreshAuthState],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

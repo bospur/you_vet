@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { NestedAppBar } from '../../components/shell/AppBar';
 import { useAuth } from '../../auth/AuthContext';
 import { authVerifyCode, parseAuthError } from '../../api/auth';
+import { setTokens } from '../../auth/tokenStorage';
 import styles from './VerifyScreen.module.css';
 
 export default function VerifyScreen() {
@@ -26,7 +27,8 @@ export default function VerifyScreen() {
     setLoading(true);
     setError(null);
     try {
-      await authVerifyCode(phone, digits);
+      const tokens = await authVerifyCode(phone, digits);
+      await setTokens(tokens.access_token, tokens.refresh_token);
       await refreshAuthState();
       navigate(returnUrl, { replace: true });
     } catch (err) {

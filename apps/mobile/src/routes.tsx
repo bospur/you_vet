@@ -9,6 +9,7 @@ import VerifyScreen from './screens/auth/VerifyScreen';
 import LinkTelegramScreen from './screens/auth/LinkTelegramScreen';
 import VkCallbackScreen from './screens/auth/VkCallbackScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
+import MoreScreen from './screens/MoreScreen';
 
 export function AppRoutes() {
   return (
@@ -18,7 +19,7 @@ export function AppRoutes() {
         <Route path="/" element={<AppShell />}>
           <Route index element={<HomeScreen />} />
           <Route path="animals" element={<PlaceholderScreen title="Статьи" />} />
-          <Route path="more" element={<PlaceholderScreen title="Ещё" />} />
+          <Route path="more" element={<MoreScreen />} />
           <Route path="booking" element={<BookingHubScreen />} />
           <Route path="booking/new" element={<PlaceholderScreen title="Выбор услуги" />} />
           <Route path="booking/requests" element={<PlaceholderScreen title="Мои заявки" />} />
