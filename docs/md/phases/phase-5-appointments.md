@@ -1,8 +1,8 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
-> Статус: **C1 + вопросы в коде на `dev`** · deploy server+app · миграции **016–017** · Обновлено: 2026-06-01 (передача)  
+> Статус: **C1 + вопросы на `dev`** · mobile auth (TG ✅ APK) · deploy server (VK `user_info`, 020) · Обновлено: **2026-06-10**  
 > Для клиники (простым языком): [booking-for-clinic.html](../../html/booking-for-clinic.html)  
-> Связанные документы: [roadmap.html](../../html/roadmap.html) · [roles.md](../general/roles.md) · [mobile/roadmap.md](../mobile/roadmap.md)
+> Связанные документы: [roadmap.html](../../html/roadmap.html) · [roles.md](../general/roles.md) · [mobile/roadmap.md](../mobile/roadmap.md) · [rustore-guide.md](../mobile/rustore-guide.md)
 
 ## Суть (уточнено с клиникой)
 
@@ -10,7 +10,7 @@
 
 | Принцип | Решение |
 |---|---|
-| Каналы клиента v1 | **Mini App** (запись + **задать вопрос**); бот — уведомления клиенту + посты в чат врачей |
+| Каналы клиента v1 | **Mini App** (запись + **задать вопрос**); **мобильное приложение** «Ветпрактика» — auth в APK, запись sprint 5; бот — уведомления + чат врачей |
 | Ёмкость | Слоты/места на день, гибко **по услуге** (шаблон недели + разовые окна) |
 | Подтверждение | **На услугу:** `instant` или `pending`; при pending место **резервируется**, статус «ожидает подтверждения» |
 | Горизонт | **2 недели** вперёд |
@@ -19,7 +19,7 @@
 | Staff | Роль **`manager`** (Менеджер) + **один групповой чат врачей** для уведомлений бота |
 | Груминг | Отдельно, пересечения по времени **не проверяем** в v1 |
 
-**Не входит в v1:** полная запись «на любого врача», RuStore/mobile, автосдвиг очереди при отказе (см. backlog ниже).
+**Не входит в v1:** полная запись «на любого врача», **запись в mobile app** (только вход), RuStore релиз, автосдвиг очереди при отказе (см. backlog ниже).
 
 ---
 
@@ -214,6 +214,23 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 - [x] Бот: inline «Ответить», reply на сообщение, ответ в личку клиента
 - [ ] Prod smoke; backlog: история в Mini App, список в admin
 
+### M-mobile — RuStore-приложение (PRD-06)
+
+Отдельный канал; та же модель заявок, что Mini App (когда будет booking sprint 5).
+
+| Что | Статус |
+|---|---|
+| Shell, tabs, главная | ✅ M1 |
+| Вход Telegram OTP | ✅ smoke на APK (`CapacitorHttp`, `setTokens` в verify) |
+| Вход VK ID | 🟡 Web-приложение VK + `https://app…/vk-callback.html` → deep link; **deploy server** (`user_info` + `client_id`) |
+| Профиль / выход | ✅ вкладка «Ещё» |
+| Запись на приём | ⏳ sprint 5 |
+| RuStore | ⏳ M3 |
+
+**VK кабинет:** тип **Web**, домен `app.snzbeachvolleyball25.ru`, redirect `https://app.snzbeachvolleyball25.ru/vk-callback.html`. Страница в `apps/app/public/` — статический хостинг на домене Mini App.
+
+**Сборка APK:** `apps/mobile` → `npm run build` → `npx cap sync android`.
+
 ### B5 — Polish
 
 - [ ] Тесты: capacity, pending reserve, tenant isolation
@@ -256,9 +273,10 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 
 ## Следующий шаг
 
-1. Push `dev` → deploy **server** (016, **017**, BOOK-08, Q1) + **app** (C1 polish, вопросы)
-2. VPS: **016** + **017**; BotFather: Group Privacy **off**; smoke: запись + вопрос → ответ в боте
-3. **ADM-02** — заявка из admin; backlog — очередь на слот, история вопросов
+1. Push `dev` → deploy **server** (016–017, **020**, VK `/auth/vk`, `user_info`) + **app** (C1, вопросы, `vk-callback.html`)
+2. Smoke Mini App: запись + вопрос → ответ в боте; BotFather Group Privacy **off**
+3. Smoke **mobile**: VK login на APK после deploy server; пересборка APK (`cap sync`)
+4. **ADM-02**; mobile sprint 5 (booking); backlog — очередь на слот, история вопросов
 
 ## Отладка prod (2026-05-31)
 

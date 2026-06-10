@@ -2,75 +2,64 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-06-10 (Mobile auth: VK ID + APK, docs-портал)
+## Сессия 2026-06-10 (Mobile auth: TG ✅, VK почти, профиль в «Ещё»)
 
-### Ветка
+### Ветка / деплой
 
-**`work-mobile`** — merge в **`dev`** обязателен для prod (VK `/auth/vk`, миграция **020**, фикс кнопки бота).
+Локальные изменения в **`work-mobile`** (и связанные правки server/mobile/app). **Merge в `dev` + Deploy server** нужны для:
 
-Коммиты (верх ветки):
-- `488e40b` — LoginScreen (VK + телефон), Verify, LinkTelegram, `POST /auth/vk`, миграция 020
-- `274d5e3` — бот: `menu.Reply` для кнопки «Поделиться номером»
-- `8cca642` — docs-портал: `rustore-app.html`, roadmap, без design-brief/аналитики
+- миграция **020**, `/auth/vk`, фикс `user_info` (`client_id`)
+- `apps/app/public/vk-callback.html` на prod (мост VK → APK)
+- CORS `https://localhost` (опционально для WebView)
 
 ### Сделано
 
+**Mobile auth (APK на телефоне)**
+- [x] **Telegram OTP** — работает: `CapacitorHttp`, фикс `setTokens` в `VerifyScreen` (без него сбрасывало на login)
+- [x] **VK ID** — до экрана разрешений; redirect через `https://app…/vk-callback.html` → deep link в APK; `@capacitor/browser`
+- [x] Новое **Web-приложение VK** (старый `54639803` был `DELETED` в API VK)
+- [x] Экран **«Ещё»**: профиль пользователя + **Выйти**; на «Записи» — «Вы вошли как …»
+
 **Server**
-- [x] Миграция **020** — `vk_user_id`, `mobile_user_id` в booking
-- [x] `POST /api/mobile/v1/auth/vk` — обмен code VK → JWT (`VK_APP_ID`, `VK_APP_SECRET`, `VK_REDIRECT_URI`)
-- [x] Booking list/cancel по `mobile_user_id` (VK без Telegram)
-- [x] Фикс бота: кнопка контакта при `/start link` (был пустой `reply_markup`)
+- [x] `FetchUserInfo`: добавлен **`client_id`** в `POST /oauth2/user_info` + fallback на `user_id` из токена
+- [x] CORS: `localhost:5175`, `https://localhost` (для dev/APK)
 
-**Mobile (`apps/mobile/`)**
-- [x] Экран **Вход**: VK ID (`@vkid/sdk`) + телефон/OTP/TG
-- [x] `/auth/verify`, `/auth/link-telegram`
-- [x] Первый **debug APK** на телефон пользователя (shell работает)
+**Инфра / docs**
+- [x] `vk-callback.html` в `apps/app/public/` (HTTPS-мост для VK Web-приложения)
+- [x] Портал: phase-5 + booking-for-clinic — канал **мобильное приложение**
 
-**Docs-портал** (push в `dev` — выкатился)
-- [x] `html/rustore-app.html`, обновлённые index + roadmap
-- [x] `CODEWORDS.md` — маршрут `rustore`
-
-**VPS (пользователь)**
-- [x] `VK_APP_*` добавлены в `/home/deploy/you_vet/apps/server/.env`
-- [x] `docker compose up -d --force-recreate app` (ручной `pull` → `denied` без GHCR login — нормально)
-
-### Prod / проверки
+### Prod / smoke (пользователь)
 
 | Проверка | Результат |
 |---|---|
-| `GET …/clinic-info` | ✅ 200 |
-| `POST …/auth/request` | ✅ (PHONE_NOT_LINKED если не привязан) |
-| `POST …/auth/vk` | 🟡 после deploy — **не 404** (ожидаем 400/401 на фейковом code) |
-| VK вход в APK | 🔴 «Не удалось войти» — см. блокеры ниже |
+| TG: код в бот → verify → вход | ✅ |
+| VK: форма разрешений | ✅ |
+| VK: после redirect → профиль | 🟡 «не удалось получить профиль VK» → **фикс server, ждёт deploy** |
+| Экран «Ещё» / выход | ✅ после фикса verify |
 
-### Блокеры (следующая сессия)
+### Блокеры / следующий шаг
 
-1. **`work-mobile` → `dev`** + зелёный **Deploy server** (020, `/auth/vk`, фикс бота)
-2. **`VITE_VK_APP_ID`** в `.env.local` — только **числовой ID** из кабинета VK, не защищённый ключ  
-   (было `fNnR7akAtHzjNczMNCrB` — неверно)
-3. **APK:** перед Build APK всегда `npm run build` → `npx cap sync android`  
-   (без sync в APK попадает старый JS — «sprint 4» на экране входа)
-4. Удалить старое приложение на телефоне → установить новый APK
+1. **Push `dev` → Deploy server** (обязательно: `vkid/client.go` + `user_info`)
+2. Убедиться: `vk-callback.html` на prod (`deploy-app` после push)
+3. **VK кабинет (Web):** базовый домен `app.snzbeachvolleyball25.ru`, redirect `https://app.snzbeachvolleyball25.ru/vk-callback.html`, живой `VK_APP_ID` / secret на VPS и в `.env.local`
+4. Пересборка APK: `npm run build` → `npx cap sync android`
+5. Smoke VK end-to-end после deploy server
 
-### Smoke VK (после merge + APK)
+### Дальше по продукту
 
-1. Запись → Записаться → **Войти через VK ID**
-2. Или телефон: бот `?start=link` → контакт → код в TG
-3. `curl -X POST …/auth/vk` — не `404`
+1. Mobile **sprint 2** — статьи (`/animals`)
+2. Mobile **sprint 5** — booking flow (запись в APK)
+3. Admin: вкладка **«Приложение»** в «Обзор» (`mobile_users`) — обсуждено, не в коде
+4. **ADM-02**, C1 smoke Mini App
 
-### Следующая сессия
+### Сборка APK (напоминание)
 
-1. Merge `work-mobile` → `dev`, deploy server, проверить `/auth/vk`
-2. Исправить `VITE_VK_APP_ID`, пересобрать APK
-3. Smoke VK login на телефоне
-4. Mobile **sprint 2** — статьи (animals → articles)
-5. Backlog: **ADM-02**, C1 smoke
-
-### Правило admin UI
-
-Эталон: `BookingScreen`, `GroomingScreen` — `< sm`: карточки, `fullScreen` диалоги, scrollable tabs.
+- Имя: `appName` в `capacitor.config.ts` → `npx cap sync`
+- Версия: `versionCode` / `versionName` в `android/app/build.gradle`
+- Иконка: Android Studio → Image Asset → `ic_launcher`
+- Всегда: `npm run build` → `cap sync` перед APK
 
 ### Ссылки
 
-- Запись: [phase-5-appointments.md](../md/phases/phase-5-appointments.md)
-- Mobile: [design-mvp.md](../md/mobile/design-mvp.md) · [rustore-guide.md](../md/mobile/rustore-guide.md) · [rustore-app.html](../html/rustore-app.html)
+- Запись: [phase-5-appointments.md](../md/phases/phase-5-appointments.md) · [booking-for-clinic.html](../html/booking-for-clinic.html)
+- Mobile: [design-mvp.md](../md/mobile/design-mvp.md) · [rustore-guide.md](../md/mobile/rustore-guide.md)

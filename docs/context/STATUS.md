@@ -6,13 +6,13 @@
 
 | Компонент | Статус | Примечание |
 |---|---|---|
-| Telegram-бот | 🟡 | Фикс кнопки contact — в `work-mobile`, после merge `dev` |
+| Telegram-бот | 🟡 | OTP + `/start link`; contact-кнопка — после merge `dev` |
 | Mini App | 🟡 | C1 + вопросы |
 | Admin | ✅ | без изменений в mobile-сессии |
-| API | 🟡 | M0 **019** на prod; **020 + /auth/vk** — в `work-mobile`, merge → `dev` |
-| **Mobile app** | 🟡 | Auth UI + VK в `work-mobile`; debug APK на телефоне; RuStore — нет |
-| Docs portal | ✅ | rustore + roadmap обновлены |
-| VPS | 🟡 | `VK_APP_*` в `.env`; deploy через CI после merge |
+| API | 🟡 | **019** prod; **020 + /auth/vk** + фикс VK `user_info` — в коде, deploy |
+| **Mobile app** | 🟡 | TG auth ✅ на APK; VK до redirect; профиль в «Ещё»; RuStore — нет |
+| Docs portal | 🟡 | phase-5 + clinic — mobile канал (после push `dev`) |
+| VPS | 🟡 | `VK_APP_*` — проверить новый ID после пересоздания приложения VK |
 
 ## Функциональность (MVP)
 
@@ -21,15 +21,15 @@
 | B1–B4 запись | 🟡 | 🟡 | 🟡 | — |
 | C1 запись UI | — | 🟡 | 🟡 | — |
 | Вопросы клиенту | — | 🟡 | 🟡 | v1.1 |
-| **Mobile RuStore** | — | — | 🟡 M0+VK в коде | 🟡 M1+auth UI |
+| **Mobile RuStore** | — | — | 🟡 M0+auth | 🟡 M1+auth UI, TG ✅ |
 
 ## Фокус
 
-1. Merge **`work-mobile` → `dev`** → Deploy server (020, VK, бот)
-2. `VITE_VK_APP_ID` (число) + `npm run build` → `cap sync` → новый APK
-3. Smoke VK login на телефоне
-4. Sprint 2 — статьи в mobile
+1. **Deploy server** — VK `user_info` (`client_id`), миграция 020
+2. Smoke **VK login** на APK после deploy
+3. Deploy **app** — `vk-callback.html` на prod
+4. Mobile sprint 2 (статьи) · sprint 5 (booking)
 
 ## CI
 
-`ci.yml`: Go test + lint/build admin/app/**mobile**.
+`ci.yml`: Go test + lint/build admin/app/mobile.
