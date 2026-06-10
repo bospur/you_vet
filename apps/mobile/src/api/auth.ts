@@ -33,7 +33,13 @@ export async function authVerifyCode(phone: string, code: string): Promise<Token
 }
 
 export function parseAuthError(err: unknown): string {
-  if (axios.isAxiosError(err) && err.response?.data) {
+  if (axios.isAxiosError(err)) {
+    if (!err.response) {
+      if (err.code === 'ERR_NETWORK') {
+        return 'Нет связи с сервером. Проверьте интернет или перезапустите приложение';
+      }
+      return 'Не удалось связаться с сервером';
+    }
     const body = err.response.data as AuthApiError;
     if (body.message) return body.message;
     if (body.error === 'PHONE_NOT_LINKED') {

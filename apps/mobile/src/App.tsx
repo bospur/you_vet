@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { VkDeepLinkHandler } from './auth/VkDeepLinkHandler';
 import { AppRoutes } from './routes';
 
 function BootRedirect() {
@@ -22,6 +23,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <BootRedirect />
+        <VkDeepLinkHandler />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ветпрактика — вход через VK</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 24px;
+      text-align: center;
+      color: #333;
+    }
+    p { line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <p id="msg">Возвращаем в приложение…</p>
+  <script>
+    (function () {
+      var params = window.location.search || '';
+      var appUrl = 'ru.snzbeachvolleyball25.vetpraktika://auth/vk-callback' + params;
+      window.location.replace(appUrl);
+      setTimeout(function () {
+        document.getElementById('msg').textContent =
+          'Если приложение не открылось — переключитесь на «Ветпрактика» вручную.';
+      }, 3000);
+    })();
+  </script>
+</body>
+</html>
