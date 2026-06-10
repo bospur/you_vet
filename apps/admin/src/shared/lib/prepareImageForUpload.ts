@@ -14,6 +14,14 @@ function getCompressionLimits() {
   };
 }
 
+function isPng(file: File): boolean {
+  return file.type === 'image/png' || /\.png$/i.test(file.name);
+}
+
+function isWebp(file: File): boolean {
+  return file.type === 'image/webp' || /\.webp$/i.test(file.name);
+}
+
 function isHeic(file: File): boolean {
   const type = file.type.toLowerCase();
   const name = file.name.toLowerCase();
@@ -88,6 +96,15 @@ function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<B
   });
 }
 
+function canvasToPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Не удалось сжать изображение'))),
+      'image/png',
+    );
+  });
+}
+
 async function compressToJpeg(file: File): Promise<File> {
   const { maxDimension, targetBytes } = getCompressionLimits();
   const { source, width: srcW, height: srcH } = await loadImageSource(file);
@@ -139,6 +156,73 @@ async function compressToJpeg(file: File): Promise<File> {
   } finally {
     closeSource(source);
   }
+}
+
+async function compressToPng(file: File): Promise<File> {
+  const { maxDimension, targetBytes } = getCompressionLimits();
+  const { source, width: srcW, height: srcH } = await loadImageSource(file);
+
+  try {
+    let dimLimit = maxDimension;
+    let bestBlob: Blob | null = null;
+
+    for (let round = 0; round < 10; round++) {
+      const scale = Math.min(1, dimLimit / Math.max(srcW, srcH));
+      const width = Math.max(1, Math.round(srcW * scale));
+      const height = Math.max(1, Math.round(srcH * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Не удалось обработать изображение');
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(source, 0, 0, width, height);
+
+      const blob = await canvasToPngBlob(canvas);
+      bestBlob = blob;
+      if (blob.size <= targetBytes) {
+        const baseName = file.name.replace(/\.[^.]+$/, '') || 'logo';
+        return new File([blob], `${baseName}.png`, {
+          type: 'image/png',
+          lastModified: Date.now(),
+        });
+      }
+
+      if (bestBlob.size <= SERVER_MAX_BYTES) {
+        break;
+      }
+      dimLimit = Math.round(dimLimit * 0.72);
+      if (dimLimit < 400) break;
+    }
+
+    if (!bestBlob || bestBlob.size > SERVER_MAX_BYTES) {
+      throw new Error('Не удалось ужать логотип до 5 МБ. Попробуйте уменьшить размер файла.');
+    }
+
+    const baseName = file.name.replace(/\.[^.]+$/, '') || 'logo';
+    return new File([bestBlob], `${baseName}.png`, {
+      type: 'image/png',
+      lastModified: Date.now(),
+    });
+  } finally {
+    closeSource(source);
+  }
+}
+
+/**
+ * Логотип: сохраняем PNG/WebP с прозрачностью (не конвертируем в JPEG).
+ */
+export async function prepareLogoForUpload(file: File): Promise<File> {
+  const { targetBytes } = getCompressionLimits();
+  const skipCompress =
+    !isCoarseMobile()
+    && isPng(file)
+    && file.size <= targetBytes;
+
+  if (skipCompress) return file;
+  if (isPng(file) || isWebp(file)) return compressToPng(file);
+  return prepareImageForUpload(file);
 }
 
 /**
