@@ -2,7 +2,12 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '../../api/client';
-import { fetchProfile, updateProfile, uploadProfilePhoto } from '../../api/profile';
+import {
+  fetchProfile,
+  updateProfile,
+  uploadProfilePhoto,
+  type MobileProfile,
+} from '../../api/profile';
 import { useAuth } from '../../auth/AuthContext';
 import { setTokens } from '../../auth/tokenStorage';
 import { authMethodLabel, maskPhone } from '../../auth/mobileUser';
@@ -12,32 +17,14 @@ import { prepareImageForUpload } from '../../lib/prepareImageForUpload';
 import { getApiErrorMessage } from '../../utils/apiError';
 import styles from './ProfileScreen.module.css';
 
-export default function ProfileScreen() {
+function ProfileContent({ profile }: { profile: MobileProfile }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAuthenticated, isLoading: authLoading, refreshAuthState } = useAuth();
+  const { refreshAuthState } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [displayName, setDisplayName] = useState('');
+  const [displayName, setDisplayName] = useState(profile.display_name);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login?return=/profile', { replace: true });
-    }
-  }, [authLoading, isAuthenticated, navigate]);
-
-  const { data: profile, isLoading, isError } = useQuery({
-    queryKey: ['mobile-profile'],
-    queryFn: fetchProfile,
-    enabled: isAuthenticated,
-  });
-
-  useEffect(() => {
-    if (profile?.display_name) {
-      setDisplayName(profile.display_name);
-    }
-  }, [profile?.display_name]);
 
   const saveMutation = useMutation({
     mutationFn: () => updateProfile(displayName.trim()),
@@ -80,24 +67,6 @@ export default function ProfileScreen() {
     setPhotoError(null);
     photoMutation.mutate(file);
   };
-
-  if (authLoading || !isAuthenticated) return null;
-
-  if (isLoading) return <Preloader />;
-
-  if (isError || !profile) {
-    return (
-      <>
-        <NestedAppBar title="Личный кабинет" />
-        <div className={styles.wrap}>
-          <p className={styles.muted}>Не удалось загрузить профиль</p>
-          <button type="button" className={styles.secondaryBtn} onClick={() => navigate('/more')}>
-            Назад
-          </button>
-        </div>
-      </>
-    );
-  }
 
   const photoSrc = profile.photo_url ? `${API_URL}${profile.photo_url}` : null;
   const initial = (profile.display_name || '?').charAt(0).toUpperCase();
@@ -202,4 +171,41 @@ export default function ProfileScreen() {
       </div>
     </>
   );
+}
+
+export default function ProfileScreen() {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth/login?return=/profile', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  const { data: profile, isLoading, isError } = useQuery({
+    queryKey: ['mobile-profile'],
+    queryFn: fetchProfile,
+    enabled: isAuthenticated,
+  });
+
+  if (authLoading || !isAuthenticated) return null;
+
+  if (isLoading) return <Preloader />;
+
+  if (isError || !profile) {
+    return (
+      <>
+        <NestedAppBar title="Личный кабинет" />
+        <div className={styles.wrap}>
+          <p className={styles.muted}>Не удалось загрузить профиль</p>
+          <button type="button" className={styles.secondaryBtn} onClick={() => navigate('/more')}>
+            Назад
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return <ProfileContent profile={profile} />;
 }
