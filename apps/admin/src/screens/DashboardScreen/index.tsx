@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
+  Avatar,
   Box,
   Card,
   CardContent,
   CircularProgress,
   Grid,
   Paper,
+  Tab,
+  Tabs,
   Table,
   TableBody,
   TableCell,
@@ -17,14 +20,21 @@ import {
   useTheme,
 } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import TelegramIcon from '@mui/icons-material/Telegram';
 import { Layout } from '../../shared/ui/Layout';
 import {
+  fetchMobileAppUsers,
+  fetchMobileStatsSummary,
   fetchStatsSummary,
   fetchTelegramAppUsers,
+  type MobileAppUser,
   type StatsSummary,
   type TelegramAppUser,
 } from '../../data/source/stats';
 import { useNotification } from '../../shared/ui/Notification/NotificationContext';
+
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 const CARDS: { key: keyof StatsSummary; label: string }[] = [
   { key: 'today', label: 'Сегодня' },
@@ -43,16 +53,58 @@ function formatDateTime(iso: string): string {
   });
 }
 
-function displayName(u: TelegramAppUser): string {
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('7')) {
+    return `+7 ${digits.slice(1, 4)} *** ${digits.slice(-2)}`;
+  }
+  if (phone.length > 4) return `${phone.slice(0, 4)} *** ${phone.slice(-2)}`;
+  return phone || '—';
+}
+
+function displayTelegramName(u: TelegramAppUser): string {
   return u.first_name?.trim() || '—';
 }
 
-function displayUsername(u: TelegramAppUser): string {
+function displayTelegramUsername(u: TelegramAppUser): string {
   const name = u.username?.trim();
   return name ? `@${name}` : '—';
 }
 
-export function DashboardScreen() {
+function displayMobileName(u: MobileAppUser): string {
+  return u.display_name?.trim() || '—';
+}
+
+function StatsCards({ stats, loading }: { stats: StatsSummary | null; loading: boolean }) {
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Grid container spacing={2} sx={{ mb: 4 }}>
+      {CARDS.map(({ key, label }) => (
+        <Grid key={key} size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {label}
+              </Typography>
+              <Typography variant="h4" fontWeight={700} color="primary.main">
+                {stats?.[key] ?? 0}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
+function MiniAppTab() {
   const { notify } = useNotification();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -64,77 +116,30 @@ export function DashboardScreen() {
   useEffect(() => {
     let cancelled = false;
     fetchStatsSummary()
-      .then((data) => {
-        if (!cancelled) setStats(data);
-      })
-      .catch(() => {
-        if (!cancelled) notify('Не удалось загрузить статистику', 'error');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => { if (!cancelled) setStats(data); })
+      .catch(() => { if (!cancelled) notify('Не удалось загрузить статистику', 'error'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [notify]);
 
   useEffect(() => {
     let cancelled = false;
     fetchTelegramAppUsers()
-      .then((data) => {
-        if (!cancelled) setUsers(data);
-      })
-      .catch(() => {
-        if (!cancelled) notify('Не удалось загрузить список пользователей', 'error');
-      })
-      .finally(() => {
-        if (!cancelled) setUsersLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => { if (!cancelled) setUsers(data); })
+      .catch(() => { if (!cancelled) notify('Не удалось загрузить список пользователей', 'error'); })
+      .finally(() => { if (!cancelled) setUsersLoading(false); });
+    return () => { cancelled = true; };
   }, [notify]);
 
   return (
-    <Layout title="Обзор">
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <InsightsIcon color="primary" />
-        <Typography variant="h5" fontWeight={600}>
-          Пользователи Mini App
-        </Typography>
-      </Box>
+    <>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Уникальные посетители Telegram по активности (last_seen).
       </Typography>
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {CARDS.map(({ key, label }) => (
-            <Grid key={key} size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card>
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {label}
-                  </Typography>
-                  <Typography variant="h4" fontWeight={700} color="primary.main">
-                    {stats?.[key] ?? 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <StatsCards stats={stats} loading={loading} />
 
       <Typography variant="h6" fontWeight={600} sx={{ mb: 1.5 }}>
         Список посетителей
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Данные из Mini App (Telegram). Сортировка по последнему визиту.
       </Typography>
 
       {usersLoading ? (
@@ -151,9 +156,9 @@ export function DashboardScreen() {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {users.map((u) => (
             <Paper key={u.telegram_user_id} variant="outlined" sx={{ p: 2 }}>
-              <Typography fontWeight={600}>{displayName(u)}</Typography>
+              <Typography fontWeight={600}>{displayTelegramName(u)}</Typography>
               <Typography variant="body2" color="text.secondary">
-                {displayUsername(u)} · ID {u.telegram_user_id}
+                {displayTelegramUsername(u)} · ID {u.telegram_user_id}
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
                 Первый визит: {formatDateTime(u.first_seen)}
@@ -171,20 +176,16 @@ export function DashboardScreen() {
               <TableHead>
                 <TableRow>
                   {['Имя', 'Username', 'Telegram ID', 'Первый визит', 'Последний визит'].map((h) => (
-                    <TableCell key={h} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>
-                      {h}
-                    </TableCell>
+                    <TableCell key={h} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {users.map((u) => (
                   <TableRow key={u.telegram_user_id} hover>
-                    <TableCell>{displayName(u)}</TableCell>
-                    <TableCell>{displayUsername(u)}</TableCell>
-                    <TableCell sx={{ fontFamily: 'monospace', fontSize: 13 }}>
-                      {u.telegram_user_id}
-                    </TableCell>
+                    <TableCell>{displayTelegramName(u)}</TableCell>
+                    <TableCell>{displayTelegramUsername(u)}</TableCell>
+                    <TableCell sx={{ fontFamily: 'monospace', fontSize: 13 }}>{u.telegram_user_id}</TableCell>
                     <TableCell>{formatDateTime(u.first_seen)}</TableCell>
                     <TableCell>{formatDateTime(u.last_seen)}</TableCell>
                   </TableRow>
@@ -194,6 +195,153 @@ export function DashboardScreen() {
           </TableContainer>
         </Paper>
       )}
+    </>
+  );
+}
+
+function MobileAppTab() {
+  const { notify } = useNotification();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [stats, setStats] = useState<StatsSummary | null>(null);
+  const [users, setUsers] = useState<MobileAppUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMobileStatsSummary()
+      .then((data) => { if (!cancelled) setStats(data); })
+      .catch(() => { if (!cancelled) notify('Не удалось загрузить статистику приложения', 'error'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [notify]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMobileAppUsers()
+      .then((data) => { if (!cancelled) setUsers(data); })
+      .catch(() => { if (!cancelled) notify('Не удалось загрузить пользователей приложения', 'error'); })
+      .finally(() => { if (!cancelled) setUsersLoading(false); });
+    return () => { cancelled = true; };
+  }, [notify]);
+
+  const authLabel = (u: MobileAppUser) => {
+    const parts: string[] = [];
+    if (u.vk_user_id) parts.push('VK');
+    if (u.telegram_user_id) parts.push('Telegram');
+    if (u.phone) parts.push('телефон');
+    return parts.length ? parts.join(' · ') : '—';
+  };
+
+  return (
+    <>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Пользователи RuStore-приложения «Ветпрактика» (регистрация / вход).
+      </Typography>
+      <StatsCards stats={stats} loading={loading} />
+
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 1.5 }}>
+        Список пользователей
+      </Typography>
+
+      {usersLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : users.length === 0 ? (
+        <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
+          <Typography color="text.secondary">
+            Пока нет записей. Появятся после первых входов в мобильное приложение.
+          </Typography>
+        </Paper>
+      ) : isMobile ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {users.map((u) => (
+            <Paper key={u.id} variant="outlined" sx={{ p: 2, display: 'flex', gap: 2 }}>
+              <Avatar
+                src={u.photo_url ? `${API_URL}${u.photo_url}` : undefined}
+                sx={{ width: 44, height: 44 }}
+              >
+                {displayMobileName(u).charAt(0)}
+              </Avatar>
+              <Box>
+                <Typography fontWeight={600}>{displayMobileName(u)}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {maskPhone(u.phone)} · {authLabel(u)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  ID {u.id} · {formatDateTime(u.linked_at ?? u.created_at)}
+                </Typography>
+              </Box>
+            </Paper>
+          ))}
+        </Box>
+      ) : (
+        <Paper variant="outlined">
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  {['', 'Имя', 'Телефон', 'Вход', 'Telegram', 'VK', 'Дата'].map((h) => (
+                    <TableCell key={h || 'avatar'} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.id} hover>
+                    <TableCell>
+                      <Avatar
+                        src={u.photo_url ? `${API_URL}${u.photo_url}` : undefined}
+                        sx={{ width: 36, height: 36 }}
+                      >
+                        {displayMobileName(u).charAt(0)}
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>{displayMobileName(u)}</TableCell>
+                    <TableCell>{maskPhone(u.phone)}</TableCell>
+                    <TableCell>{authLabel(u)}</TableCell>
+                    <TableCell sx={{ fontFamily: 'monospace', fontSize: 13 }}>
+                      {u.telegram_user_id ?? '—'}
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: 'monospace', fontSize: 13 }}>
+                      {u.vk_user_id ?? '—'}
+                    </TableCell>
+                    <TableCell>{formatDateTime(u.linked_at ?? u.created_at)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+    </>
+  );
+}
+
+export function DashboardScreen() {
+  const [tab, setTab] = useState(0);
+
+  return (
+    <Layout title="Обзор">
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <InsightsIcon color="primary" />
+        <Typography variant="h5" fontWeight={600}>
+          Пользователи
+        </Typography>
+      </Box>
+
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Tab icon={<TelegramIcon />} iconPosition="start" label="Mini App" />
+        <Tab icon={<PhoneAndroidIcon />} iconPosition="start" label="Приложение" />
+      </Tabs>
+
+      {tab === 0 ? <MiniAppTab /> : <MobileAppTab />}
     </Layout>
   );
 }

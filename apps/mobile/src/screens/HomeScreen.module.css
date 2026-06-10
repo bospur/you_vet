@@ -87,3 +87,9 @@
   text-align: center;
   color: var(--vet-text-hint);
 }
+
+.cardSkeleton {
+  min-height: 88px;
+  border-radius: 12px;
+  background: var(--vet-skeleton);
+}

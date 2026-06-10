@@ -10,17 +10,19 @@ import (
 	"go-server/internal/repository"
 )
 
-// ClientQuestionHandler — вопросы клиентов из Mini App.
+// ClientQuestionHandler — вопросы клиентов (Mini App + mobile).
 type ClientQuestionHandler struct {
 	questionRepo *repository.ClientQuestionRepository
+	mobileRepo   *repository.MobileAuthRepository
 	notifier     QuestionNotifier
 }
 
 func NewClientQuestionHandler(
 	questionRepo *repository.ClientQuestionRepository,
+	mobileRepo *repository.MobileAuthRepository,
 	notifier QuestionNotifier,
 ) *ClientQuestionHandler {
-	return &ClientQuestionHandler{questionRepo: questionRepo, notifier: notifier}
+	return &ClientQuestionHandler{questionRepo: questionRepo, mobileRepo: mobileRepo, notifier: notifier}
 }
 
 type createQuestionBody struct {
@@ -63,6 +65,67 @@ func (h *ClientQuestionHandler) CreatePublicQuestion(w http.ResponseWriter, r *h
 			return
 		}
 		log.Printf("ошибка создания вопроса: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	if h.notifier != nil {
+		go h.notifier.NotifyClientQuestionCreated(clinicID, *q)
+	}
+
+	writeJSON(w, http.StatusCreated, publicQuestionResponse{
+		ID:        q.ID,
+		CreatedAt: q.CreatedAt,
+	})
+}
+
+// CreateMobileQuestion — POST /api/mobile/v1/clinics/{clinicSlug}/questions (JWT + привязанный Telegram).
+func (h *ClientQuestionHandler) CreateMobileQuestion(w http.ResponseWriter, r *http.Request) {
+	clinicID, ok := h.clinicIDFromSlug(w, r)
+	if !ok {
+		return
+	}
+
+	claims := middleware.MobileClaimsFromContext(r)
+	if claims == nil || claims.MobileUserID <= 0 {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.mobileRepo.GetByID(claims.MobileUserID)
+	if err != nil {
+		log.Printf("ошибка mobile user: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if user == nil || !user.TelegramUserID.Valid || user.TelegramUserID.Int64 <= 0 {
+		http.Error(w, "Привяжите Telegram в профиле, чтобы получать ответы от клиники в боте", http.StatusBadRequest)
+		return
+	}
+
+	var body createQuestionBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+
+	clientName := "Клиент"
+	if user.DisplayName.Valid && user.DisplayName.String != "" {
+		clientName = user.DisplayName.String
+	}
+
+	q, err := h.questionRepo.Create(
+		clinicID,
+		user.TelegramUserID.Int64,
+		clientName,
+		"",
+		body.Text,
+	)
+	if err != nil {
+		if questionError(w, err) {
+			return
+		}
+		log.Printf("ошибка создания вопроса (mobile): %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}

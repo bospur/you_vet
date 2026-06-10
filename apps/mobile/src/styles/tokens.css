@@ -13,8 +13,22 @@
   --vet-icon-color: var(--vet-green-label);
   --vet-surface-card: var(--vet-green-surface);
   --vet-accent: #2e7d32;
+  --vet-accent-soft: rgba(76, 175, 80, 0.08);
+  --vet-accent-soft-md: rgba(76, 175, 80, 0.12);
+  --vet-accent-soft-chip: rgba(76, 175, 80, 0.1);
+  --vet-accent-soft-subtle: rgba(76, 175, 80, 0.06);
+  --vet-accent-border-light: rgba(76, 175, 80, 0.2);
   --vet-accent-border: rgba(76, 175, 80, 0.35);
+  --vet-muted-bg: rgba(0, 0, 0, 0.03);
+  --vet-spinner-track: rgba(51, 139, 78, 0.2);
   --vet-skeleton: rgba(51, 139, 78, 0.12);
+
+  --tgui--text_color: var(--vet-text-body);
+  --tgui--hint_color: var(--vet-text-hint);
+  --tgui--bg_color: var(--vet-bg);
+  --tgui--divider_color: var(--vet-tab-bar-border);
+  --tgui--link_color: var(--vet-accent);
+  --tgui--secondary_bg_color: var(--vet-bg-secondary);
   --vet-tab-bar-bg: #ffffff;
   --vet-tab-bar-border: rgba(0, 0, 0, 0.08);
   --vet-safe-bottom: env(safe-area-inset-bottom, 0px);

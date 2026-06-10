@@ -12,7 +12,9 @@ export function AppShell() {
   const location = useLocation();
   const info = useOutletContext<ClinicOutletContext>();
   const isTabRoot = TAB_ROOTS.has(location.pathname);
-  const hideTabBar = location.pathname.startsWith('/auth') || location.pathname.startsWith('/booking/new');
+  const hideTabBar =
+    location.pathname.startsWith('/auth') ||
+    location.pathname.startsWith('/booking/new');
 
   return (
     <div className={styles.root}>
