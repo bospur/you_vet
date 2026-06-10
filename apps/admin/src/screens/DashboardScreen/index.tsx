@@ -6,6 +6,7 @@ import {
   CardContent,
   CircularProgress,
   Grid,
+  IconButton,
   Paper,
   Tab,
   Tabs,
@@ -19,11 +20,14 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import InsightsIcon from '@mui/icons-material/Insights';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import { Layout } from '../../shared/ui/Layout';
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import {
+  deleteMobileAppUser,
   fetchMobileAppUsers,
   fetchMobileStatsSummary,
   fetchStatsSummary,
@@ -207,6 +211,8 @@ function MobileAppTab() {
   const [users, setUsers] = useState<MobileAppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<MobileAppUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,6 +240,24 @@ function MobileAppTab() {
     return parts.length ? parts.join(' · ') : '—';
   };
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteMobileAppUser(deleteTarget.id);
+      setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
+      setStats((prev) =>
+        prev ? { ...prev, total: Math.max(0, prev.total - 1) } : prev,
+      );
+      notify('Пользователь приложения удалён', 'success');
+      setDeleteTarget(null);
+    } catch {
+      notify('Не удалось удалить пользователя', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -258,14 +282,14 @@ function MobileAppTab() {
       ) : isMobile ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {users.map((u) => (
-            <Paper key={u.id} variant="outlined" sx={{ p: 2, display: 'flex', gap: 2 }}>
+            <Paper key={u.id} variant="outlined" sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'flex-start' }}>
               <Avatar
                 src={u.photo_url ? `${API_URL}${u.photo_url}` : undefined}
                 sx={{ width: 44, height: 44 }}
               >
                 {displayMobileName(u).charAt(0)}
               </Avatar>
-              <Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography fontWeight={600}>{displayMobileName(u)}</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {maskPhone(u.phone)} · {authLabel(u)}
@@ -274,6 +298,14 @@ function MobileAppTab() {
                   ID {u.id} · {formatDateTime(u.linked_at ?? u.created_at)}
                 </Typography>
               </Box>
+              <IconButton
+                size="small"
+                color="error"
+                aria-label="Удалить пользователя"
+                onClick={() => setDeleteTarget(u)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
             </Paper>
           ))}
         </Box>
@@ -283,7 +315,7 @@ function MobileAppTab() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  {['', 'Имя', 'Телефон', 'Вход', 'Telegram', 'VK', 'Дата'].map((h) => (
+                  {['', 'Имя', 'Телефон', 'Вход', 'Telegram', 'VK', 'Дата', ''].map((h) => (
                     <TableCell key={h || 'avatar'} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
                   ))}
                 </TableRow>
@@ -309,6 +341,16 @@ function MobileAppTab() {
                       {u.vk_user_id ?? '—'}
                     </TableCell>
                     <TableCell>{formatDateTime(u.linked_at ?? u.created_at)}</TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        aria-label="Удалить пользователя"
+                        onClick={() => setDeleteTarget(u)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -316,6 +358,19 @@ function MobileAppTab() {
           </TableContainer>
         </Paper>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Удалить пользователя приложения?"
+        message={
+          deleteTarget
+            ? `${displayMobileName(deleteTarget)} будет удалён из базы. Активная сессия в приложении завершится при следующем запросе.`
+            : ''
+        }
+        loading={deleting}
+        onConfirm={() => void handleDelete()}
+        onClose={() => !deleting && setDeleteTarget(null)}
+      />
     </>
   );
 }

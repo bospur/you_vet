@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { NestedAppBar } from '../../components/shell/AppBar';
 import { isVkConfigured, startVkLogin } from '../../auth/vkLogin';
 import { authRequestCode, parseAuthError } from '../../api/auth';
 import { phone } from '../../utils/phone';
@@ -53,13 +52,16 @@ export default function LoginScreen() {
   };
 
   return (
-    <>
-      <NestedAppBar title="Вход" onBack={() => navigate(-1)} />
-      <div className={styles.wrap}>
-        <p className={styles.lead}>
-          Войдите, чтобы записаться на приём и видеть свои заявки.
-        </p>
+    <div className={styles.page}>
+      <div className={styles.brand}>
+        <div className={styles.logoMark} aria-hidden>
+          +
+        </div>
+        <h1 className={styles.title}>Ветпрактика</h1>
+        <p className={styles.subtitle}>Войдите, чтобы записаться на приём и задавать вопросы</p>
+      </div>
 
+      <div className={styles.card}>
         {isVkConfigured() && (
           <button
             type="button"
@@ -67,43 +69,36 @@ export default function LoginScreen() {
             onClick={handleVk}
             disabled={loadingVk || loadingPhone}
           >
-            <span className={styles.vkIcon}>VK</span>
-            {loadingVk ? 'Подключаем VK…' : 'Войти через VK ID'}
+            {loadingVk ? 'Подключаем VK…' : 'Продолжить через VK ID'}
           </button>
         )}
 
-        {!isVkConfigured() && (
-          <p className={styles.sectionHint}>
-            VK ID: добавьте <code>VITE_VK_APP_ID</code> в <code>.env.local</code> и пересоберите APK.
-          </p>
-        )}
-
-        <div className={styles.divider}>или</div>
-
-        <h2 className={styles.sectionTitle}>Телефон + код в Telegram</h2>
-        <p className={styles.sectionHint}>
-          Нужен Telegram: код придёт в личные сообщения от бота после привязки номера.
-        </p>
-
-        <div className={styles.phoneRow}>
-          <input
-            className={styles.input}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="+79XXXXXXXXX"
-            value={phoneInput}
-            onChange={(e) => setPhoneInput(e.target.value)}
-          />
+        <div className={styles.divider}>
+          <span>или</span>
         </div>
+
+        <label className={styles.label} htmlFor="login-phone">
+          Номер телефона
+        </label>
+        <input
+          id="login-phone"
+          className={styles.input}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="+79XXXXXXXXX"
+          value={phoneInput}
+          onChange={(e) => setPhoneInput(e.target.value)}
+        />
+        <p className={styles.fieldHint}>Код придёт в Telegram от бота клиники</p>
 
         <button
           type="button"
-          className={styles.secondaryBtn}
+          className={styles.primaryBtn}
           onClick={handlePhoneRequest}
           disabled={loadingVk || loadingPhone}
         >
-          {loadingPhone ? 'Отправляем…' : 'Получить код в Telegram'}
+          {loadingPhone ? 'Отправляем код…' : 'Получить код'}
         </button>
 
         <button
@@ -118,7 +113,11 @@ export default function LoginScreen() {
 
         {error && <p className={styles.error}>{error}</p>}
       </div>
-    </>
+
+      <button type="button" className={styles.skipBtn} onClick={() => navigate('/')}>
+        Продолжить без входа
+      </button>
+    </div>
   );
 }
 

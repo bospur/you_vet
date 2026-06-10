@@ -21,7 +21,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/auth/**/*.{ts,tsx}'],
+    files: ['src/auth/**/*.{ts,tsx}', 'src/theme/**/*.{ts,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

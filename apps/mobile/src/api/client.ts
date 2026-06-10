@@ -1,5 +1,7 @@
-import axios from 'axios';
-import { getAccessToken } from '../auth/tokenStorage';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { emitSessionExpired } from '../auth/sessionEvents';
+import { refreshSession } from '../auth/sessionRefresh';
+import { clearTokens, getAccessToken } from '../auth/tokenStorage';
 
 // В dev — same-origin + vite proxy, чтобы не упираться в CORS из браузера.
 const API_URL = import.meta.env.DEV
@@ -24,3 +26,28 @@ apiClient.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const config = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    if (!config || error.response?.status !== 401 || config._retry) {
+      return Promise.reject(error);
+    }
+
+    config._retry = true;
+
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      const token = await getAccessToken();
+      if (token) {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      }
+      return apiClient.request(config);
+    }
+
+    await clearTokens();
+    emitSessionExpired();
+    return Promise.reject(error);
+  },
+);

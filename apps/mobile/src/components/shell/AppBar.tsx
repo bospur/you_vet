@@ -1,10 +1,56 @@
 import { useNavigate } from 'react-router-dom';
 import type { ClinicInfo } from '@you-vet/types';
 import { API_URL } from '../../api/client';
+import { useAuth } from '../../auth/AuthContext';
+import { useMobileProfile } from '../../hooks/useMobileProfile';
 import styles from './AppBar.module.css';
 
 interface RootAppBarProps {
   info: ClinicInfo | null;
+}
+
+function ProfileHeaderButton() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { data: profile } = useMobileProfile();
+
+  const goProfile = () => {
+    if (isAuthenticated) {
+      navigate('/profile');
+      return;
+    }
+    navigate('/auth/login?return=/profile');
+  };
+
+  const photoSrc = profile?.photo_url ? `${API_URL}${profile.photo_url}` : null;
+  const initial = (profile?.display_name || '?').charAt(0).toUpperCase();
+
+  return (
+    <button
+      type="button"
+      className={styles.profileBtn}
+      onClick={goProfile}
+      aria-label={isAuthenticated ? 'Личный кабинет' : 'Войти'}
+    >
+      {isAuthenticated ? (
+        photoSrc ? (
+          <img src={photoSrc} alt="" className={styles.profileAvatar} />
+        ) : (
+          <span className={styles.profileFallback}>{initial}</span>
+        )
+      ) : (
+        <svg className={styles.loginIcon} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
+  );
 }
 
 export function RootAppBar({ info }: RootAppBarProps) {
@@ -16,37 +62,28 @@ export function RootAppBar({ info }: RootAppBarProps) {
     <header className={styles.bar}>
       <button type="button" className={styles.titleBtn} onClick={() => navigate('/')}>
         {logoUrl && <img src={logoUrl} alt="" className={styles.logo} />}
-        <span>{info?.name ?? 'Ветпрактика'}</span>
+        <span className={styles.titleText}>{info?.name ?? 'Ветпрактика'}</span>
       </button>
-      {phone && (
-        <a href={`tel:${phone}`} className={styles.phoneBtn} aria-label="Позвонить">
-          📞
-        </a>
-      )}
+      <div className={styles.actions}>
+        {phone && (
+          <a href={`tel:${phone}`} className={styles.phoneBtn} aria-label="Позвонить">
+            📞
+          </a>
+        )}
+        <ProfileHeaderButton />
+      </div>
     </header>
   );
 }
 
 interface NestedAppBarProps {
   title: string;
-  onBack?: () => void;
 }
 
-export function NestedAppBar({ title, onBack }: NestedAppBarProps) {
-  const navigate = useNavigate();
-
+export function NestedAppBar({ title }: NestedAppBarProps) {
   return (
     <header className={styles.bar}>
-      <div className={styles.left}>
-        <button
-          type="button"
-          className={styles.backBtn}
-          onClick={onBack ?? (() => navigate(-1))}
-        >
-          ‹ Назад
-        </button>
-        <span className={styles.center}>{title}</span>
-      </div>
+      <h1 className={styles.nestedTitle}>{title}</h1>
     </header>
   );
 }

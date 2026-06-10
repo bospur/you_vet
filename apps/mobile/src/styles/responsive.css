@@ -1,0 +1,15 @@
+@media (max-width: 365px) {
+  :root {
+    --vet-page-padding: 12px;
+    --vet-app-bar-height: 48px;
+    --vet-tab-height: 52px;
+  }
+}
+
+@media (max-width: 320px) {
+  :root {
+    --vet-page-padding: 10px;
+    --vet-app-bar-height: 46px;
+    --vet-tab-height: 50px;
+  }
+}

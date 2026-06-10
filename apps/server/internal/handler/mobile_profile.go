@@ -66,7 +66,7 @@ func (h *MobileAuthHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user == nil {
-		http.Error(w, "пользователь не найден", http.StatusNotFound)
+		http.Error(w, "сессия недействительна", http.StatusUnauthorized)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *MobileAuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request
 
 	if err := h.repo.UpdateDisplayName(claims.MobileUserID, name); err != nil {
 		if err == sql.ErrNoRows {
-			http.Error(w, "пользователь не найден", http.StatusNotFound)
+			http.Error(w, "сессия недействительна", http.StatusUnauthorized)
 			return
 		}
 		log.Printf("mobile profile update: %v", err)
@@ -165,7 +165,7 @@ func (h *MobileAuthHandler) UploadProfilePhoto(w http.ResponseWriter, r *http.Re
 	photoURL := "/uploads/" + filename
 	if err := h.repo.UpdatePhotoURL(claims.MobileUserID, photoURL); err != nil {
 		if err == sql.ErrNoRows {
-			http.Error(w, "пользователь не найден", http.StatusNotFound)
+			http.Error(w, "сессия недействительна", http.StatusUnauthorized)
 			return
 		}
 		log.Printf("mobile profile photo db: %v", err)

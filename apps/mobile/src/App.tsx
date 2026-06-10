@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { SessionExpiredRedirect } from './auth/SessionExpiredRedirect';
+import { ThemeProvider } from './theme/ThemeContext';
 import { VkDeepLinkHandler } from './auth/VkDeepLinkHandler';
 import { AppRoutes } from './routes';
 
@@ -20,12 +22,15 @@ function BootRedirect() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <BootRedirect />
-        <VkDeepLinkHandler />
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <BootRedirect />
+          <VkDeepLinkHandler />
+          <SessionExpiredRedirect />
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

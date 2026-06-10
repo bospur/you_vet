@@ -4,9 +4,9 @@ import { API_URL } from '../../api/client';
 import { fetchDoctors } from '../../api/content';
 import { NestedAppBar } from '../../components/shell/AppBar';
 import { DoctorAvatar } from '../../components/DoctorAvatar';
-import { NavList } from '../../components/NavList';
 import { Preloader } from '../../components/Preloader';
-import styles from './content.module.css';
+import contentStyles from './content.module.css';
+import styles from './DoctorsScreen.module.css';
 
 export default function DoctorsScreen() {
   const navigate = useNavigate();
@@ -21,26 +21,36 @@ export default function DoctorsScreen() {
       {isLoading ? (
         <Preloader />
       ) : isError ? (
-        <div className={styles.emptyWrap}>
-          <p className={styles.empty}>Не удалось загрузить список врачей</p>
+        <div className={contentStyles.emptyWrap}>
+          <p className={contentStyles.empty}>Не удалось загрузить список врачей</p>
         </div>
       ) : (
-        <NavList
-          items={(data ?? []).map((doctor) => ({
-            key: doctor.id,
-            title: doctor.full_name,
-            subtitle: doctor.specialty,
-            before: (
-              <DoctorAvatar
-                name={doctor.full_name}
-                photoUrl={doctor.photo_url ? `${API_URL}${doctor.photo_url}` : undefined}
-                size={40}
-              />
-            ),
-            onClick: () => navigate(`/doctors/${doctor.id}`),
-          }))}
-          onBack={() => navigate('/')}
-        />
+        <div className={styles.wrap}>
+          <div className={styles.grid}>
+            {(data ?? []).map((doctor) => (
+              <button
+                key={doctor.id}
+                type="button"
+                className={styles.card}
+                onClick={() => navigate(`/doctors/${doctor.id}`)}
+              >
+                <div className={styles.photoWrap}>
+                  <DoctorAvatar
+                    name={doctor.full_name}
+                    photoUrl={doctor.photo_url ? `${API_URL}${doctor.photo_url}` : undefined}
+                    variant="square"
+                  />
+                </div>
+                <div className={styles.body}>
+                  <p className={styles.name}>{doctor.full_name}</p>
+                  {doctor.specialty && (
+                    <p className={styles.specialty}>{doctor.specialty}</p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </>
   );
