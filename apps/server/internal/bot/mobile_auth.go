@@ -25,7 +25,7 @@ func (b *Bot) promptLinkContact(c tele.Context) error {
 		"Нажмите кнопку ниже — Telegram отправит ваш контакт боту."
 
 	menu := &tele.ReplyMarkup{ResizeKeyboard: true, OneTimeKeyboard: true}
-	menu.Contact("📱 Поделиться номером")
+	menu.Reply(menu.Row(menu.Contact("📱 Поделиться номером")))
 
 	return c.Send(text, menu, tele.ModeMarkdown)
 }
