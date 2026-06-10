@@ -17,20 +17,39 @@ interface DoctorAvatarProps {
   name: string;
   photoUrl?: string;
   size?: number;
+  variant?: 'circle' | 'square';
 }
 
-export function DoctorAvatar({ name, photoUrl, size = 40 }: DoctorAvatarProps) {
+export function DoctorAvatar({
+  name,
+  photoUrl,
+  size = 40,
+  variant = 'circle',
+}: DoctorAvatarProps) {
   const [imgError, setImgError] = useState(false);
   const letter = name.trim().charAt(0).toUpperCase();
   const bg = colorForName(name);
-  const fontSize = Math.round(size * 0.42);
+  const isSquare = variant === 'square';
+  const fontSize = isSquare ? 48 : Math.round(size * 0.42);
+  const borderRadius = isSquare ? 0 : '50%';
+
+  const sharedStyle = isSquare
+    ? { width: '100%', height: '100%', borderRadius, objectFit: 'cover' as const, display: 'block' }
+    : {
+        width: size,
+        height: size,
+        borderRadius,
+        objectFit: 'cover' as const,
+        display: 'block',
+        flexShrink: 0,
+      };
 
   if (photoUrl && !imgError) {
     return (
       <img
         src={photoUrl}
         alt={name}
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+        style={sharedStyle}
         onError={() => setImgError(true)}
       />
     );
@@ -40,9 +59,7 @@ export function DoctorAvatar({ name, photoUrl, size = 40 }: DoctorAvatarProps) {
     <div
       aria-hidden
       style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
+        ...sharedStyle,
         background: bg,
         display: 'flex',
         alignItems: 'center',
@@ -50,7 +67,6 @@ export function DoctorAvatar({ name, photoUrl, size = 40 }: DoctorAvatarProps) {
         color: '#fff',
         fontSize,
         fontWeight: 700,
-        flexShrink: 0,
       }}
     >
       {letter}

@@ -1,0 +1,49 @@
+.banner {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(198, 40, 40, 0.22);
+  background: rgba(198, 40, 40, 0.1);
+}
+
+.text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #b71c1c;
+}
+
+.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #c62828;
+  font-size: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+:root[data-theme='dark'] .banner {
+  border-color: rgba(239, 83, 80, 0.28);
+  background: rgba(239, 83, 80, 0.12);
+}
+
+:root[data-theme='dark'] .text {
+  color: #ef9a9a;
+}
+
+:root[data-theme='dark'] .link {
+  color: #ffab91;
+}
+
+@media (max-width: 320px) {
+  .banner {
+    padding: 10px 12px;
+  }
+
+  .text {
+    font-size: 12px;
+  }
+}

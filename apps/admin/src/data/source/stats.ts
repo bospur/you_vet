@@ -37,3 +37,6 @@ export const fetchMobileStatsSummary = () =>
 
 export const fetchMobileAppUsers = () =>
   axiosInstance.get<MobileAppUser[]>('/api/admin/stats/mobile/users').then((r) => r.data ?? []);
+
+export const deleteMobileAppUser = (id: number) =>
+  axiosInstance.delete(`/api/admin/stats/mobile/users/${id}`);

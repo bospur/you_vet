@@ -1,6 +1,6 @@
 import type { TokenPair } from './auth';
+import { authenticatedFetch } from './authenticatedFetch';
 import { profileBaseURL } from './client';
-import { getAccessToken } from '../auth/tokenStorage';
 
 export interface MobileProfile {
   id: number;
@@ -14,10 +14,7 @@ export interface MobileProfile {
 }
 
 export async function fetchProfile(): Promise<MobileProfile> {
-  const token = await getAccessToken();
-  const res = await fetch(profileBaseURL, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  const res = await authenticatedFetch(profileBaseURL);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || 'Не удалось загрузить профиль');
@@ -29,13 +26,9 @@ export async function updateProfile(displayName: string): Promise<{
   profile: MobileProfile;
   tokens?: TokenPair;
 }> {
-  const token = await getAccessToken();
-  const res = await fetch(profileBaseURL, {
+  const res = await authenticatedFetch(profileBaseURL, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ display_name: displayName }),
   });
   if (!res.ok) {
@@ -46,13 +39,11 @@ export async function updateProfile(displayName: string): Promise<{
 }
 
 export async function uploadProfilePhoto(file: File): Promise<MobileProfile> {
-  const token = await getAccessToken();
   const form = new FormData();
   form.append('photo', file, file.name);
 
-  const res = await fetch(`${profileBaseURL}/photo`, {
+  const res = await authenticatedFetch(`${profileBaseURL}/photo`, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: form,
   });
   if (!res.ok) {

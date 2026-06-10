@@ -197,6 +197,32 @@ func (r *MobileAuthRepository) GetStatsSummary(clinicID int) (*StatsSummary, err
 	return &s, nil
 }
 
+// DeleteByClinic удаляет mobile-пользователя клиники (заявки сохраняются, mobile_user_id обнуляется).
+func (r *MobileAuthRepository) DeleteByClinic(clinicID int, userID int64) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(`
+		UPDATE booking_requests SET mobile_user_id = NULL
+		WHERE clinic_id = $1 AND mobile_user_id = $2
+	`, clinicID, userID); err != nil {
+		return err
+	}
+
+	res, err := tx.Exec(`DELETE FROM mobile_users WHERE id = $1 AND clinic_id = $2`, userID, clinicID)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return tx.Commit()
+}
+
 // ListByClinicID — список для admin.
 func (r *MobileAuthRepository) ListByClinicID(clinicID int, limit int) ([]MobileUserListItem, error) {
 	if limit <= 0 || limit > 1000 {

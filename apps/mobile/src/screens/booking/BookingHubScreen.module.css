@@ -1,3 +1,10 @@
+.pageTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--vet-text-body);
+}
+
 .wrap {
   padding: var(--vet-page-padding);
 }

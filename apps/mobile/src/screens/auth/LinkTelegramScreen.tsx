@@ -12,7 +12,7 @@ export default function LinkTelegramScreen() {
 
   return (
     <>
-      <NestedAppBar title="Привязка Telegram" onBack={() => navigate(-1)} />
+      <NestedAppBar title="Привязка Telegram" />
       <div className={styles.wrap}>
         <ol className={styles.steps}>
           <li>Откройте бота клиники по кнопке ниже</li>

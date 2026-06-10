@@ -35,3 +35,24 @@
   font-size: 20px;
   line-height: 1;
 }
+
+@media (max-width: 365px) {
+  .tab {
+    font-size: 10px;
+    gap: 1px;
+  }
+
+  .icon {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 320px) {
+  .tab {
+    font-size: 9px;
+  }
+
+  .icon {
+    font-size: 17px;
+  }
+}

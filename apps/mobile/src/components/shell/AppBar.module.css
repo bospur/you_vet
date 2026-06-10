@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   min-height: var(--vet-app-bar-height);
   padding: 8px var(--vet-page-padding);
   padding-top: calc(8px + env(safe-area-inset-top, 0px));
@@ -16,6 +17,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
   border: none;
   background: none;
   padding: 0;
@@ -23,30 +26,40 @@
   font-weight: 700;
   font-size: 17px;
   cursor: pointer;
+  text-align: left;
+}
+
+.titleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .logo {
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
   border-radius: 8px;
   object-fit: cover;
 }
 
-.backBtn {
-  border: none;
-  background: none;
-  color: var(--vet-accent);
-  font-size: 16px;
-  padding: 0;
-  margin-right: 8px;
-  cursor: pointer;
-}
-
-.center {
+.nestedTitle {
   flex: 1;
+  margin: 0;
   font-weight: 600;
   font-size: 17px;
   color: var(--vet-text-body);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .phoneBtn {
@@ -61,8 +74,75 @@
   text-decoration: none;
 }
 
-.left {
+.profileBtn {
   display: flex;
   align-items: center;
-  min-width: 0;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--vet-surface-card);
+  cursor: pointer;
+}
+
+.profileAvatar,
+.profileFallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profileFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vet-accent-soft);
+  color: var(--vet-accent);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.loginIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--vet-icon-color);
+}
+
+@media (max-width: 365px) {
+  .titleBtn,
+  .nestedTitle {
+    font-size: 16px;
+  }
+
+  .logo,
+  .phoneBtn,
+  .profileBtn,
+  .profileAvatar,
+  .profileFallback {
+    width: 36px;
+    height: 36px;
+  }
+
+  .profileFallback {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 320px) {
+  .titleBtn,
+  .nestedTitle {
+    font-size: 15px;
+  }
+
+  .logo,
+  .phoneBtn,
+  .profileBtn,
+  .profileAvatar,
+  .profileFallback {
+    width: 34px;
+    height: 34px;
+  }
 }

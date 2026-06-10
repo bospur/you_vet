@@ -215,6 +215,7 @@ func main() {
 	http.HandleFunc("GET /api/admin/stats/users", adminAuth(statsHandler.ListUsers))
 	http.HandleFunc("GET /api/admin/stats/mobile/summary", adminAuth(statsHandler.GetMobileSummary))
 	http.HandleFunc("GET /api/admin/stats/mobile/users", adminAuth(statsHandler.ListMobileUsers))
+	http.HandleFunc("DELETE /api/admin/stats/mobile/users/{id}", adminAuth(statsHandler.DeleteMobileUser))
 
 	// Users (только admin)
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))

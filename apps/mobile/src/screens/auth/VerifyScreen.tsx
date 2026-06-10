@@ -40,7 +40,7 @@ export default function VerifyScreen() {
 
   return (
     <>
-      <NestedAppBar title="Код из Telegram" onBack={() => navigate(-1)} />
+      <NestedAppBar title="Код из Telegram" />
       <div className={styles.wrap}>
         <p className={styles.hint}>
           Код отправлен в Telegram для номера <strong>{phone}</strong>

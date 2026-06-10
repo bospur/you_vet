@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '../../api/client';
 import {
-  fetchProfile,
   updateProfile,
   uploadProfilePhoto,
   type MobileProfile,
@@ -13,7 +12,10 @@ import { setTokens } from '../../auth/tokenStorage';
 import { authMethodLabel, maskPhone } from '../../auth/mobileUser';
 import { NestedAppBar } from '../../components/shell/AppBar';
 import { Preloader } from '../../components/Preloader';
+import { ProgressBar } from '../../components/ProgressBar';
 import { prepareImageForUpload } from '../../lib/prepareImageForUpload';
+import { useTheme } from '../../theme/ThemeContext';
+import { useMobileProfile } from '../../hooks/useMobileProfile';
 import { getApiErrorMessage } from '../../utils/apiError';
 import styles from './ProfileScreen.module.css';
 
@@ -21,21 +23,25 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refreshAuthState } = useAuth();
+  const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState(profile.display_name);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
+  const savedName = profile.display_name.trim();
+  const trimmedName = displayName.trim();
+  const isNameDirty = trimmedName !== savedName;
+  const canSaveName = isNameDirty && trimmedName.length >= 1 && trimmedName.length <= 100;
+
   const saveMutation = useMutation({
-    mutationFn: () => updateProfile(displayName.trim()),
+    mutationFn: () => updateProfile(trimmedName),
     onSuccess: async (result) => {
       if (result.tokens) {
         await setTokens(result.tokens.access_token, result.tokens.refresh_token);
         await refreshAuthState();
       }
       queryClient.setQueryData(['mobile-profile'], result.profile);
-      setSaveMessage('Сохранено');
-      setTimeout(() => setSaveMessage(null), 2500);
+      setDisplayName(result.profile.display_name);
     },
   });
 
@@ -53,10 +59,9 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
     },
   });
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleNameSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const name = displayName.trim();
-    if (name.length < 1 || name.length > 100) return;
+    if (!canSaveName || saveMutation.isPending) return;
     saveMutation.mutate();
   };
 
@@ -73,7 +78,7 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
 
   return (
     <>
-      <NestedAppBar title="Личный кабинет" onBack={() => navigate('/more')} />
+      <NestedAppBar title="Личный кабинет" />
       <div className={styles.wrap}>
         <button
           type="button"
@@ -97,35 +102,65 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
           className={styles.hiddenInput}
           onChange={handlePhotoPick}
         />
+        {photoMutation.isPending && (
+          <ProgressBar label="Загружаем фото…" />
+        )}
         {photoError && <p className={styles.error}>{photoError}</p>}
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleNameSubmit}>
           <label className={styles.label} htmlFor="display-name">
             Имя
           </label>
-          <input
-            id="display-name"
-            className={styles.input}
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={100}
-            placeholder="Как к вам обращаться"
-          />
-
-          <button
-            type="submit"
-            className={styles.primaryBtn}
-            disabled={saveMutation.isPending || displayName.trim().length < 1}
-          >
-            {saveMutation.isPending ? 'Сохранение…' : 'Сохранить'}
-          </button>
+          <div className={styles.inputWrap}>
+            <input
+              id="display-name"
+              className={styles.input}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={100}
+              placeholder="Как к вам обращаться"
+            />
+            {isNameDirty && (
+              <button
+                type="submit"
+                className={styles.inputAction}
+                disabled={!canSaveName || saveMutation.isPending}
+                aria-label="Сохранить имя"
+                title="Сохранить"
+              >
+                {saveMutation.isPending ? '…' : '✓'}
+              </button>
+            )}
+          </div>
           {saveMutation.isError && (
             <p className={styles.error}>
               {getApiErrorMessage(saveMutation.error, 'Не удалось сохранить')}
             </p>
           )}
-          {saveMessage && <p className={styles.success}>{saveMessage}</p>}
         </form>
+
+        <section className={styles.info}>
+          <h3 className={styles.infoTitle}>Оформление</h3>
+          <div className={styles.themeRow}>
+            <span className={styles.infoLabel}>Тема</span>
+            <div className={styles.themeToggle} role="group" aria-label="Тема оформления">
+              <button
+                type="button"
+                className={theme === 'light' ? styles.themeBtnActive : styles.themeBtn}
+                onClick={() => setTheme('light')}
+              >
+                Светлая
+              </button>
+              <button
+                type="button"
+                className={theme === 'dark' ? styles.themeBtnActive : styles.themeBtn}
+                onClick={() => setTheme('dark')}
+              >
+                Тёмная
+              </button>
+            </div>
+          </div>
+        </section>
 
         <section className={styles.info}>
           <h3 className={styles.infoTitle}>Данные аккаунта</h3>
@@ -175,7 +210,8 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, refreshAuthState } = useAuth();
+  const { data: profile, isLoading, isError, isFetching, refetch } = useMobileProfile();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -183,11 +219,16 @@ export default function ProfileScreen() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  const { data: profile, isLoading, isError } = useQuery({
-    queryKey: ['mobile-profile'],
-    queryFn: fetchProfile,
-    enabled: isAuthenticated,
-  });
+  useEffect(() => {
+    if (isError) {
+      void refreshAuthState();
+    }
+  }, [isError, refreshAuthState]);
+
+  const handleRetry = async () => {
+    await refreshAuthState();
+    await refetch();
+  };
 
   if (authLoading || !isAuthenticated) return null;
 
@@ -199,8 +240,13 @@ export default function ProfileScreen() {
         <NestedAppBar title="Личный кабинет" />
         <div className={styles.wrap}>
           <p className={styles.muted}>Не удалось загрузить профиль</p>
-          <button type="button" className={styles.secondaryBtn} onClick={() => navigate('/more')}>
-            Назад
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={() => void handleRetry()}
+            disabled={isFetching}
+          >
+            {isFetching ? 'Загрузка…' : 'Повторить'}
           </button>
         </div>
       </>

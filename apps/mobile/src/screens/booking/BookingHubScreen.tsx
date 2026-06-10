@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { NestedAppBar } from '../../components/shell/AppBar';
 import { useAuth } from '../../auth/AuthContext';
 import { displayUserName } from '../../auth/mobileUser';
 import styles from './BookingHubScreen.module.css';
@@ -17,9 +16,8 @@ export default function BookingHubScreen() {
   };
 
   return (
-    <>
-      <NestedAppBar title="Запись на приём" onBack={() => navigate('/')} />
-      <div className={styles.wrap}>
+    <div className={styles.wrap}>
+      <h1 className={styles.pageTitle}>Запись на приём</h1>
         <button type="button" className={styles.row} onClick={() => goProtected('/booking/new')}>
           <span className={styles.icon}>📅</span>
           <span>
@@ -43,7 +41,6 @@ export default function BookingHubScreen() {
             Войдите через VK ID или по телефону (код в Telegram), чтобы записаться.
           </p>
         )}
-      </div>
-    </>
+    </div>
   );
 }

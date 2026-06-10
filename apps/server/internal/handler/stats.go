@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	"go-server/internal/middleware"
 	"go-server/internal/repository"
@@ -98,4 +101,31 @@ func (h *StatsHandler) ListMobileUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, users)
+}
+
+// DeleteMobileUser — DELETE /api/admin/stats/mobile/users/{id}
+func (h *StatsHandler) DeleteMobileUser(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "неверный id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.mobileRepo.DeleteByClinic(claims.ClinicID, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "пользователь не найден", http.StatusNotFound)
+			return
+		}
+		log.Printf("ошибка удаления mobile_user %d: %v", id, err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

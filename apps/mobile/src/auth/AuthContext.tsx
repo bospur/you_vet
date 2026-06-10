@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { onSessionExpired } from './sessionEvents';
 import { parseMobileAccessToken, type MobileUserProfile } from './mobileUser';
 import { clearTokens, getAccessToken } from './tokenStorage';
 
@@ -46,6 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [applyToken]);
+
+  useEffect(() => {
+    return onSessionExpired(() => {
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+    });
+  }, []);
 
   const logout = useCallback(async () => {
     await clearTokens();

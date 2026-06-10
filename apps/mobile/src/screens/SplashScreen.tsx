@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { fetchClinicInfo } from '../api/clinic';
+import splashBg from '../assets/splash-bg.png';
+import { hideNativeSplash } from '../lib/nativeSplash';
 import styles from './SplashScreen.module.css';
 
 const MIN_SPLASH_MS = 800;
@@ -9,6 +11,10 @@ const MIN_SPLASH_MS = 800;
 export default function SplashScreen() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    void hideNativeSplash();
+  }, []);
 
   useEffect(() => {
     const started = Date.now();
@@ -33,9 +39,7 @@ export default function SplashScreen() {
   }, [navigate, queryClient]);
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.logo}>🏥</div>
-      <h1 className={styles.title}>Ветпрактика</h1>
+    <div className={styles.wrap} style={{ backgroundImage: `url(${splashBg})` }}>
       <div className={styles.spinner} aria-label="Загрузка" />
     </div>
   );

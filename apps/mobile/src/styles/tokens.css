@@ -39,6 +39,8 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
+
   --vet-bg: #121212;
   --vet-bg-secondary: #1e1e1e;
   --vet-text-primary: #ffffff;
@@ -47,7 +49,31 @@
   --vet-text-hint: #8e8e93;
   --vet-icon-color: #ffffff;
   --vet-surface-card: #2c2c2e;
+  --vet-surface-chip: #2c2c2e;
+
+  --vet-green-title: var(--vet-text-primary);
+  --vet-green-label: var(--vet-text-primary);
+  --vet-green-address: var(--vet-text-secondary);
+  --vet-green-surface: var(--vet-surface-card);
+
   --vet-accent: #81c784;
+  --vet-accent-soft: rgba(255, 255, 255, 0.08);
+  --vet-accent-soft-md: rgba(255, 255, 255, 0.1);
+  --vet-accent-soft-chip: #2c2c2e;
+  --vet-accent-soft-subtle: rgba(255, 255, 255, 0.06);
+  --vet-accent-border-light: rgba(255, 255, 255, 0.2);
+  --vet-accent-border: rgba(255, 255, 255, 0.35);
+  --vet-muted-bg: rgba(255, 255, 255, 0.06);
+  --vet-spinner-track: rgba(255, 255, 255, 0.25);
+  --vet-skeleton: rgba(255, 255, 255, 0.12);
+
   --vet-tab-bar-bg: #1e1e1e;
   --vet-tab-bar-border: rgba(255, 255, 255, 0.1);
+
+  --tgui--text_color: var(--vet-text-body);
+  --tgui--hint_color: var(--vet-text-hint);
+  --tgui--bg_color: var(--vet-bg);
+  --tgui--divider_color: var(--vet-tab-bar-border);
+  --tgui--link_color: var(--vet-accent);
+  --tgui--secondary_bg_color: var(--vet-bg-secondary);
 }
