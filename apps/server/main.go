@@ -128,6 +128,8 @@ func main() {
 
 	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, vkClient, clinicID, mobileJWTSecret, uploadsDir)
 	statsHandler := handler.NewStatsHandler(telegramUserRepo, mobileAuthRepo)
+	docsPortalRepo := repository.NewDocsPortalRepository(database)
+	docsPortalHandler := handler.NewDocsPortalHandler(docsPortalRepo, jwtSecret)
 
 	// ── Публичные роуты (Mini App, initData) ───────────────────────────────────
 	miniApp := middleware.TelegramInitData(botToken, telegramUserRepo)
@@ -178,6 +180,14 @@ func main() {
 	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.CreatePublicRequest))
 	http.HandleFunc("PATCH /api/mobile/v1/clinics/{clinicSlug}/booking/requests/{id}", mobileAuth(bookingHandler.CancelPublicRequest))
 	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/questions", mobileAuth(questionHandler.CreateMobileQuestion))
+
+	// ── Docs portal (анонимные комментарии) ─────────────────────────────────────
+	docsAuth := func(h http.HandlerFunc) http.HandlerFunc {
+		return middleware.IPRateLimit(30, time.Minute, middleware.DocsAuth(jwtSecret, h))
+	}
+	http.HandleFunc("POST /api/docs/v1/register", middleware.LoginRateLimit(10, 15*time.Minute, docsPortalHandler.Register))
+	http.HandleFunc("GET /api/docs/v1/comments", middleware.IPRateLimit(120, time.Minute, docsPortalHandler.ListComments))
+	http.HandleFunc("POST /api/docs/v1/comments", middleware.LoginRateLimit(20, 15*time.Minute, docsAuth(docsPortalHandler.CreateComment)))
 
 	// Статические файлы (фото врачей)
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))

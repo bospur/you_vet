@@ -2,67 +2,69 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-06-10 (mobile UX + auth + splash + admin delete user)
+## Сессия 2026-06-10 (mobile polish + iOS задел + контент)
 
 ### Prod / smoke
 
 | Проверка | Результат |
 |---|---|
-| Deploy пользователя (server/admin/mobile) | ✅ пользователь подтвердил |
-| CI lint mobile (`ProfileScreen` setState in effect) | ✅ исправлено в коде |
-| APK: splash с картинкой клиники | ✅ в коде; `cap sync` + rebuild |
-| APK: гостевой режим / вход / ЛК | 🟡 smoke после push |
+| Deploy (предыдущая сессия) | ✅ пользователь подтвердил |
+| CI lint `HomeScreen` (`useMemo` после early return) | ✅ исправлено |
+| APK: логотип / баннер / врачи / имя на записи | 🟡 в коде; rebuild APK |
+| iOS `cap sync` / симулятор | ⏸ ждёт **полный Xcode** (регистрация Apple) |
 
 ### Сделано
 
-**Mobile (`apps/mobile`) — UI/UX**
-- [x] Убрана кнопка «Назад» в `NestedAppBar` (системная навигация)
-- [x] Профиль в хедере; для гостя — иконка входа
-- [x] Убрана sticky «Позвонить» на главной (звонок в хедере)
-- [x] Адаптация **365px / 320px**
-- [x] ЛК: progress при загрузке фото, ✓ в инпуте имени, тема светлая/тёмная
-- [x] Главная: коллапс «О нас» (`HomeClinicBlock`), баннер для гостей
-- [x] Меню: «Запись» и «Вопрос» скрыты без auth
-- [x] Иконки меню как в mini app (`react-icons/fa6`)
-- [x] Врачи: сетка 2×N с крупным фото
-- [x] Экран входа — полноэкранный (VK + телефон, «Продолжить без входа»)
-- [x] «Ещё» упрощён (без дубля аккаунта; выход / подсказка)
-
-**Mobile — splash**
-- [x] Нативный launch screen + веб `/splash` с фоном `src/assets/splash-bg.png`
-- [x] `SplashScreen` plugin: `launchAutoHide: false`, hide при монтировании React
-
-**Mobile — auth/session**
-- [x] Refresh JWT (`/auth/refresh`) в `authenticatedFetch` + axios interceptor
-- [x] При 401 → clear tokens → редирект на `/auth/login` с защищённых маршрутов
-
-**Server**
-- [x] `DELETE /api/admin/stats/mobile/users/{id}` — удаление mobile user
-- [x] Профиль удалённого user → **401** (не 404)
+**Mobile — UI/контент**
+- [x] Логотип в `AppBar`: `object-fit: contain`, 36×36 (как Mini App)
+- [x] Промо-баннер на главной (`ClinicPromoBanner`) — `banner_enabled` + `banner_url` из админки, закрытие в sessionStorage
+- [x] Врачи: квадратные фото, `contain`, центр, без border, зелёный box-shadow
+- [x] Запись: «Вы вошли как …» — имя из API профиля, без заглушек `VK 12345`
 
 **Admin**
-- [x] «Обзор» → «Приложение»: кнопка удаления пользователя + confirm
+- [x] `prepareLogoForUpload` — PNG/WebP с прозрачностью (не JPEG); перезалить логотип после deploy
+
+**Server**
+- [x] VK `DisplayName()` без `VK {user_id}` → «Пользователь VK» для новых входов
+
+**Mobile — iOS задел**
+- [x] `@capacitor/ios@^7.4.2`, скрипт `cap:ios`
+- [x] `npx cap add ios` → папка `apps/mobile/ios/`
+- [x] `Info.plist`: URL scheme VK + `NSPhotoLibraryUsageDescription`
+- [ ] `pod install` — **failed**: нужен Xcode, не Command Line Tools
 
 **Fix**
-- [x] Android build: дубликат `ic_launcher_background` в `colors.xml`
+- [x] CI: `react-hooks/rules-of-hooks` в `HomeScreen.tsx`
 
 ### Деплой (после push `dev`)
 
-1. **Server** — delete mobile user + 401 profile
-2. **Admin** — delete в табе «Приложение»
+1. **Server** — VK display name
+2. **Admin** — PNG-логотип
 3. **Mobile APK** — `npm run build` → `npx cap sync android`
 
 ### Следующий шаг
 
-1. **Mobile sprint 5** — booking flow (`/booking/new`, «Мои заявки»)
-2. Smoke: удаление user в admin → 401 в APK → экран входа
-3. **ADM-02**, C1 smoke Mini App
+1. **Mobile sprint 5** — booking flow (`/booking/new`, «Мои заявки`)
+2. Smoke APK: баннер, логотип, врачи, имя на экране записи
+3. **iOS** (когда Xcode): `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` → `cap sync ios` → симулятор
+4. **ADM-02**, C1 smoke Mini App
 
-### Сборка APK
+### Сборка
 
-`npm run build` → `npx cap sync android` → Android Studio (**Clean Project** после смены `res/`).
+| Платформа | Команды |
+|---|---|
+| Android APK | `npm run build` → `npx cap sync android` → Android Studio |
+| iOS (позже) | Xcode из App Store → `xcode-select` → `npm run build && npx cap sync ios` → `npm run cap:ios` |
+
+**Заметка iOS:** Xcode бесплатен с Apple ID; платный Developer ($99) — для TestFlight/App Store, не для установки Xcode.
+
+### Auth (обсуждено, не меняли код)
+
+- VK даёт JWT без Telegram; OTP только в TG по телефону
+- Код в VK / email — нет публичного API VK; email OTP — отдельная фича + SMTP
 
 ### Ссылки
 
 - [design-mvp.md](../md/mobile/design-mvp.md)
 - [phase-5-appointments.md](../md/phases/phase-5-appointments.md)
+- [app-id-and-stores.md](../md/mobile/app-id-and-stores.md)

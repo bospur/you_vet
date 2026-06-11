@@ -34,7 +34,16 @@ export function DoctorAvatar({
   const borderRadius = isSquare ? 0 : '50%';
 
   const sharedStyle = isSquare
-    ? { width: '100%', height: '100%', borderRadius, objectFit: 'cover' as const, display: 'block' }
+    ? {
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: 'auto',
+        height: 'auto',
+        borderRadius,
+        objectFit: 'contain' as const,
+        objectPosition: 'center',
+        display: 'block',
+      }
     : {
         width: size,
         height: size,
@@ -55,10 +64,21 @@ export function DoctorAvatar({
     );
   }
 
-  return (
-    <div
-      aria-hidden
-      style={{
+  const fallbackStyle = isSquare
+    ? {
+        width: '56%',
+        aspectRatio: '1',
+        borderRadius: '50%',
+        background: bg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+        fontSize: 32,
+        fontWeight: 700,
+        flexShrink: 0,
+      }
+    : {
         ...sharedStyle,
         background: bg,
         display: 'flex',
@@ -67,8 +87,10 @@ export function DoctorAvatar({
         color: '#fff',
         fontSize,
         fontWeight: 700,
-      }}
-    >
+      };
+
+  return (
+    <div aria-hidden style={fallbackStyle}>
       {letter}
     </div>
   );

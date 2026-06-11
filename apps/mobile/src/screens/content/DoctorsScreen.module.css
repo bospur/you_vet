@@ -14,12 +14,17 @@
   flex-direction: column;
   min-width: 0;
   padding: 0;
-  border: 1px solid var(--vet-accent-border);
+  border: none;
   border-radius: 12px;
   background: var(--vet-bg);
+  box-shadow: 0 2px 10px rgba(51, 139, 78, 0.14);
   overflow: hidden;
   cursor: pointer;
   text-align: left;
+}
+
+:root[data-theme='dark'] .card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.38);
 }
 
 .card:active {
@@ -27,9 +32,14 @@
 }
 
 .photoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   aspect-ratio: 1;
   width: 100%;
+  padding: 8px;
   background: var(--vet-surface-card);
+  box-sizing: border-box;
 }
 
 .body {

@@ -43,9 +43,10 @@ packages/types/  @you-vet/types
 |---|---|
 | M0 backend API + auth | ✅ prod |
 | M1 Capacitor shell + контент | ✅ APK |
-| M2 auth UX + гостевой режим + polish | 🟡 в коде, deploy APK |
+| M2 auth UX + гостевой режим + polish | 🟡 deploy APK (баннер, лого, врачи) |
 | M2b booking flow | backlog **sprint 5** |
 | M3 RuStore | backlog |
+| **iOS shell** | ⏸ `ios/` + `@capacitor/ios@7`; симулятор после Xcode |
 
 `appId`: `ru.snzbeachvolleyball25.vetpraktika` · API: `/api/mobile/v1`
 

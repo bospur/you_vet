@@ -8,9 +8,10 @@
 |---|---|---|
 | Telegram-бот | ✅ | OTP, вопросы, заявки |
 | Mini App | 🟡 | C1 + вопросы |
-| Admin | 🟡 | **Приложение**: список + **удаление** user — deploy |
-| API | 🟡 | mobile delete user, profile 401 — deploy server |
-| **Mobile app** | 🟡 | UX polish ✅ в коде · **запись** — sprint 5 |
+| Admin | 🟡 | PNG-логотип, баннер — deploy |
+| API | 🟡 | VK display name — deploy server |
+| **Mobile Android** | 🟡 | polish + баннер + врачи — deploy APK; **запись** sprint 5 |
+| **Mobile iOS** | ⏸ | `ios/` в репо; **ждёт Xcode** (Apple регистрация) |
 | Docs portal | 🟡 | sync после push `dev` |
 
 ## Функциональность (MVP)
@@ -21,13 +22,13 @@
 | C1 запись UI | — | 🟡 | 🟡 | — |
 | Вопросы | — | 🟡 | 🟡 | 🟡 (auth, ответ в TG) |
 | Контент read-only | — | ✅ | ✅ | ✅ |
-| **Mobile RuStore** | 🟡 users + delete | — | 🟡 M0–M2 | 🟡 auth+контент+ЛК+UX |
+| **Mobile RuStore** | 🟡 | — | 🟡 M0–M2 | 🟡 auth+контент+ЛК+UX+баннер |
 
 ## Фокус
 
-1. Deploy **server + admin** (delete mobile user)
-2. **Mobile sprint 5** — booking в APK
-3. Smoke гостевой режим + session expiry после delete в admin
+1. **Mobile sprint 5** — booking в APK
+2. Deploy **server + admin + mobile** (polish этой сессии)
+3. iOS — после установки Xcode: `cap sync ios` → симулятор
 
 ## CI
 

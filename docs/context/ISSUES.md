@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-10 (передача, mobile UX + admin delete user)
+> Последнее обновление: 2026-06-10 (передача, mobile polish + iOS задел)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -109,9 +109,17 @@
 | MOB-18 | 🟡 | CI: `set-state-in-effect` в ProfileScreen | **fixed 2026-06-10** |
 | MOB-19 | 🟡 | Android: duplicate `ic_launcher_background` | **fixed 2026-06-10** |
 | MOB-20 | 🟡 | Admin: удаление mobile user | **fixed 2026-06-10** — deploy admin+server |
+| MOB-21 | ⚪ | Логотип в AppBar обрезается (`object-fit: cover`) | **fixed 2026-06-10** — `contain` |
+| MOB-22 | 🟡 | PNG-логотип в admin → чёрный фон (JPEG) | **fixed 2026-06-10** — `prepareLogoForUpload`; перезалить |
+| MOB-23 | ⚪ | Промо-баннер на главной mobile | **fixed 2026-06-10** — `ClinicPromoBanner` |
+| MOB-24 | ⚪ | Фото врачей разной высоты | **fixed 2026-06-10** — aspect-ratio + shadow |
+| MOB-25 | 🟡 | «Вы вошли как VK 12345» на записи | **fixed 2026-06-10** — профиль API + server VK name |
+| MOB-26 | ⚪ | CI: `useMemo` conditional в HomeScreen | **fixed 2026-06-10** |
+| MOB-27 | ⚪ | iOS: Capacitor platform | **in progress** — `ios/` есть; `pod install` ждёт Xcode |
 
 ## Следующие шаги
 
-1. Deploy **server + admin** (delete mobile user)
-2. **Mobile sprint 5** — booking
-3. **ADM-02** · C1 smoke
+1. **Mobile sprint 5** — booking
+2. Deploy polish (admin PNG, server VK name, APK)
+3. iOS: Xcode → `cap sync ios`
+4. **ADM-02** · C1 smoke

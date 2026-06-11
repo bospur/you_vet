@@ -6,6 +6,7 @@ on:
       - dev
     paths:
       - 'docs/**'
+      - 'apps/docs/**'
       - '.github/workflows/deploy-docs.yml'
 
 jobs:
@@ -16,12 +17,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy HTML files to VPS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build docs portal
+        env:
+          VITE_API_URL: https://api.snzbeachvolleyball25.ru
+        run: npm run build --workspace=@you-vet/docs-portal
+
+      - name: Deploy to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: docs/html/*
+          source: apps/docs/dist/*
           target: /var/www/you-vet-docs/
-          strip_components: 2
+          strip_components: 3

@@ -52,3 +52,8 @@ jobs:
 
       - name: Build mobile
         run: npm run build --workspace=@you-vet/mobile
+
+      - name: Build docs portal
+        env:
+          VITE_API_URL: https://api.example.com
+        run: npm run build --workspace=@you-vet/docs-portal

@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { displayUserName } from '../../auth/mobileUser';
+import { displayNameFromSources } from '../../auth/mobileUser';
+import { useMobileProfile } from '../../hooks/useMobileProfile';
 import styles from './BookingHubScreen.module.css';
 
 export default function BookingHubScreen() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { data: profile } = useMobileProfile();
 
   const goProtected = (path: string) => {
     if (!isAuthenticated) {
@@ -34,7 +36,7 @@ export default function BookingHubScreen() {
         </button>
         {isAuthenticated && user ? (
           <p className={styles.authOk}>
-            Вы вошли как <strong>{displayUserName(user)}</strong>
+            Вы вошли как <strong>{displayNameFromSources(user, profile)}</strong>
           </p>
         ) : (
           <p className={styles.hint}>
