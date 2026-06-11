@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useState } from 'react'
+import { type DragEvent, type FormEvent, useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   createTask,
@@ -6,37 +6,29 @@ import {
   fetchTasks,
   loadVisitor,
   registerVisitor,
-  updateTaskStatus,
+  updateTask,
   type DocsTask,
+  type TaskPriority,
   type TaskStatus,
 } from '../api'
+import { nextPriority, PRIORITY_META } from '../board'
 
 const COLUMNS: { status: TaskStatus; title: string }[] = [
-  { status: 'todo', title: 'Туду' },
+  { status: 'todo', title: 'К выполнению' },
   { status: 'in_progress', title: 'В работе' },
   { status: 'done', title: 'Готова' },
 ]
-
-const NEXT_STATUS: Record<TaskStatus, TaskStatus | null> = {
-  todo: 'in_progress',
-  in_progress: 'done',
-  done: null,
-}
-
-const PREV_STATUS: Record<TaskStatus, TaskStatus | null> = {
-  todo: null,
-  in_progress: 'todo',
-  done: 'in_progress',
-}
 
 export function BoardPage() {
   const [tasks, setTasks] = useState<DocsTask[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [title, setTitle] = useState('')
+  const [priority, setPriority] = useState<TaskPriority>('normal')
   const [busy, setBusy] = useState(false)
   const [visitor, setVisitor] = useState(() => loadVisitor())
   const [registerName, setRegisterName] = useState('')
+  const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -75,9 +67,10 @@ export function BoardPage() {
     setBusy(true)
     setError('')
     try {
-      const task = await createTask(title)
+      const task = await createTask(title, priority)
       setTasks((prev) => [...prev, task])
       setTitle('')
+      setPriority('normal')
     } catch (err) {
       if (err instanceof Error && err.message === 'auth_required') {
         setVisitor(null)
@@ -90,11 +83,11 @@ export function BoardPage() {
     }
   }
 
-  async function moveTask(task: DocsTask, status: TaskStatus) {
+  async function patchTask(id: number, patch: Parameters<typeof updateTask>[1]) {
     setBusy(true)
     setError('')
     try {
-      const updated = await updateTaskStatus(task.id, status)
+      const updated = await updateTask(id, patch)
       setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка обновления')
@@ -116,6 +109,27 @@ export function BoardPage() {
     }
   }
 
+  function onDragStart(e: DragEvent, taskId: number) {
+    e.dataTransfer.setData('text/plain', String(taskId))
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  function onDragOverColumn(e: DragEvent, status: TaskStatus) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOver(status)
+  }
+
+  async function onDropColumn(e: DragEvent, status: TaskStatus) {
+    e.preventDefault()
+    setDragOver(null)
+    if (!visitor) return
+    const taskId = Number(e.dataTransfer.getData('text/plain'))
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task || task.status === status) return
+    await patchTask(taskId, { status })
+  }
+
   return (
     <div className="board-page">
       <div className="doc-back">
@@ -124,7 +138,9 @@ export function BoardPage() {
 
       <header className="board-header">
         <h1>Задачи команды</h1>
-        <p className="board-lead">Канбан: туду → в работе → готова. Общая доска для всех на портале.</p>
+        <p className="board-lead">
+          Перетаскивайте карточки между колонками. Приоритет — цветная метка на карточке.
+        </p>
       </header>
 
       {!visitor ? (
@@ -153,6 +169,15 @@ export function BoardPage() {
             maxLength={200}
             required
           />
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as TaskPriority)}
+            aria-label="Важность"
+          >
+            <option value="low">Низкая важность</option>
+            <option value="normal">Обычная</option>
+            <option value="high">Срочно</option>
+          </select>
           <button type="submit" disabled={busy || !title.trim()}>
             Добавить
           </button>
@@ -163,35 +188,49 @@ export function BoardPage() {
 
       <div className="board-columns">
         {COLUMNS.map((col) => (
-          <section key={col.status} className="board-column">
+          <section
+            key={col.status}
+            className={`board-column${dragOver === col.status ? ' board-column-over' : ''}`}
+            onDragOver={(e) => onDragOverColumn(e, col.status)}
+            onDragLeave={() => setDragOver(null)}
+            onDrop={(e) => onDropColumn(e, col.status)}
+          >
             <h2>{col.title}</h2>
             <div className="board-cards">
               {tasks
                 .filter((t) => t.status === col.status)
                 .map((task) => (
-                  <article key={task.id} className="board-card">
-                    <p className="board-card-title">{task.title}</p>
+                  <article
+                    key={task.id}
+                    className={`board-card ${PRIORITY_META[task.priority].className}`}
+                    draggable={!!visitor && !busy}
+                    onDragStart={(e) => onDragStart(e, task.id)}
+                  >
+                    <div className="board-card-top">
+                      <p className="board-card-title">{task.title}</p>
+                      {visitor ? (
+                        <button
+                          type="button"
+                          className={`board-priority ${PRIORITY_META[task.priority].className}`}
+                          disabled={busy}
+                          title="Сменить важность"
+                          onClick={() =>
+                            patchTask(task.id, { priority: nextPriority(task.priority) })
+                          }
+                        >
+                          {PRIORITY_META[task.priority].label}
+                        </button>
+                      ) : (
+                        <span
+                          className={`board-priority board-priority-readonly ${PRIORITY_META[task.priority].className}`}
+                        >
+                          {PRIORITY_META[task.priority].label}
+                        </span>
+                      )}
+                    </div>
                     <p className="board-card-meta">{task.display_name}</p>
                     {visitor ? (
                       <div className="board-card-actions">
-                        {PREV_STATUS[task.status] ? (
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => moveTask(task, PREV_STATUS[task.status]!)}
-                          >
-                            ←
-                          </button>
-                        ) : null}
-                        {NEXT_STATUS[task.status] ? (
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => moveTask(task, NEXT_STATUS[task.status]!)}
-                          >
-                            →
-                          </button>
-                        ) : null}
                         <button
                           type="button"
                           className="board-delete"

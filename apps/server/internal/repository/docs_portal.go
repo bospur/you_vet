@@ -19,12 +19,14 @@ type DocsComment struct {
 	Body        string
 	DisplayName string
 	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type DocsTask struct {
 	ID          int64
 	Title       string
 	Status      string
+	Priority    string
 	Position    int
 	VisitorID   int64
 	DisplayName string
@@ -71,7 +73,7 @@ func (r *DocsPortalRepository) GetVisitor(id int64) (*DocsVisitor, error) {
 
 func (r *DocsPortalRepository) ListComments(pageSlug string) ([]DocsComment, error) {
 	rows, err := r.db.Query(
-		`SELECT c.id, c.page_slug, c.visitor_id, c.body, v.display_name, c.created_at
+		`SELECT c.id, c.page_slug, c.visitor_id, c.body, v.display_name, c.created_at, c.updated_at
 		 FROM docs_comments c
 		 JOIN docs_visitors v ON v.id = c.visitor_id
 		 WHERE c.page_slug = $1
@@ -86,7 +88,7 @@ func (r *DocsPortalRepository) ListComments(pageSlug string) ([]DocsComment, err
 	var items []DocsComment
 	for rows.Next() {
 		var c DocsComment
-		if err := rows.Scan(&c.ID, &c.PageSlug, &c.VisitorID, &c.Body, &c.DisplayName, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.PageSlug, &c.VisitorID, &c.Body, &c.DisplayName, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, c)
@@ -99,9 +101,9 @@ func (r *DocsPortalRepository) CreateComment(pageSlug string, visitorID int64, b
 	err := r.db.QueryRow(
 		`INSERT INTO docs_comments (page_slug, visitor_id, body)
 		 VALUES ($1, $2, $3)
-		 RETURNING id, page_slug, visitor_id, body, created_at`,
+		 RETURNING id, page_slug, visitor_id, body, created_at, updated_at`,
 		pageSlug, visitorID, strings.TrimSpace(body),
-	).Scan(&c.ID, &c.PageSlug, &c.VisitorID, &c.Body, &c.CreatedAt)
+	).Scan(&c.ID, &c.PageSlug, &c.VisitorID, &c.Body, &c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -115,13 +117,48 @@ func (r *DocsPortalRepository) CreateComment(pageSlug string, visitorID int64, b
 	return &c, nil
 }
 
+func (r *DocsPortalRepository) GetComment(id int64) (*DocsComment, error) {
+	var c DocsComment
+	err := r.db.QueryRow(
+		`SELECT c.id, c.page_slug, c.visitor_id, c.body, v.display_name, c.created_at, c.updated_at
+		 FROM docs_comments c
+		 JOIN docs_visitors v ON v.id = c.visitor_id
+		 WHERE c.id = $1`,
+		id,
+	).Scan(&c.ID, &c.PageSlug, &c.VisitorID, &c.Body, &c.DisplayName, &c.CreatedAt, &c.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r *DocsPortalRepository) UpdateComment(id, visitorID int64, body string) (*DocsComment, error) {
+	res, err := r.db.Exec(
+		`UPDATE docs_comments SET body = $1, updated_at = NOW()
+		 WHERE id = $2 AND visitor_id = $3`,
+		strings.TrimSpace(body), id, visitorID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return r.GetComment(id)
+}
+
 func (r *DocsPortalRepository) ListTasks() ([]DocsTask, error) {
 	rows, err := r.db.Query(
-		`SELECT t.id, t.title, t.status, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
+		`SELECT t.id, t.title, t.status, t.priority, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
 		 FROM docs_tasks t
 		 JOIN docs_visitors v ON v.id = t.visitor_id
 		 ORDER BY
 		   CASE t.status WHEN 'todo' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,
+		   CASE t.priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END,
 		   t.position ASC,
 		   t.id ASC`,
 	)
@@ -134,7 +171,7 @@ func (r *DocsPortalRepository) ListTasks() ([]DocsTask, error) {
 	for rows.Next() {
 		var t DocsTask
 		if err := rows.Scan(
-			&t.ID, &t.Title, &t.Status, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt,
+			&t.ID, &t.Title, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -152,18 +189,18 @@ func (r *DocsPortalRepository) nextTaskPosition(status string) (int, error) {
 	return pos, err
 }
 
-func (r *DocsPortalRepository) CreateTask(visitorID int64, title string) (*DocsTask, error) {
+func (r *DocsPortalRepository) CreateTask(visitorID int64, title, priority string) (*DocsTask, error) {
 	pos, err := r.nextTaskPosition("todo")
 	if err != nil {
 		return nil, err
 	}
 	var t DocsTask
 	err = r.db.QueryRow(
-		`INSERT INTO docs_tasks (title, status, position, visitor_id)
-		 VALUES ($1, 'todo', $2, $3)
-		 RETURNING id, title, status, position, visitor_id, created_at, updated_at`,
-		strings.TrimSpace(title), pos, visitorID,
-	).Scan(&t.ID, &t.Title, &t.Status, &t.Position, &t.VisitorID, &t.CreatedAt, &t.UpdatedAt)
+		`INSERT INTO docs_tasks (title, status, priority, position, visitor_id)
+		 VALUES ($1, 'todo', $2, $3, $4)
+		 RETURNING id, title, status, priority, position, visitor_id, created_at, updated_at`,
+		strings.TrimSpace(title), priority, pos, visitorID,
+	).Scan(&t.ID, &t.Title, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -180,12 +217,12 @@ func (r *DocsPortalRepository) CreateTask(visitorID int64, title string) (*DocsT
 func (r *DocsPortalRepository) GetTask(id int64) (*DocsTask, error) {
 	var t DocsTask
 	err := r.db.QueryRow(
-		`SELECT t.id, t.title, t.status, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
+		`SELECT t.id, t.title, t.status, t.priority, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
 		 FROM docs_tasks t
 		 JOIN docs_visitors v ON v.id = t.visitor_id
 		 WHERE t.id = $1`,
 		id,
-	).Scan(&t.ID, &t.Title, &t.Status, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt)
+	).Scan(&t.ID, &t.Title, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -195,7 +232,7 @@ func (r *DocsPortalRepository) GetTask(id int64) (*DocsTask, error) {
 	return &t, nil
 }
 
-func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *string) (*DocsTask, error) {
+func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *string, priority *string) (*DocsTask, error) {
 	task, err := r.GetTask(id)
 	if err != nil {
 		return nil, err
@@ -212,6 +249,10 @@ func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *strin
 	if status != nil {
 		newStatus = *status
 	}
+	newPriority := task.Priority
+	if priority != nil {
+		newPriority = *priority
+	}
 
 	newPos := task.Position
 	if status != nil && *status != task.Status {
@@ -223,8 +264,8 @@ func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *strin
 	}
 
 	_, err = r.db.Exec(
-		`UPDATE docs_tasks SET title = $1, status = $2, position = $3, updated_at = NOW() WHERE id = $4`,
-		newTitle, newStatus, newPos, id,
+		`UPDATE docs_tasks SET title = $1, status = $2, priority = $3, position = $4, updated_at = NOW() WHERE id = $5`,
+		newTitle, newStatus, newPriority, newPos, id,
 	)
 	if err != nil {
 		return nil, err

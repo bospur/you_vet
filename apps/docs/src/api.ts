@@ -9,21 +9,31 @@ export type DocsVisitor = {
 export type DocsComment = {
   id: number
   page_slug: string
+  visitor_id: number
   body: string
   display_name: string
   created_at: string
+  updated_at: string
 }
 
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
+export type TaskPriority = 'low' | 'normal' | 'high'
 
 export type DocsTask = {
   id: number
   title: string
   status: TaskStatus
+  priority: TaskPriority
   position: number
   display_name: string
   created_at: string
   updated_at: string
+}
+
+export type TaskPatch = {
+  status?: TaskStatus
+  priority?: TaskPriority
+  title?: string
 }
 
 const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru'
@@ -31,6 +41,13 @@ const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball2
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem(STORAGE_KEY)
   return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+function handleAuthError(res: Response) {
+  if (res.status === 401) {
+    clearSession()
+    throw new Error('auth_required')
+  }
 }
 
 export function loadVisitor(): DocsVisitor | null {
@@ -86,13 +103,28 @@ export async function postComment(pageSlug: string, body: string): Promise<DocsC
     },
     body: JSON.stringify({ page_slug: pageSlug, body: body.trim() }),
   })
-  if (res.status === 401) {
-    clearSession()
-    throw new Error('auth_required')
-  }
+  handleAuthError(res)
   if (!res.ok) {
     const text = await res.text()
     throw new Error(text || 'Не удалось отправить комментарий')
+  }
+  const data = (await res.json()) as { comment: DocsComment }
+  return data.comment
+}
+
+export async function patchComment(id: number, body: string): Promise<DocsComment> {
+  const res = await fetch(`${apiBase}/api/docs/v1/comments/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ body: body.trim() }),
+  })
+  handleAuthError(res)
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || 'Не удалось изменить комментарий')
   }
   const data = (await res.json()) as { comment: DocsComment }
   return data.comment
@@ -105,19 +137,19 @@ export async function fetchTasks(): Promise<DocsTask[]> {
   return data.tasks
 }
 
-export async function createTask(title: string): Promise<DocsTask> {
+export async function createTask(
+  title: string,
+  priority: TaskPriority = 'normal',
+): Promise<DocsTask> {
   const res = await fetch(`${apiBase}/api/docs/v1/tasks`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
     },
-    body: JSON.stringify({ title: title.trim() }),
+    body: JSON.stringify({ title: title.trim(), priority }),
   })
-  if (res.status === 401) {
-    clearSession()
-    throw new Error('auth_required')
-  }
+  handleAuthError(res)
   if (!res.ok) {
     const text = await res.text()
     throw new Error(text || 'Не удалось создать задачу')
@@ -126,19 +158,16 @@ export async function createTask(title: string): Promise<DocsTask> {
   return data.task
 }
 
-export async function updateTaskStatus(id: number, status: TaskStatus): Promise<DocsTask> {
+export async function updateTask(id: number, patch: TaskPatch): Promise<DocsTask> {
   const res = await fetch(`${apiBase}/api/docs/v1/tasks/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(patch),
   })
-  if (res.status === 401) {
-    clearSession()
-    throw new Error('auth_required')
-  }
+  handleAuthError(res)
   if (!res.ok) {
     const text = await res.text()
     throw new Error(text || 'Не удалось обновить задачу')
@@ -152,10 +181,7 @@ export async function deleteTask(id: number): Promise<void> {
     method: 'DELETE',
     headers: authHeaders(),
   })
-  if (res.status === 401) {
-    clearSession()
-    throw new Error('auth_required')
-  }
+  handleAuthError(res)
   if (!res.ok && res.status !== 204) {
     const text = await res.text()
     throw new Error(text || 'Не удалось удалить задачу')
