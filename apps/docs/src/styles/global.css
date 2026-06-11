@@ -555,7 +555,143 @@ a {
   padding: 48px 20px;
 }
 
+.board-page {
+  max-width: 100%;
+}
+
+.board-header {
+  margin: 16px 0 24px;
+}
+
+.board-header h1 {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.board-lead {
+  color: #666;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.board-register,
+.board-create {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.board-register p {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.board-register-row,
+.board-create {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.board-register-row input,
+.board-create input {
+  flex: 1;
+  min-width: 200px;
+  font: inherit;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.board-register-row button,
+.board-create button {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.board-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.board-column {
+  background: #f0f0ee;
+  border-radius: 10px;
+  padding: 12px;
+  min-height: 200px;
+}
+
+.board-column h2 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.board-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.board-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.board-card-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.board-card-meta {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.board-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.board-card-actions button {
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.board-delete {
+  color: #c62828 !important;
+  border-color: #ffcdd2 !important;
+  background: #fff !important;
+}
+
 @media (max-width: 640px) {
+  .board-columns {
+    grid-template-columns: 1fr;
+  }
+
   .layout-header {
     flex-direction: column;
     align-items: flex-start;

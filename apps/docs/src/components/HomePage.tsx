@@ -29,6 +29,20 @@ export function HomePage() {
 
   return (
     <div className="home">
+      <div className="section-title">Инструменты</div>
+      <div className="cards">
+        <Link className="card" to="/board">
+          <div className="card-icon">📌</div>
+          <div className="card-body">
+            <div className="card-title">
+              Задачи <span className="badge badge-orange">Канбан</span>
+            </div>
+            <div className="card-desc">Туду · в работе · готова — общая доска команды</div>
+          </div>
+          <div className="card-arrow">›</div>
+        </Link>
+      </div>
+
       <div className="section-title">Для команды</div>
       <div className="cards">
         {team.map((page) => (

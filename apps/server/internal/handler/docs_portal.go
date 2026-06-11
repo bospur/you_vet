@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -40,6 +43,21 @@ type docsRegisterBody struct {
 type docsCommentBody struct {
 	PageSlug string `json:"page_slug"`
 	Body     string `json:"body"`
+}
+
+type docsTaskBody struct {
+	Title string `json:"title"`
+}
+
+type docsTaskPatchBody struct {
+	Title  *string `json:"title"`
+	Status *string `json:"status"`
+}
+
+var allowedTaskStatuses = map[string]struct{}{
+	"todo":        {},
+	"in_progress": {},
+	"done":        {},
 }
 
 func (h *DocsPortalHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -143,6 +161,138 @@ func (h *DocsPortalHandler) CreateComment(w http.ResponseWriter, r *http.Request
 			"created_at":   comment.CreatedAt.UTC().Format(time.RFC3339),
 		},
 	})
+}
+
+func (h *DocsPortalHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
+	items, err := h.repo.ListTasks()
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	out := make([]map[string]any, 0, len(items))
+	for _, t := range items {
+		out = append(out, taskToJSON(t))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"tasks": out})
+}
+
+func (h *DocsPortalHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.DocsClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	var req docsTaskBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+
+	title := strings.TrimSpace(req.Title)
+	if utf8.RuneCountInString(title) < 1 || utf8.RuneCountInString(title) > 200 {
+		http.Error(w, "задача: от 1 до 200 символов", http.StatusBadRequest)
+		return
+	}
+
+	task, err := h.repo.CreateTask(claims.VisitorID, title)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{"task": taskToJSON(*task)})
+}
+
+func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.DocsClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "неверный id", http.StatusBadRequest)
+		return
+	}
+
+	var req docsTaskPatchBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title == nil && req.Status == nil {
+		http.Error(w, "нет полей для обновления", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title != nil {
+		title := strings.TrimSpace(*req.Title)
+		if utf8.RuneCountInString(title) < 1 || utf8.RuneCountInString(title) > 200 {
+			http.Error(w, "задача: от 1 до 200 символов", http.StatusBadRequest)
+			return
+		}
+		req.Title = &title
+	}
+
+	if req.Status != nil {
+		if _, ok := allowedTaskStatuses[*req.Status]; !ok {
+			http.Error(w, "неверный статус", http.StatusBadRequest)
+			return
+		}
+	}
+
+	task, err := h.repo.UpdateTask(id, req.Title, req.Status)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if task == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"task": taskToJSON(*task)})
+}
+
+func (h *DocsPortalHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.DocsClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "неверный id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.DeleteTask(id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "не найдено", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func taskToJSON(t repository.DocsTask) map[string]any {
+	return map[string]any{
+		"id":           t.ID,
+		"title":        t.Title,
+		"status":       t.Status,
+		"position":     t.Position,
+		"display_name": t.DisplayName,
+		"created_at":   t.CreatedAt.UTC().Format(time.RFC3339),
+		"updated_at":   t.UpdatedAt.UTC().Format(time.RFC3339),
+	}
 }
 
 func (h *DocsPortalHandler) signToken(visitorID int64, displayName string) (string, error) {
