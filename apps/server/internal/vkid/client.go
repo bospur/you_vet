@@ -53,9 +53,6 @@ func (u UserInfo) DisplayName() string {
 	if name != "" {
 		return name
 	}
-	if u.UserID > 0 {
-		return fmt.Sprintf("VK %d", u.UserID)
-	}
 	return "Пользователь VK"
 }
 

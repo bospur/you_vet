@@ -9,9 +9,11 @@ import (
 var defaultAllowedOrigins = []string{
 	"https://admin.snzbeachvolleyball25.ru",
 	"https://app.snzbeachvolleyball25.ru",
+	"https://docs.snzbeachvolleyball25.ru",
 	"http://localhost:5173",
 	"http://localhost:5174",
 	"http://localhost:5175",
+	"http://localhost:5176",
 	"https://localhost",
 }
 
