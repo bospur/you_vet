@@ -45,19 +45,31 @@ type docsCommentBody struct {
 	Body     string `json:"body"`
 }
 
+type docsCommentPatchBody struct {
+	Body string `json:"body"`
+}
+
 type docsTaskBody struct {
-	Title string `json:"title"`
+	Title    string `json:"title"`
+	Priority string `json:"priority"`
 }
 
 type docsTaskPatchBody struct {
-	Title  *string `json:"title"`
-	Status *string `json:"status"`
+	Title    *string `json:"title"`
+	Status   *string `json:"status"`
+	Priority *string `json:"priority"`
 }
 
 var allowedTaskStatuses = map[string]struct{}{
 	"todo":        {},
 	"in_progress": {},
 	"done":        {},
+}
+
+var allowedTaskPriorities = map[string]struct{}{
+	"low":    {},
+	"normal": {},
+	"high":   {},
 }
 
 func (h *DocsPortalHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -109,13 +121,7 @@ func (h *DocsPortalHandler) ListComments(w http.ResponseWriter, r *http.Request)
 
 	out := make([]map[string]any, 0, len(items))
 	for _, c := range items {
-		out = append(out, map[string]any{
-			"id":           c.ID,
-			"page_slug":    c.PageSlug,
-			"body":         c.Body,
-			"display_name": c.DisplayName,
-			"created_at":   c.CreatedAt.UTC().Format(time.RFC3339),
-		})
+		out = append(out, commentToJSON(c))
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"comments": out})
@@ -153,13 +159,47 @@ func (h *DocsPortalHandler) CreateComment(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]any{
-		"comment": map[string]any{
-			"id":           comment.ID,
-			"page_slug":    comment.PageSlug,
-			"body":         comment.Body,
-			"display_name": comment.DisplayName,
-			"created_at":   comment.CreatedAt.UTC().Format(time.RFC3339),
-		},
+		"comment": commentToJSON(*comment),
+	})
+}
+
+func (h *DocsPortalHandler) UpdateComment(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.DocsClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "неверный id", http.StatusBadRequest)
+		return
+	}
+
+	var req docsCommentPatchBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+
+	body := strings.TrimSpace(req.Body)
+	if utf8.RuneCountInString(body) < 1 || utf8.RuneCountInString(body) > 2000 {
+		http.Error(w, "комментарий: от 1 до 2000 символов", http.StatusBadRequest)
+		return
+	}
+
+	comment, err := h.repo.UpdateComment(id, claims.VisitorID, body)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "не найдено или нет прав", http.StatusForbidden)
+			return
+		}
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"comment": commentToJSON(*comment),
 	})
 }
 
@@ -196,7 +236,16 @@ func (h *DocsPortalHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.repo.CreateTask(claims.VisitorID, title)
+	priority := strings.TrimSpace(req.Priority)
+	if priority == "" {
+		priority = "normal"
+	}
+	if _, ok := allowedTaskPriorities[priority]; !ok {
+		http.Error(w, "неверный приоритет", http.StatusBadRequest)
+		return
+	}
+
+	task, err := h.repo.CreateTask(claims.VisitorID, title, priority)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -224,7 +273,7 @@ func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Title == nil && req.Status == nil {
+	if req.Title == nil && req.Status == nil && req.Priority == nil {
 		http.Error(w, "нет полей для обновления", http.StatusBadRequest)
 		return
 	}
@@ -245,7 +294,14 @@ func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	task, err := h.repo.UpdateTask(id, req.Title, req.Status)
+	if req.Priority != nil {
+		if _, ok := allowedTaskPriorities[*req.Priority]; !ok {
+			http.Error(w, "неверный приоритет", http.StatusBadRequest)
+			return
+		}
+	}
+
+	task, err := h.repo.UpdateTask(id, req.Title, req.Status, req.Priority)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -283,11 +339,24 @@ func (h *DocsPortalHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func commentToJSON(c repository.DocsComment) map[string]any {
+	return map[string]any{
+		"id":           c.ID,
+		"page_slug":    c.PageSlug,
+		"visitor_id":   c.VisitorID,
+		"body":         c.Body,
+		"display_name": c.DisplayName,
+		"created_at":   c.CreatedAt.UTC().Format(time.RFC3339),
+		"updated_at":   c.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
 func taskToJSON(t repository.DocsTask) map[string]any {
 	return map[string]any{
 		"id":           t.ID,
 		"title":        t.Title,
 		"status":       t.Status,
+		"priority":     t.Priority,
 		"position":     t.Position,
 		"display_name": t.DisplayName,
 		"created_at":   t.CreatedAt.UTC().Format(time.RFC3339),

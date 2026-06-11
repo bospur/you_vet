@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from 'react'
 import {
   fetchComments,
   loadVisitor,
+  patchComment,
   postComment,
   registerVisitor,
   type DocsComment,
@@ -10,6 +11,10 @@ import {
 
 type Props = {
   pageSlug: string
+}
+
+function wasEdited(c: DocsComment): boolean {
+  return new Date(c.updated_at).getTime() - new Date(c.created_at).getTime() > 2000
 }
 
 export function CommentsPanel({ pageSlug }: Props) {
@@ -21,6 +26,8 @@ export function CommentsPanel({ pageSlug }: Props) {
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editBody, setEditBody] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -82,11 +89,43 @@ export function CommentsPanel({ pageSlug }: Props) {
     }
   }
 
+  function startEdit(c: DocsComment) {
+    setEditingId(c.id)
+    setEditBody(c.body)
+    setError('')
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditBody('')
+  }
+
+  async function saveEdit(e: FormEvent) {
+    e.preventDefault()
+    if (editingId === null || !editBody.trim()) return
+    setError('')
+    setSubmitting(true)
+    try {
+      const updated = await patchComment(editingId, editBody)
+      setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+      cancelEdit()
+    } catch (err) {
+      if (err instanceof Error && err.message === 'auth_required') {
+        setVisitor(null)
+        setError('Войдите снова, чтобы редактировать')
+      } else {
+        setError(err instanceof Error ? err.message : 'Ошибка сохранения')
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <section className="comments">
       <h2>Комментарии</h2>
       <p className="comments-hint">
-        Анонимная регистрация — только имя для подписи. Без email и пароля.
+        Анонимная регистрация — только имя для подписи. Свои комментарии можно редактировать.
       </p>
 
       {loading ? <p className="comments-muted">Загрузка…</p> : null}
@@ -99,11 +138,44 @@ export function CommentsPanel({ pageSlug }: Props) {
           <li key={c.id} className="comment-item">
             <div className="comment-meta">
               <strong>{c.display_name}</strong>
-              <time dateTime={c.created_at}>
-                {new Date(c.created_at).toLocaleString('ru-RU')}
+              <time dateTime={c.updated_at}>
+                {new Date(c.updated_at).toLocaleString('ru-RU')}
+                {wasEdited(c) ? ' · изменён' : ''}
               </time>
             </div>
-            <p>{c.body}</p>
+            {editingId === c.id ? (
+              <form className="comment-edit-form" onSubmit={saveEdit}>
+                <textarea
+                  value={editBody}
+                  onChange={(e) => setEditBody(e.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  required
+                  autoFocus
+                />
+                <div className="comment-edit-actions">
+                  <button type="submit" disabled={submitting}>
+                    Сохранить
+                  </button>
+                  <button type="button" className="link-btn" onClick={cancelEdit}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <p>{c.body}</p>
+                {visitor?.id === c.visitor_id ? (
+                  <button
+                    type="button"
+                    className="comment-edit-btn"
+                    onClick={() => startEdit(c)}
+                  >
+                    Изменить
+                  </button>
+                ) : null}
+              </>
+            )}
           </li>
         ))}
       </ul>

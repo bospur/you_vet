@@ -459,6 +459,43 @@ a {
   margin-bottom: 10px;
 }
 
+.comment-edit-btn {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: #666;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.comment-edit-form textarea {
+  width: 100%;
+  font: inherit;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+
+.comment-edit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.comment-edit-actions button[type='submit'] {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .comment-meta {
   display: flex;
   justify-content: space-between;
@@ -597,13 +634,19 @@ a {
 }
 
 .board-register-row input,
-.board-create input {
+.board-create input,
+.board-create select {
   flex: 1;
-  min-width: 200px;
+  min-width: 120px;
   font: inherit;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 10px 12px;
+}
+
+.board-create select {
+  flex: 0 0 auto;
+  max-width: 180px;
 }
 
 .board-register-row button,
@@ -629,6 +672,12 @@ a {
   border-radius: 10px;
   padding: 12px;
   min-height: 200px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.board-column-over {
+  background: #e8f5e9;
+  box-shadow: inset 0 0 0 2px #4caf50;
 }
 
 .board-column h2 {
@@ -651,12 +700,72 @@ a {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 12px;
+  border-left: 4px solid #e0e0e0;
+  cursor: grab;
+}
+
+.board-card:active {
+  cursor: grabbing;
+}
+
+.board-card.priority-low {
+  border-left-color: #9e9e9e;
+  background: #fafafa;
+}
+
+.board-card.priority-normal {
+  border-left-color: #4caf50;
+}
+
+.board-card.priority-high {
+  border-left-color: #e65100;
+  background: #fff8f0;
+  border-color: #ffcc80;
+}
+
+.board-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .board-card-title {
   font-weight: 600;
   font-size: 14px;
-  margin-bottom: 6px;
+  flex: 1;
+}
+
+.board-priority {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.board-priority-readonly {
+  cursor: default;
+}
+
+.board-priority.priority-low {
+  background: #eeeeee;
+  color: #616161;
+}
+
+.board-priority.priority-normal {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.board-priority.priority-high {
+  background: #ffe0b2;
+  color: #e65100;
 }
 
 .board-card-meta {
