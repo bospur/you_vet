@@ -14,6 +14,18 @@ export type DocsComment = {
   created_at: string
 }
 
+export type TaskStatus = 'todo' | 'in_progress' | 'done'
+
+export type DocsTask = {
+  id: number
+  title: string
+  status: TaskStatus
+  position: number
+  display_name: string
+  created_at: string
+  updated_at: string
+}
+
 const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru'
 
 function authHeaders(): HeadersInit {
@@ -84,4 +96,68 @@ export async function postComment(pageSlug: string, body: string): Promise<DocsC
   }
   const data = (await res.json()) as { comment: DocsComment }
   return data.comment
+}
+
+export async function fetchTasks(): Promise<DocsTask[]> {
+  const res = await fetch(`${apiBase}/api/docs/v1/tasks`)
+  if (!res.ok) throw new Error('Не удалось загрузить задачи')
+  const data = (await res.json()) as { tasks: DocsTask[] }
+  return data.tasks
+}
+
+export async function createTask(title: string): Promise<DocsTask> {
+  const res = await fetch(`${apiBase}/api/docs/v1/tasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ title: title.trim() }),
+  })
+  if (res.status === 401) {
+    clearSession()
+    throw new Error('auth_required')
+  }
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || 'Не удалось создать задачу')
+  }
+  const data = (await res.json()) as { task: DocsTask }
+  return data.task
+}
+
+export async function updateTaskStatus(id: number, status: TaskStatus): Promise<DocsTask> {
+  const res = await fetch(`${apiBase}/api/docs/v1/tasks/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ status }),
+  })
+  if (res.status === 401) {
+    clearSession()
+    throw new Error('auth_required')
+  }
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || 'Не удалось обновить задачу')
+  }
+  const data = (await res.json()) as { task: DocsTask }
+  return data.task
+}
+
+export async function deleteTask(id: number): Promise<void> {
+  const res = await fetch(`${apiBase}/api/docs/v1/tasks/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+  if (res.status === 401) {
+    clearSession()
+    throw new Error('auth_required')
+  }
+  if (!res.ok && res.status !== 204) {
+    const text = await res.text()
+    throw new Error(text || 'Не удалось удалить задачу')
+  }
 }

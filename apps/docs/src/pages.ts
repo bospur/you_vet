@@ -1,5 +1,5 @@
 import architectureMd from '@docs-md/general/architecture.md?raw'
-import roadmapMd from '@docs-md/mobile/roadmap.md?raw'
+import roadmapMd from '@docs-md/portal/roadmap.md?raw'
 import rustoreMd from '@docs-md/mobile/rustore-guide.md?raw'
 import mobileMd from '@docs-md/mobile/overview.md?raw'
 import phase5Md from '@docs-md/phases/phase-5-appointments.md?raw'

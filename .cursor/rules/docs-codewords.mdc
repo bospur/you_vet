@@ -36,13 +36,11 @@ alwaysApply: true
 
 ## `портал` [+ маршрут]
 
-Синхронизировать **markdown ↔ HTML** в `you_vet/docs/` для https://docs.snzbeachvolleyball25.ru
+Обновить React-портал `apps/docs/` для https://docs.snzbeachvolleyball25.ru
 
-- Prod получает только `docs/html/*` (workflow `deploy-docs.yml` после push `dev`).
-- Обновить **и** `docs/md/` (источник), **и** парный `docs/html/*.html` в стиле соседних страниц.
-- Проверить ссылки `html/index.html`, блок «← Все документы».
-
-Пары: `phase-5-appointments` · `audit` · `design-brief` · `mobile` · `booking-for-clinic.html` · `roadmap.html` · `project-for-devs.html` — см. таблицу в `CODEWORDS.md`.
+- Prod: CI собирает `apps/docs` → VPS (`deploy-docs.yml` после push `dev`).
+- Контент: править `docs/md/` + при новой странице `apps/docs/src/pages.ts` и `HomePage.tsx`.
+- `docs/html/` — legacy, не деплоится. `docs/context/` — только для AI, на сайт не влияет.
 
 ## `передача` [+ опционально `портал` …]
 
@@ -58,5 +56,5 @@ alwaysApply: true
 
 ## Комбинации
 
-- `передача портал запись` — HANDOFF + phase-5 md/html (+ clinic html при необходимости)
+- `передача портал запись` — HANDOFF + phase-5 md (+ pages.ts при необходимости)
 - `контекст деплой` — память + `md/general/deployment.md`

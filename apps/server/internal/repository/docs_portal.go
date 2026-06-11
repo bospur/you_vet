@@ -21,6 +21,17 @@ type DocsComment struct {
 	CreatedAt   time.Time
 }
 
+type DocsTask struct {
+	ID          int64
+	Title       string
+	Status      string
+	Position    int
+	VisitorID   int64
+	DisplayName string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
 type DocsPortalRepository struct {
 	db *sql.DB
 }
@@ -102,4 +113,133 @@ func (r *DocsPortalRepository) CreateComment(pageSlug string, visitorID int64, b
 		c.DisplayName = visitor.DisplayName
 	}
 	return &c, nil
+}
+
+func (r *DocsPortalRepository) ListTasks() ([]DocsTask, error) {
+	rows, err := r.db.Query(
+		`SELECT t.id, t.title, t.status, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
+		 FROM docs_tasks t
+		 JOIN docs_visitors v ON v.id = t.visitor_id
+		 ORDER BY
+		   CASE t.status WHEN 'todo' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,
+		   t.position ASC,
+		   t.id ASC`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []DocsTask
+	for rows.Next() {
+		var t DocsTask
+		if err := rows.Scan(
+			&t.ID, &t.Title, &t.Status, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, t)
+	}
+	return items, rows.Err()
+}
+
+func (r *DocsPortalRepository) nextTaskPosition(status string) (int, error) {
+	var pos int
+	err := r.db.QueryRow(
+		`SELECT COALESCE(MAX(position), -1) + 1 FROM docs_tasks WHERE status = $1`,
+		status,
+	).Scan(&pos)
+	return pos, err
+}
+
+func (r *DocsPortalRepository) CreateTask(visitorID int64, title string) (*DocsTask, error) {
+	pos, err := r.nextTaskPosition("todo")
+	if err != nil {
+		return nil, err
+	}
+	var t DocsTask
+	err = r.db.QueryRow(
+		`INSERT INTO docs_tasks (title, status, position, visitor_id)
+		 VALUES ($1, 'todo', $2, $3)
+		 RETURNING id, title, status, position, visitor_id, created_at, updated_at`,
+		strings.TrimSpace(title), pos, visitorID,
+	).Scan(&t.ID, &t.Title, &t.Status, &t.Position, &t.VisitorID, &t.CreatedAt, &t.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	visitor, err := r.GetVisitor(visitorID)
+	if err != nil {
+		return nil, err
+	}
+	if visitor != nil {
+		t.DisplayName = visitor.DisplayName
+	}
+	return &t, nil
+}
+
+func (r *DocsPortalRepository) GetTask(id int64) (*DocsTask, error) {
+	var t DocsTask
+	err := r.db.QueryRow(
+		`SELECT t.id, t.title, t.status, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
+		 FROM docs_tasks t
+		 JOIN docs_visitors v ON v.id = t.visitor_id
+		 WHERE t.id = $1`,
+		id,
+	).Scan(&t.ID, &t.Title, &t.Status, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *string) (*DocsTask, error) {
+	task, err := r.GetTask(id)
+	if err != nil {
+		return nil, err
+	}
+	if task == nil {
+		return nil, nil
+	}
+
+	newTitle := task.Title
+	if title != nil {
+		newTitle = strings.TrimSpace(*title)
+	}
+	newStatus := task.Status
+	if status != nil {
+		newStatus = *status
+	}
+
+	newPos := task.Position
+	if status != nil && *status != task.Status {
+		pos, err := r.nextTaskPosition(newStatus)
+		if err != nil {
+			return nil, err
+		}
+		newPos = pos
+	}
+
+	_, err = r.db.Exec(
+		`UPDATE docs_tasks SET title = $1, status = $2, position = $3, updated_at = NOW() WHERE id = $4`,
+		newTitle, newStatus, newPos, id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return r.GetTask(id)
+}
+
+func (r *DocsPortalRepository) DeleteTask(id int64) error {
+	res, err := r.db.Exec(`DELETE FROM docs_tasks WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
