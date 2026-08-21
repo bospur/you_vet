@@ -1,4 +1,4 @@
-import { type DragEvent, type FormEvent, useCallback, useEffect, useState } from 'react'
+import { type DragEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   createTask,
@@ -10,7 +10,7 @@ import {
   type TaskStatus,
   type TaskTag,
 } from '../api'
-import { COLUMNS, nextPriority, PRIORITY_META, TAG_META, TASK_TAGS } from '../board'
+import { COLUMNS, nextPriority, PRIORITY_META, PRIORITY_ORDER, TAG_META, TASK_TAGS } from '../board'
 import { useVisitor } from '../visitor-context'
 
 export function BoardPage() {
@@ -26,6 +26,7 @@ export function BoardPage() {
   const { visitor, login, logout } = useVisitor()
   const [registerName, setRegisterName] = useState('')
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
+  const [filterTags, setFilterTags] = useState<TaskTag[]>([])
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -80,6 +81,17 @@ export function BoardPage() {
     } finally {
       setBusy(false)
     }
+  }
+
+  const visibleTasks = useMemo(() => {
+    if (filterTags.length === 0) return tasks
+    return tasks.filter((task) => task.tags.some((tag) => filterTags.includes(tag)))
+  }, [tasks, filterTags])
+
+  function toggleFilterTag(tag: TaskTag) {
+    setFilterTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    )
   }
 
   function toggleCreateTag(tag: TaskTag) {
@@ -235,6 +247,27 @@ export function BoardPage() {
         </form>
       )}
 
+      <div className="board-filters" role="group" aria-label="Фильтр по тегам">
+        <span className="board-filters-label">Для кого</span>
+        <button
+          type="button"
+          className={`board-filter-chip${filterTags.length === 0 ? ' is-on' : ''}`}
+          onClick={() => setFilterTags([])}
+        >
+          Все
+        </button>
+        {TASK_TAGS.map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            className={`board-filter-chip ${TAG_META[tag].className}${filterTags.includes(tag) ? ' is-on' : ''}`}
+            onClick={() => toggleFilterTag(tag)}
+          >
+            {TAG_META[tag].label}
+          </button>
+        ))}
+      </div>
+
       {loading ? <p className="comments-muted">Загрузка…</p> : null}
 
       <div className="board-columns">
@@ -249,11 +282,11 @@ export function BoardPage() {
             <h2>
               {col.title}
               <span className="board-column-count">
-                {tasks.filter((t) => t.status === col.status).length}
+                {visibleTasks.filter((t) => t.status === col.status).length}
               </span>
             </h2>
             <div className="board-cards">
-              {tasks
+              {visibleTasks
                 .filter((t) => t.status === col.status)
                 .map((task) => (
                   <article
@@ -323,31 +356,41 @@ export function BoardPage() {
                             </option>
                           ))}
                         </select>
-                        <button
-                          type="button"
-                          className="board-open"
-                          disabled={busy}
-                          onClick={() => setOpenId(task.id)}
-                        >
-                          Открыть
-                        </button>
-                        <button
-                          type="button"
-                          className="board-delete"
-                          disabled={busy}
-                          onClick={() => removeTask(task.id)}
-                        >
-                          Удалить
-                        </button>
+                        <div className="board-card-icons">
+                          <button
+                            type="button"
+                            className="board-icon-btn board-open"
+                            disabled={busy}
+                            aria-label="Открыть"
+                            title="Открыть"
+                            onClick={() => setOpenId(task.id)}
+                          >
+                            <OpenIcon />
+                          </button>
+                          <button
+                            type="button"
+                            className="board-icon-btn board-delete"
+                            disabled={busy}
+                            aria-label="Удалить"
+                            title="Удалить"
+                            onClick={() => removeTask(task.id)}
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        className="board-open"
-                        onClick={() => setOpenId(task.id)}
-                      >
-                        Открыть
-                      </button>
+                      <div className="board-card-icons">
+                        <button
+                          type="button"
+                          className="board-icon-btn board-open"
+                          aria-label="Открыть"
+                          title="Открыть"
+                          onClick={() => setOpenId(task.id)}
+                        >
+                          <OpenIcon />
+                        </button>
+                      </div>
                     )}
                   </article>
                 ))}
@@ -454,9 +497,21 @@ function TaskModal({
                   ))}
                 </select>
               </label>
-              <span className={`board-priority ${PRIORITY_META[task.priority].className}`}>
-                {PRIORITY_META[task.priority].label}
-              </span>
+              <label>
+                Срочность
+                <select
+                  className="board-status-select"
+                  value={task.priority}
+                  disabled={busy}
+                  onChange={(e) => onPatch({ priority: e.target.value as TaskPriority })}
+                >
+                  {PRIORITY_ORDER.map((level) => (
+                    <option key={level} value={level}>
+                      {PRIORITY_META[level].label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           ) : null}
           {visitor && editing ? (
@@ -508,12 +563,49 @@ function TaskModal({
                 Править описание
               </button>
             ) : null}
-            <button type="button" className="board-delete" disabled={busy} onClick={onDelete}>
-              Удалить
+            <button
+              type="button"
+              className="board-icon-btn board-delete"
+              disabled={busy}
+              aria-label="Удалить"
+              title="Удалить"
+              onClick={onDelete}
+            >
+              <TrashIcon />
             </button>
           </div>
         ) : null}
       </div>
     </div>
+  )
+}
+
+function OpenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+      />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m6 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m4 4v7m6-7v7"
+      />
+    </svg>
   )
 }
