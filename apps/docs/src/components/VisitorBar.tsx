@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { clearSession, loadVisitor, registerVisitor } from '../api'
+import { useVisitor } from '../visitor'
 
 export function VisitorBar() {
-  const [visitor, setVisitor] = useState(() => loadVisitor())
+  const { visitor, login, logout } = useVisitor()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
@@ -11,18 +11,12 @@ export function VisitorBar() {
     if (name.trim().length < 2) return
     setBusy(true)
     try {
-      const v = await registerVisitor(name)
-      setVisitor(v)
+      await login(name)
       setOpen(false)
       setName('')
     } finally {
       setBusy(false)
     }
-  }
-
-  function logout() {
-    clearSession()
-    setVisitor(null)
   }
 
   if (visitor) {

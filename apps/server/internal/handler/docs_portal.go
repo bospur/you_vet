@@ -18,13 +18,15 @@ import (
 
 const docsTokenTTL = 365 * 24 * time.Hour
 
+// Должен совпадать со slug в apps/docs/src/pages.ts (кроме канбана /board).
 var allowedDocSlugs = map[string]struct{}{
-	"project-for-devs":      {},
-	"roadmap":               {},
-	"rustore-app":           {},
-	"mobile":                {},
-	"booking-for-clinic":    {},
-	"phase-5-appointments":  {},
+	"project-for-devs":     {},
+	"roadmap":              {},
+	"rustore-app":          {},
+	"mobile":               {},
+	"booking-for-clinic":   {},
+	"phase-5-appointments": {},
+	"sales":                {},
 }
 
 type DocsPortalHandler struct {
@@ -61,8 +63,10 @@ type docsTaskPatchBody struct {
 }
 
 var allowedTaskStatuses = map[string]struct{}{
+	"analysis":    {},
 	"todo":        {},
 	"in_progress": {},
+	"testing":     {},
 	"done":        {},
 }
 

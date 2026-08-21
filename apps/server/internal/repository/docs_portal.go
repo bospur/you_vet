@@ -157,7 +157,13 @@ func (r *DocsPortalRepository) ListTasks() ([]DocsTask, error) {
 		 FROM docs_tasks t
 		 JOIN docs_visitors v ON v.id = t.visitor_id
 		 ORDER BY
-		   CASE t.status WHEN 'todo' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,
+		   CASE t.status
+		     WHEN 'analysis' THEN 0
+		     WHEN 'todo' THEN 1
+		     WHEN 'in_progress' THEN 2
+		     WHEN 'testing' THEN 3
+		     ELSE 4
+		   END,
 		   CASE t.priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END,
 		   t.position ASC,
 		   t.id ASC`,

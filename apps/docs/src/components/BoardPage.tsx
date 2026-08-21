@@ -4,22 +4,23 @@ import {
   createTask,
   deleteTask,
   fetchTasks,
-  loadVisitor,
-  registerVisitor,
   updateTask,
   type DocsTask,
   type TaskPriority,
   type TaskStatus,
 } from '../api'
 import { nextPriority, PRIORITY_META } from '../board'
+import { useVisitor } from '../visitor'
 
 const COLUMNS: { status: TaskStatus; title: string }[] = [
+  { status: 'analysis', title: 'Анализ' },
   { status: 'todo', title: 'К выполнению' },
   { status: 'in_progress', title: 'В работе' },
+  { status: 'testing', title: 'Тестирование' },
   { status: 'done', title: 'Готова' },
 ]
 
-const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'done']
+const STATUS_ORDER: TaskStatus[] = ['analysis', 'todo', 'in_progress', 'testing', 'done']
 
 function neighborStatus(status: TaskStatus, dir: -1 | 1): TaskStatus | null {
   const i = STATUS_ORDER.indexOf(status)
@@ -28,8 +29,10 @@ function neighborStatus(status: TaskStatus, dir: -1 | 1): TaskStatus | null {
 }
 
 const MOVE_LABEL: Record<TaskStatus, string> = {
+  analysis: 'Анализ',
   todo: 'К выполнению',
   in_progress: 'В работу',
+  testing: 'Тестирование',
   done: 'Готово',
 }
 
@@ -40,7 +43,7 @@ export function BoardPage() {
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState<TaskPriority>('normal')
   const [busy, setBusy] = useState(false)
-  const [visitor, setVisitor] = useState(() => loadVisitor())
+  const { visitor, login, logout } = useVisitor()
   const [registerName, setRegisterName] = useState('')
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
 
@@ -65,8 +68,7 @@ export function BoardPage() {
     setBusy(true)
     setError('')
     try {
-      const v = await registerVisitor(registerName)
-      setVisitor(v)
+      await login(registerName)
       setRegisterName('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка регистрации')
@@ -87,7 +89,7 @@ export function BoardPage() {
       setPriority('normal')
     } catch (err) {
       if (err instanceof Error && err.message === 'auth_required') {
-        setVisitor(null)
+        logout()
         setError('Войдите, чтобы создавать задачи')
       } else {
         setError(err instanceof Error ? err.message : 'Ошибка создания')
