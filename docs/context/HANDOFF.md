@@ -2,50 +2,60 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-08-21 (домен `bospur.ru` + портал + канбан + husky)
+## Сессия 2026-08-21 (канбан: теги, модалка, фильтр, адаптив 1920–320)
 
-Ветка: **`work-doc-portal`** (синхрон с `origin`). В `dev` / prod портал попадёт после merge + push `dev`.
+Ветка: **`work-doc-portal`**. В `dev` / prod — после merge + push `dev` (`deploy-docs` + `deploy-server`).
+
+Локально могут быть незакоммиченные правки иконок «Открыть» / «Удалить» — проверить `git status` перед merge.
 
 ### Prod / smoke
 
 | Проверка | Результат |
 |---|---|
-| DNS `api/admin/app/docs.bospur.ru` | ✅ `213.176.65.71` |
-| HTTPS nginx | ✅ 200 admin/app/docs; API 404/405/initData |
-| Certs Let's Encrypt | ✅ до 2026-11-19, webroot |
-| `x-ui` / xray на `:443` | ✅ `disable --now x-ui` |
-| GitHub `VITE_API_URL`, VPS `.env` | ✅ пользователь |
-| Комментарии `/sales` | ✅ slug в `allowedDocSlugs` (нужен deploy server, если ещё не уехал) |
-| Канбан колонки Анализ / Тестирование | 🟡 код + миграция **025** — нужен **deploy-server** |
-| Pre-commit husky + lint-staged | ✅ в репо; после `npm install` |
+| DNS / HTTPS `*.bospur.ru` | ✅ с прошлой сессии |
+| Комменты: правка и удаление | 🟡 в коде; вход с тем же именем восстанавливает visitor |
+| Канбан теги / описание / фильтр | 🟡 код + миграция **026** — нужен **deploy-server** |
+| Канбан колонки Анализ / Тестирование | 🟡 миграция **025** — если ещё не на VPS, уедет вместе с 026 |
 
-### Сделано
+### Сделано (портал `/board` + комментарии)
 
-**Инфра / домен**
-- `*.snzbeachvolleyball25.ru` → `*.bospur.ru` (nginx на VPS, certs, CORS, cookie `.bospur.ru`, fallback URL, `deploy-docs.yml`).
-- **appId** `ru.snzbeachvolleyball25.vetpraktika` **не** менять.
-- На VPS `:443` был занят xray — выключен, nginx HTTPS.
+**Комментарии**
+- Снова **Изменить** / **Удалить** (DELETE `/api/docs/v1/comments/{id}`).
+- Повторный вход с тем же именем → тот же `visitor` (`GetOrCreateVisitor`), а не новый id.
+- Если кнопок нет: выйти в шапке и войти тем же именем.
 
-**Портал `apps/docs` → https://docs.bospur.ru**
-- Актуализация всех разделов + **[Продажи](https://docs.bospur.ru/sales)** (`docs/md/portal/sales.md`).
-- Мобильная вёрстка: таблицы scroll, sticky header, 16px inputs, канбан кнопками.
-- Комменты: общая сессия шапка ↔ форма (`VisitorProvider` / `visitor-context.ts`).
-- Канбан: колонки **Анализ → К выполнению → В работе → Тестирование → Готова**; API `docs_tasks`; CORS к созданию с агента не относится (curl/API ок, браузер — origin `docs.bospur.ru`).
-- CI lint: хук `useVisitor` вынесен из файла провайдера (`react-refresh/only-export-components`).
-- Pre-commit: husky + lint-staged (eslint staged ts/tsx admin/app/docs/mobile).
+**Канбан**
+- Статус — выпадающий список колонок (не кнопки «соседняя»).
+- Карточка: модалка на десктопе; на телефоне **шторка снизу**.
+- Теги: менеджмент / разработка / заказчик. Фильтр **«Для кого»** над доской (Все или OR по тегам).
+- Описание в карточке и модалке; срочность меняется в модалке.
+- Иконки: открыть (развернуть) и удалить (корзина); ряд `.board-card-icons` для будущих кнопок.
+- Адаптив **1920→320**: `/board` широкий (`layout-wide`, ~1840px), колонки на всю высоту; с ~1100px листаются вбок; 640 — шторка, компактные карточки (превью описания скрыто).
+- Селект колонки в модалке компактный, не на всю ширину окна.
+
+**Сиды (миграция 026)** — после deploy-server в «К выполнению»:
+- разработка: C1 smoke, ADM-02, mobile sprint 5, APK, BotFather/VK, iOS, RuStore, PRD-05, фазы 6–9, markdown-редактор, INF-06/07;
+- менеджмент: пилот, `/sales`+памятка, 20 клиник, демо 25 мин, возражения, три книги, формула пилота.
+
+Автор сидов: visitor `YouVet`.
+
+**API / схема**
+- `docs_tasks.description`, `docs_tasks.tags` (`management` \| `development` \| `customer`).
+- Create/PATCH задач принимают description + tags.
 
 ### Не делать с агента без явной просьбы
 
-Писать карточки на доску через prod API (общий стейт). CORS это не блокирует.
+Писать карточки на доску через prod API (общий стейт).
 
 ### Следующий шаг
 
-1. Merge `work-doc-portal` → `dev` (если ещё не в prod): `deploy-docs` + `deploy-server` (slug `sales`, миграция 025).
-2. BotFather Mini App URL + VK: `https://app.bospur.ru/vk-callback.html`.
-3. APK: `VITE_API_URL=https://api.bospur.ru` → `npm run build` → `npx cap sync android`.
-4. **Mobile sprint 5** — booking; C1 smoke Mini App; ADM-02.
+1. Докоммитить иконки, если ещё unstaged. Merge `work-doc-portal` → `dev` → `deploy-docs` + `deploy-server` (**025+026**).
+2. Проверить https://docs.bospur.ru/board : фильтр, шторка, сиды в «К выполнению».
+3. BotFather Mini App URL + VK: `https://app.bospur.ru/vk-callback.html`.
+4. APK: `VITE_API_URL=https://api.bospur.ru` → `npm run build` → `npx cap sync android`.
+5. **Mobile sprint 5** — booking; C1 smoke; ADM-02.
 
 ### Ссылки
 
 - Портал: https://docs.bospur.ru · `/sales` · `/board`
-- [deployment.md](../md/general/deployment.md) · [sales.md](../md/portal/sales.md) · [development.md](../md/general/development.md) (pre-commit)
+- [roadmap.md](../md/portal/roadmap.md) · [sales.md](../md/portal/sales.md) · [deployment.md](../md/general/deployment.md)

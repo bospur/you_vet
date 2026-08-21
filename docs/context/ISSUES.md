@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-08-21 (передача)
+> Последнее обновление: 2026-08-21 (передача, канбан 026)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -93,6 +93,8 @@
 | DOC-08 | 🟡 | Коммент на `/sales` → «неизвестная страница» | **fixed** — `allowedDocSlugs` + `sales` |
 | DOC-09 | ⚪ | Вход в комментариях не обновляет шапку | **fixed** — общий `VisitorProvider` |
 | DOC-10 | ⚪ | Канбан: колонки Анализ / Тестирование | **in code** — миграция **025**, deploy server |
+| DOC-11 | 🟡 | Комменты: пропали правка/удаление | **fixed в коде** — GetOrCreateVisitor + DELETE; deploy server+docs |
+| DOC-12 | ⚪ | Канбан: теги, описание, фильтр, шторка, адаптив | **in code** — миграция **026**, deploy server+docs |
 
 ## Mobile (PRD-06)
 
@@ -128,7 +130,7 @@
 
 ## Следующие шаги
 
-1. Merge `work-doc-portal` → `dev` (портал + server 025)
+1. Merge `work-doc-portal` → `dev` (портал + server **025+026**)
 2. **Mobile sprint 5** — booking
 3. BotFather + VK на `app.bospur.ru`; пересборка APK
 4. **ADM-02** · C1 smoke Mini App
