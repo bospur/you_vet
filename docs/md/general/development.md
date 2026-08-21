@@ -68,6 +68,14 @@ dev           ← основная ветка, только через PR
 feature/...   fix/...   chore/...
 ```
 
+### Pre-commit
+
+На `git commit` husky запускает **lint-staged**: ESLint только по staged `.ts`/`.tsx` в `apps/docs`, `admin`, `app`, `mobile` (то же правило, что валит CI — в том числе `react-refresh/only-export-components`).
+
+После `npm install` в корне крючок ставится сам (`prepare`: husky). Обойти: `git commit --no-verify` — только если уверены.
+
+Go (`apps/server`) в хуке не гоняется; его ловит CI.
+
 ### Типичный флоу
 
 ```bash

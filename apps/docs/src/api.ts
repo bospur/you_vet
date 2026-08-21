@@ -16,7 +16,7 @@ export type DocsComment = {
   updated_at: string
 }
 
-export type TaskStatus = 'todo' | 'in_progress' | 'done'
+export type TaskStatus = 'analysis' | 'todo' | 'in_progress' | 'testing' | 'done'
 export type TaskPriority = 'low' | 'normal' | 'high'
 
 export type DocsTask = {

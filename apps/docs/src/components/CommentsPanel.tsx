@@ -1,13 +1,11 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import {
   fetchComments,
-  loadVisitor,
   patchComment,
   postComment,
-  registerVisitor,
   type DocsComment,
-  type DocsVisitor,
 } from '../api'
+import { useVisitor } from '../visitor-context'
 
 type Props = {
   pageSlug: string
@@ -18,7 +16,7 @@ function wasEdited(c: DocsComment): boolean {
 }
 
 export function CommentsPanel({ pageSlug }: Props) {
-  const [visitor, setVisitor] = useState<DocsVisitor | null>(() => loadVisitor())
+  const { visitor, login, logout } = useVisitor()
   const [comments, setComments] = useState<DocsComment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -52,8 +50,7 @@ export function CommentsPanel({ pageSlug }: Props) {
     setError('')
     setSubmitting(true)
     try {
-      const v = await registerVisitor(name)
-      setVisitor(v)
+      await login(name)
       setShowRegister(false)
       setName('')
     } catch (err) {
@@ -78,7 +75,7 @@ export function CommentsPanel({ pageSlug }: Props) {
       setBody('')
     } catch (err) {
       if (err instanceof Error && err.message === 'auth_required') {
-        setVisitor(null)
+        logout()
         setShowRegister(true)
         setError('Войдите снова, чтобы оставить комментарий')
       } else {
@@ -111,7 +108,7 @@ export function CommentsPanel({ pageSlug }: Props) {
       cancelEdit()
     } catch (err) {
       if (err instanceof Error && err.message === 'auth_required') {
-        setVisitor(null)
+        logout()
         setError('Войдите снова, чтобы редактировать')
       } else {
         setError(err instanceof Error ? err.message : 'Ошибка сохранения')

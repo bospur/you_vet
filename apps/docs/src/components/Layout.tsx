@@ -6,14 +6,16 @@ export function Layout() {
   return (
     <div className="layout">
       <header className="layout-header">
-        <Link to="/" className="layout-brand">
-          <CatLogo />
-          <div>
-            <div className="layout-brand-title">YouVet</div>
-            <div className="layout-brand-sub">Документация проекта</div>
-          </div>
-        </Link>
-        <VisitorBar />
+        <div className="layout-header-inner">
+          <Link to="/" className="layout-brand">
+            <CatLogo />
+            <div>
+              <div className="layout-brand-title">YouVet</div>
+              <div className="layout-brand-sub">Документация проекта</div>
+            </div>
+          </Link>
+          <VisitorBar />
+        </div>
       </header>
       <main className="layout-main">
         <Outlet />
