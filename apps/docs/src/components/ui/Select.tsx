@@ -48,13 +48,13 @@ export function Select<T extends string>(props: SelectProps<T>) {
 
   useLayoutEffect(() => {
     if (!open) return
-    const trigger = rootRef.current
     const menu = menuRef.current
-    if (!trigger || !menu) return
 
     function placeMenu() {
-      if (!trigger || !menu) return
-      const rect = trigger.getBoundingClientRect()
+      const el = rootRef.current
+      const panel = menuRef.current
+      if (!el || !panel) return
+      const rect = el.getBoundingClientRect()
       const vw = window.innerWidth
       const vh = window.innerHeight
       const maxH = Math.min(options.length * 40 + 12, 280, vh - 16)
@@ -62,16 +62,16 @@ export function Select<T extends string>(props: SelectProps<T>) {
       const openUp = vh - rect.bottom < maxH && rect.top > vh - rect.bottom
       const width = Math.max(rect.width, size === 'sm' ? 148 : 168)
       const left = Math.min(Math.max(8, rect.left), Math.max(8, vw - width - 8))
-      menu.style.left = `${left}px`
-      menu.style.width = `${width}px`
-      menu.style.maxHeight = `${maxH}px`
-      menu.style.top = openUp ? 'auto' : `${rect.bottom + gap}px`
-      menu.style.bottom = openUp ? `${vh - rect.top + gap}px` : 'auto'
+      panel.style.left = `${left}px`
+      panel.style.width = `${width}px`
+      panel.style.maxHeight = `${maxH}px`
+      panel.style.top = openUp ? 'auto' : `${rect.bottom + gap}px`
+      panel.style.bottom = openUp ? `${vh - rect.top + gap}px` : 'auto'
     }
 
     placeMenu()
-    menu.focus()
-    menu.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
+    menu?.focus()
+    menu?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
 
     function onPointerDown(e: PointerEvent) {
       const t = e.target as Node
@@ -79,11 +79,11 @@ export function Select<T extends string>(props: SelectProps<T>) {
       setOpen(false)
     }
 
-    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('pointerdown', onPointerDown, true)
     window.addEventListener('resize', placeMenu)
     window.addEventListener('scroll', placeMenu, true)
     return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('pointerdown', onPointerDown, true)
       window.removeEventListener('resize', placeMenu)
       window.removeEventListener('scroll', placeMenu, true)
     }
@@ -166,17 +166,25 @@ export function Select<T extends string>(props: SelectProps<T>) {
       <LuChevronDown className="ui-select-chevron" size={14} aria-hidden />
       {open
         ? createPortal(
-            <div
-              ref={menuRef}
-              id={listId}
-              className={`ui-select-menu ui-select-menu-${size}`}
-              role="listbox"
-              tabIndex={-1}
-              aria-multiselectable={multiple || undefined}
-              aria-label={ariaLabel}
-              onKeyDown={onMenuKey}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
+            <>
+              <div
+                className="ui-select-backdrop"
+                aria-hidden
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  setOpen(false)
+                }}
+              />
+              <div
+                ref={menuRef}
+                id={listId}
+                className={`ui-select-menu ui-select-menu-${size}`}
+                role="listbox"
+                tabIndex={-1}
+                aria-multiselectable={multiple || undefined}
+                aria-label={ariaLabel}
+                onKeyDown={onMenuKey}
+              >
               {options.map((opt, i) => {
                 const isOn = selectedSet.has(opt.value)
                 return (
@@ -200,7 +208,8 @@ export function Select<T extends string>(props: SelectProps<T>) {
                   </button>
                 )
               })}
-            </div>,
+              </div>
+            </>,
             document.body,
           )
         : null}

@@ -8,8 +8,8 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Link } from 'react-router-dom'
-import { LuChevronLeft, LuChevronRight, LuExpand, LuPencil, LuTrash2 } from 'react-icons/lu'
+import { Link, useSearchParams } from 'react-router-dom'
+import { LuCheck, LuChevronLeft, LuChevronRight, LuExpand, LuLink, LuPencil, LuTrash2 } from 'react-icons/lu'
 import {
   createTask,
   deleteTask,
@@ -37,13 +37,25 @@ import { useVisitor } from '../visitor-context'
 import { BoardDrawer } from './ui/BoardDrawer'
 import { Select } from './ui/Select'
 
+function parseTaskId(params: URLSearchParams): number | null {
+  const raw = params.get('task')
+  if (!raw || !/^\d+$/.test(raw)) return null
+  const id = Number(raw)
+  return id > 0 ? id : null
+}
+
+function taskHref(id: number) {
+  return { pathname: '/board', search: `?task=${id}` }
+}
+
 export function BoardPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const openId = parseTaskId(searchParams)
   const [tasks, setTasks] = useState<DocsTask[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [formBusy, setFormBusy] = useState(false)
   const [pendingIds, setPendingIds] = useState<ReadonlySet<number>>(() => new Set())
-  const [openId, setOpenId] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
   const { visitor, login, logout } = useVisitor()
   const [registerName, setRegisterName] = useState('')
@@ -53,6 +65,21 @@ export function BoardPage() {
   tasksRef.current = tasks
   const columnsRef = useRef<HTMLDivElement>(null)
   const [activeCol, setActiveCol] = useState<TaskStatus>('analysis')
+
+  const setTaskQuery = useCallback(
+    (id: number | null, replace = false) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        const current = next.get('task')
+        const nextVal = id == null ? null : String(id)
+        if (current === nextVal) return prev
+        if (nextVal == null) next.delete('task')
+        else next.set('task', nextVal)
+        return next
+      }, { replace })
+    },
+    [setSearchParams],
+  )
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -72,6 +99,17 @@ export function BoardPage() {
 
   const openTask = tasks.find((t) => t.id === openId) ?? null
   const [canDrag, setCanDrag] = useState(false)
+
+  useEffect(() => {
+    if (openId != null) setCreating(false)
+  }, [openId])
+
+  useEffect(() => {
+    if (loading || openId == null) return
+    if (tasks.some((t) => t.id === openId)) return
+    setError('Задача не найдена или удалена')
+    setTaskQuery(null, true)
+  }, [loading, openId, tasks, setTaskQuery])
 
   useEffect(() => {
     const mq = window.matchMedia('(hover: hover) and (pointer: fine)')
@@ -166,6 +204,7 @@ export function BoardPage() {
         const task = await createTask(input)
         setTasks((prev) => [...prev, task])
         setCreating(false)
+        setTaskQuery(task.id)
       } catch (err) {
         if (err instanceof Error && err.message === 'auth_required') {
           logout()
@@ -178,7 +217,7 @@ export function BoardPage() {
         setFormBusy(false)
       }
     },
-    [logout],
+    [logout, setTaskQuery],
   )
 
   const markPending = useCallback((id: number, on: boolean) => {
@@ -218,13 +257,13 @@ export function BoardPage() {
     try {
       await deleteTask(id)
       setTasks((prev) => prev.filter((t) => t.id !== id))
-      setOpenId((current) => (current === id ? null : current))
+      if (openId === id) setTaskQuery(null, true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления')
     } finally {
       markPending(id, false)
     }
-  }, [markPending])
+  }, [markPending, openId, setTaskQuery])
 
   const onDragStart = useCallback((e: DragEvent, taskId: number) => {
     e.dataTransfer.setData('text/plain', String(taskId))
@@ -252,10 +291,9 @@ export function BoardPage() {
 
   const onDragLeaveColumn = useCallback(() => setDragOver(null), [])
 
-  const openTaskModal = useCallback((id: number) => {
-    setCreating(false)
-    setOpenId(id)
-  }, [])
+  const closeTaskModal = useCallback(() => {
+    setTaskQuery(null, true)
+  }, [setTaskQuery])
 
   return (
     <div className="board-page">
@@ -266,8 +304,8 @@ export function BoardPage() {
       <header className="board-header">
         <h1>Задачи команды</h1>
         <p className="board-lead">
-          Карточку можно открыть целиком. Статус — в списке колонок. На телефоне колонки
-          листаются вбок, карточка выезжает снизу.
+          Карточку можно открыть целиком и поделиться ссылкой. Статус — в списке колонок.
+          На телефоне колонки листаются вбок, карточка выезжает снизу.
         </p>
       </header>
 
@@ -316,7 +354,7 @@ export function BoardPage() {
             type="button"
             className="board-btn board-btn-primary board-add-btn"
             onClick={() => {
-              setOpenId(null)
+              closeTaskModal()
               setCreating(true)
             }}
           >
@@ -344,7 +382,6 @@ export function BoardPage() {
             onDragLeave={onDragLeaveColumn}
             onDrop={onDropColumn}
             onDragStart={onDragStart}
-            onOpen={openTaskModal}
             onPatch={patchTask}
             onDelete={removeTask}
           />
@@ -367,7 +404,7 @@ export function BoardPage() {
           task={openTask}
           visitor={!!visitor}
           pending={pendingIds.has(openTask.id)}
-          onClose={() => setOpenId(null)}
+          onClose={closeTaskModal}
           onPatch={(patch) => patchTask(openTask.id, patch)}
           onDelete={() => removeTask(openTask.id)}
         />
@@ -445,7 +482,6 @@ const BoardColumn = memo(function BoardColumn({
   onDragLeave,
   onDrop,
   onDragStart,
-  onOpen,
   onPatch,
   onDelete,
 }: {
@@ -460,7 +496,6 @@ const BoardColumn = memo(function BoardColumn({
   onDragLeave: () => void
   onDrop: (e: DragEvent, status: TaskStatus) => void
   onDragStart: (e: DragEvent, taskId: number) => void
-  onOpen: (id: number) => void
   onPatch: (id: number, patch: TaskPatch) => void
   onDelete: (id: number) => void
 }) {
@@ -485,7 +520,6 @@ const BoardColumn = memo(function BoardColumn({
             canDrag={canDrag}
             pending={pendingIds.has(task.id)}
             onDragStart={onDragStart}
-            onOpen={onOpen}
             onPatch={onPatch}
             onDelete={onDelete}
           />
@@ -501,7 +535,6 @@ const BoardCard = memo(function BoardCard({
   canDrag,
   pending,
   onDragStart,
-  onOpen,
   onPatch,
   onDelete,
 }: {
@@ -510,7 +543,6 @@ const BoardCard = memo(function BoardCard({
   canDrag: boolean
   pending: boolean
   onDragStart: (e: DragEvent, taskId: number) => void
-  onOpen: (id: number) => void
   onPatch: (id: number, patch: TaskPatch) => void
   onDelete: (id: number) => void
 }) {
@@ -521,9 +553,9 @@ const BoardCard = memo(function BoardCard({
       onDragStart={(e) => onDragStart(e, task.id)}
     >
       <div className="board-card-top">
-        <button type="button" className="board-card-title" onClick={() => onOpen(task.id)}>
+        <Link to={taskHref(task.id)} className="board-card-title">
           {task.title}
-        </button>
+        </Link>
         {visitor ? (
           <button
             type="button"
@@ -566,16 +598,14 @@ const BoardCard = memo(function BoardCard({
             }}
           />
           <div className="board-card-icons">
-            <button
-              type="button"
+            <Link
+              to={taskHref(task.id)}
               className="board-icon-btn board-open"
-              disabled={pending}
               aria-label="Открыть"
               title="Открыть"
-              onClick={() => onOpen(task.id)}
             >
               <LuExpand size={16} aria-hidden />
-            </button>
+            </Link>
             <button
               type="button"
               className="board-icon-btn board-delete"
@@ -590,15 +620,14 @@ const BoardCard = memo(function BoardCard({
         </div>
       ) : (
         <div className="board-card-icons">
-          <button
-            type="button"
+          <Link
+            to={taskHref(task.id)}
             className="board-icon-btn board-open"
             aria-label="Открыть"
             title="Открыть"
-            onClick={() => onOpen(task.id)}
           >
             <LuExpand size={16} aria-hidden />
-          </button>
+          </Link>
         </div>
       )}
     </article>
@@ -722,18 +751,21 @@ function TaskModal({
       titleId={`task-modal-${task.id}`}
       onClose={onClose}
       footer={
-        visitor ? (
-          <button
-            type="button"
-            className="board-icon-btn board-delete"
-            disabled={pending}
-            aria-label="Удалить"
-            title="Удалить"
-            onClick={onDelete}
-          >
-            <LuTrash2 size={16} aria-hidden />
-          </button>
-        ) : null
+        <>
+          <CopyTaskLinkButton taskId={task.id} />
+          {visitor ? (
+            <button
+              type="button"
+              className="board-icon-btn board-delete"
+              disabled={pending}
+              aria-label="Удалить"
+              title="Удалить"
+              onClick={onDelete}
+            >
+              <LuTrash2 size={16} aria-hidden />
+            </button>
+          ) : null}
+        </>
       }
     >
           <p className="board-card-meta">
@@ -839,6 +871,35 @@ function TaskModal({
             </div>
           )}
     </BoardDrawer>
+  )
+}
+
+function CopyTaskLinkButton({ taskId }: { taskId: number }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    const url = new URL(window.location.href)
+    url.searchParams.set('task', String(taskId))
+    try {
+      await navigator.clipboard.writeText(url.toString())
+    } catch {
+      window.prompt('Ссылка на задачу', url.toString())
+      return
+    }
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1600)
+  }
+
+  return (
+    <button
+      type="button"
+      className="board-icon-btn"
+      aria-label={copied ? 'Скопировано' : 'Скопировать ссылку'}
+      title={copied ? 'Скопировано' : 'Скопировать ссылку'}
+      onClick={() => void copy()}
+    >
+      {copied ? <LuCheck size={16} aria-hidden /> : <LuLink size={16} aria-hidden />}
+    </button>
   )
 }
 
