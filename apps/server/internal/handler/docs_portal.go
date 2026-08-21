@@ -52,14 +52,18 @@ type docsCommentPatchBody struct {
 }
 
 type docsTaskBody struct {
-	Title    string `json:"title"`
-	Priority string `json:"priority"`
+	Title       string   `json:"title"`
+	Priority    string   `json:"priority"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
 }
 
 type docsTaskPatchBody struct {
-	Title    *string `json:"title"`
-	Status   *string `json:"status"`
-	Priority *string `json:"priority"`
+	Title       *string   `json:"title"`
+	Status      *string   `json:"status"`
+	Priority    *string   `json:"priority"`
+	Description *string   `json:"description"`
+	Tags        *[]string `json:"tags"`
 }
 
 var allowedTaskStatuses = map[string]struct{}{
@@ -76,6 +80,14 @@ var allowedTaskPriorities = map[string]struct{}{
 	"high":   {},
 }
 
+var allowedTaskTags = map[string]struct{}{
+	"management":  {},
+	"development": {},
+	"customer":    {},
+}
+
+const maxTaskDescriptionRunes = 4000
+
 func (h *DocsPortalHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req docsRegisterBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -89,7 +101,7 @@ func (h *DocsPortalHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	visitor, err := h.repo.CreateVisitor(name)
+	visitor, err := h.repo.GetOrCreateVisitor(name)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -207,6 +219,31 @@ func (h *DocsPortalHandler) UpdateComment(w http.ResponseWriter, r *http.Request
 	})
 }
 
+func (h *DocsPortalHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.DocsClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "неверный id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.DeleteComment(id, claims.VisitorID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "не найдено или нет прав", http.StatusForbidden)
+			return
+		}
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *DocsPortalHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 	items, err := h.repo.ListTasks()
 	if err != nil {
@@ -249,7 +286,19 @@ func (h *DocsPortalHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.repo.CreateTask(claims.VisitorID, title, priority)
+	description := strings.TrimSpace(req.Description)
+	if utf8.RuneCountInString(description) > maxTaskDescriptionRunes {
+		http.Error(w, "описание: до 4000 символов", http.StatusBadRequest)
+		return
+	}
+
+	tags, err := normalizeTaskTags(req.Tags)
+	if err != nil {
+		http.Error(w, "неверный тег", http.StatusBadRequest)
+		return
+	}
+
+	task, err := h.repo.CreateTask(claims.VisitorID, title, priority, description, tags)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -277,7 +326,7 @@ func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Title == nil && req.Status == nil && req.Priority == nil {
+	if req.Title == nil && req.Status == nil && req.Priority == nil && req.Description == nil && req.Tags == nil {
 		http.Error(w, "нет полей для обновления", http.StatusBadRequest)
 		return
 	}
@@ -305,7 +354,26 @@ func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	task, err := h.repo.UpdateTask(id, req.Title, req.Status, req.Priority)
+	if req.Description != nil {
+		description := strings.TrimSpace(*req.Description)
+		if utf8.RuneCountInString(description) > maxTaskDescriptionRunes {
+			http.Error(w, "описание: до 4000 символов", http.StatusBadRequest)
+			return
+		}
+		req.Description = &description
+	}
+
+	var tags *[]string
+	if req.Tags != nil {
+		normalized, err := normalizeTaskTags(*req.Tags)
+		if err != nil {
+			http.Error(w, "неверный тег", http.StatusBadRequest)
+			return
+		}
+		tags = &normalized
+	}
+
+	task, err := h.repo.UpdateTask(id, req.Title, req.Status, req.Priority, req.Description, tags)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -356,9 +424,15 @@ func commentToJSON(c repository.DocsComment) map[string]any {
 }
 
 func taskToJSON(t repository.DocsTask) map[string]any {
+	tags := t.Tags
+	if tags == nil {
+		tags = []string{}
+	}
 	return map[string]any{
 		"id":           t.ID,
 		"title":        t.Title,
+		"description":  t.Description,
+		"tags":         tags,
 		"status":       t.Status,
 		"priority":     t.Priority,
 		"position":     t.Position,
@@ -366,6 +440,26 @@ func taskToJSON(t repository.DocsTask) map[string]any {
 		"created_at":   t.CreatedAt.UTC().Format(time.RFC3339),
 		"updated_at":   t.UpdatedAt.UTC().Format(time.RFC3339),
 	}
+}
+
+func normalizeTaskTags(in []string) ([]string, error) {
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, raw := range in {
+		tag := strings.TrimSpace(raw)
+		if tag == "" {
+			continue
+		}
+		if _, ok := allowedTaskTags[tag]; !ok {
+			return nil, errors.New("invalid tag")
+		}
+		if _, dup := seen[tag]; dup {
+			continue
+		}
+		seen[tag] = struct{}{}
+		out = append(out, tag)
+	}
+	return out, nil
 }
 
 func (h *DocsPortalHandler) signToken(visitorID int64, displayName string) (string, error) {

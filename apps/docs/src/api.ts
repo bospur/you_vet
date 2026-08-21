@@ -18,10 +18,13 @@ export type DocsComment = {
 
 export type TaskStatus = 'analysis' | 'todo' | 'in_progress' | 'testing' | 'done'
 export type TaskPriority = 'low' | 'normal' | 'high'
+export type TaskTag = 'management' | 'development' | 'customer'
 
 export type DocsTask = {
   id: number
   title: string
+  description: string
+  tags: TaskTag[]
   status: TaskStatus
   priority: TaskPriority
   position: number
@@ -34,6 +37,15 @@ export type TaskPatch = {
   status?: TaskStatus
   priority?: TaskPriority
   title?: string
+  description?: string
+  tags?: TaskTag[]
+}
+
+export type CreateTaskInput = {
+  title: string
+  priority?: TaskPriority
+  description?: string
+  tags?: TaskTag[]
 }
 
 const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.bospur.ru'
@@ -50,11 +62,20 @@ function handleAuthError(res: Response) {
   }
 }
 
+function normalizeTask(raw: DocsTask): DocsTask {
+  return {
+    ...raw,
+    description: raw.description ?? '',
+    tags: Array.isArray(raw.tags) ? raw.tags : [],
+  }
+}
+
 export function loadVisitor(): DocsVisitor | null {
   const raw = localStorage.getItem(VISITOR_KEY)
   if (!raw) return null
   try {
-    return JSON.parse(raw) as DocsVisitor
+    const visitor = JSON.parse(raw) as DocsVisitor
+    return { ...visitor, id: Number(visitor.id) }
   } catch {
     return null
   }
@@ -62,7 +83,7 @@ export function loadVisitor(): DocsVisitor | null {
 
 export function saveSession(token: string, visitor: DocsVisitor) {
   localStorage.setItem(STORAGE_KEY, token)
-  localStorage.setItem(VISITOR_KEY, JSON.stringify(visitor))
+  localStorage.setItem(VISITOR_KEY, JSON.stringify({ ...visitor, id: Number(visitor.id) }))
 }
 
 export function clearSession() {
@@ -81,8 +102,9 @@ export async function registerVisitor(displayName: string): Promise<DocsVisitor>
     throw new Error(text || 'Не удалось зарегистрироваться')
   }
   const data = (await res.json()) as { token: string; visitor: DocsVisitor }
-  saveSession(data.token, data.visitor)
-  return data.visitor
+  const visitor = { ...data.visitor, id: Number(data.visitor.id) }
+  saveSession(data.token, visitor)
+  return visitor
 }
 
 export async function fetchComments(pageSlug: string): Promise<DocsComment[]> {
@@ -91,7 +113,7 @@ export async function fetchComments(pageSlug: string): Promise<DocsComment[]> {
   )
   if (!res.ok) throw new Error('Не удалось загрузить комментарии')
   const data = (await res.json()) as { comments: DocsComment[] }
-  return data.comments
+  return data.comments.map((c) => ({ ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }))
 }
 
 export async function postComment(pageSlug: string, body: string): Promise<DocsComment> {
@@ -109,7 +131,8 @@ export async function postComment(pageSlug: string, body: string): Promise<DocsC
     throw new Error(text || 'Не удалось отправить комментарий')
   }
   const data = (await res.json()) as { comment: DocsComment }
-  return data.comment
+  const c = data.comment
+  return { ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }
 }
 
 export async function patchComment(id: number, body: string): Promise<DocsComment> {
@@ -127,27 +150,42 @@ export async function patchComment(id: number, body: string): Promise<DocsCommen
     throw new Error(text || 'Не удалось изменить комментарий')
   }
   const data = (await res.json()) as { comment: DocsComment }
-  return data.comment
+  const c = data.comment
+  return { ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }
+}
+
+export async function deleteComment(id: number): Promise<void> {
+  const res = await fetch(`${apiBase}/api/docs/v1/comments/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+  handleAuthError(res)
+  if (!res.ok && res.status !== 204) {
+    const text = await res.text()
+    throw new Error(text || 'Не удалось удалить комментарий')
+  }
 }
 
 export async function fetchTasks(): Promise<DocsTask[]> {
   const res = await fetch(`${apiBase}/api/docs/v1/tasks`)
   if (!res.ok) throw new Error('Не удалось загрузить задачи')
   const data = (await res.json()) as { tasks: DocsTask[] }
-  return data.tasks
+  return data.tasks.map(normalizeTask)
 }
 
-export async function createTask(
-  title: string,
-  priority: TaskPriority = 'normal',
-): Promise<DocsTask> {
+export async function createTask(input: CreateTaskInput): Promise<DocsTask> {
   const res = await fetch(`${apiBase}/api/docs/v1/tasks`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
     },
-    body: JSON.stringify({ title: title.trim(), priority }),
+    body: JSON.stringify({
+      title: input.title.trim(),
+      priority: input.priority ?? 'normal',
+      description: input.description?.trim() ?? '',
+      tags: input.tags ?? [],
+    }),
   })
   handleAuthError(res)
   if (!res.ok) {
@@ -155,7 +193,7 @@ export async function createTask(
     throw new Error(text || 'Не удалось создать задачу')
   }
   const data = (await res.json()) as { task: DocsTask }
-  return data.task
+  return normalizeTask(data.task)
 }
 
 export async function updateTask(id: number, patch: TaskPatch): Promise<DocsTask> {
@@ -173,7 +211,7 @@ export async function updateTask(id: number, patch: TaskPatch): Promise<DocsTask
     throw new Error(text || 'Не удалось обновить задачу')
   }
   const data = (await res.json()) as { task: DocsTask }
-  return data.task
+  return normalizeTask(data.task)
 }
 
 export async function deleteTask(id: number): Promise<void> {

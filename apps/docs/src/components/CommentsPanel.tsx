@@ -1,9 +1,11 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import {
+  deleteComment,
   fetchComments,
   patchComment,
   postComment,
   type DocsComment,
+  type DocsVisitor,
 } from '../api'
 import { useVisitor } from '../visitor-context'
 
@@ -13,6 +15,11 @@ type Props = {
 
 function wasEdited(c: DocsComment): boolean {
   return new Date(c.updated_at).getTime() - new Date(c.created_at).getTime() > 2000
+}
+
+function isOwnComment(visitor: DocsVisitor | null, c: DocsComment): boolean {
+  if (!visitor) return false
+  return Number(visitor.id) === Number(c.visitor_id)
 }
 
 export function CommentsPanel({ pageSlug }: Props) {
@@ -118,11 +125,32 @@ export function CommentsPanel({ pageSlug }: Props) {
     }
   }
 
+  async function handleDelete(c: DocsComment) {
+    if (!window.confirm('Удалить комментарий?')) return
+    setError('')
+    setSubmitting(true)
+    try {
+      await deleteComment(c.id)
+      setComments((prev) => prev.filter((item) => item.id !== c.id))
+      if (editingId === c.id) cancelEdit()
+    } catch (err) {
+      if (err instanceof Error && err.message === 'auth_required') {
+        logout()
+        setError('Войдите снова, чтобы удалить')
+      } else {
+        setError(err instanceof Error ? err.message : 'Ошибка удаления')
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <section className="comments">
       <h2>Комментарии</h2>
       <p className="comments-hint">
-        Анонимная регистрация — только имя для подписи. Свои комментарии можно редактировать.
+        Свои комментарии можно изменить или удалить. Если кнопок нет — выйдите в шапке и
+        войдите с тем же именем.
       </p>
 
       {loading ? <p className="comments-muted">Загрузка…</p> : null}
@@ -161,15 +189,26 @@ export function CommentsPanel({ pageSlug }: Props) {
               </form>
             ) : (
               <>
-                <p>{c.body}</p>
-                {visitor?.id === c.visitor_id ? (
-                  <button
-                    type="button"
-                    className="comment-edit-btn"
-                    onClick={() => startEdit(c)}
-                  >
-                    Изменить
-                  </button>
+                <p className="comment-body">{c.body}</p>
+                {isOwnComment(visitor, c) ? (
+                  <div className="comment-actions">
+                    <button
+                      type="button"
+                      className="comment-action-btn"
+                      disabled={submitting}
+                      onClick={() => startEdit(c)}
+                    >
+                      Изменить
+                    </button>
+                    <button
+                      type="button"
+                      className="comment-action-btn comment-action-delete"
+                      disabled={submitting}
+                      onClick={() => handleDelete(c)}
+                    >
+                      Удалить
+                    </button>
+                  </div>
                 ) : null}
               </>
             )}
@@ -197,7 +236,7 @@ export function CommentsPanel({ pageSlug }: Props) {
             />
           </label>
           <button type="submit" disabled={submitting}>
-            {submitting ? '…' : 'Зарегистрироваться'}
+            {submitting ? '…' : 'Войти'}
           </button>
         </form>
       ) : null}
