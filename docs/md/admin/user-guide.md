@@ -1,6 +1,6 @@
 # Инструкция по работе с админкой
 
-**Адрес:** https://admin.snzbeachvolleyball25.ru
+**Адрес:** https://admin.bospur.ru
 
 ---
 

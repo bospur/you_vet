@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getTelegramInitData } from '../utils/telegramInitData';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.bospur.ru';
 const CLINIC_SLUG = import.meta.env.VITE_CLINIC_SLUG ?? 'default';
 
 export const apiClient = axios.create({

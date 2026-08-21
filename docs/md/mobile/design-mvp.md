@@ -589,7 +589,7 @@ export default config;
 
 | Variable | Пример | Назначение |
 |---|---|---|
-| `VITE_API_URL` | `https://api.snzbeachvolleyball25.ru` | API host |
+| `VITE_API_URL` | `https://api.bospur.ru` | API host |
 | `VITE_CLINIC_SLUG` | `default` | Клиника |
 | `VITE_BOT_USERNAME` | `VPract_bot` | Deep link |
 | `VITE_MOBILE_API_PREFIX` | `/api/mobile/v1` | Префикс |

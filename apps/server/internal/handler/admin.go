@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -351,6 +352,10 @@ func (h *AdminHandler) UpdateArticleStatus(w http.ResponseWriter, r *http.Reques
 
 	article, err := h.articleRepo.UpdateStatus(claims.ClinicID, id, body.Status)
 	if err != nil {
+		if errors.Is(err, repository.ErrArticleNoAnimal) {
+			http.Error(w, "сначала выберите животное и сохраните статью", http.StatusBadRequest)
+			return
+		}
 		log.Printf("ошибка обновления статуса статьи: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return

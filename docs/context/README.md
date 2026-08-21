@@ -28,7 +28,7 @@
 2. Фаза 5 (запись) — [../md/phases/phase-5-appointments.md](../md/phases/phase-5-appointments.md)
 3. Полный аудит — [../md/general/audit.md](../md/general/audit.md)
 3. Markdown-документация — [../README.md](../README.md)
-4. HTML-портал для команды — https://docs.snzbeachvolleyball25.ru
+4. HTML-портал для команды — https://docs.bospur.ru
 
 ## Правило синхронизации
 

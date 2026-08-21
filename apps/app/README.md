@@ -3,7 +3,7 @@
 Telegram Mini App для ветеринарной клиники.
 Позволяет владельцам животных получить информацию первой помощи и расписание врачей прямо в Telegram.
 
-**Prod:** https://app.snzbeachvolleyball25.ru
+**Prod:** https://app.bospur.ru
 **Бот:** @VPract_bot
 
 ## Стек
@@ -29,7 +29,7 @@ npm run dev
 
 | Переменная | Описание | Пример |
 |---|---|---|
-| `VITE_API_URL` | Базовый URL бэкенда | `https://api.snzbeachvolleyball25.ru` |
+| `VITE_API_URL` | Базовый URL бэкенда | `https://api.bospur.ru` |
 | `VITE_CLINIC_SLUG` | Slug клиники | `default` |
 
 ## Экраны

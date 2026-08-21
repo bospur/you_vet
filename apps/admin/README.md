@@ -3,7 +3,7 @@
 Административная панель для ветеринарного Telegram Mini App.
 Управление контентом: животные, категории, статьи, врачи, расписание, груминг, пользователи.
 
-**Prod:** https://admin.snzbeachvolleyball25.ru
+**Prod:** https://admin.bospur.ru
 
 ## Стек
 
@@ -31,7 +31,7 @@ npm run dev
 
 | Переменная | Описание | Пример |
 |---|---|---|
-| `VITE_API_URL` | Базовый URL бэкенда | `https://api.snzbeachvolleyball25.ru` |
+| `VITE_API_URL` | Базовый URL бэкенда | `https://api.bospur.ru` |
 | `VITE_CLINIC_SLUG` | Slug клиники (для публичных путей, если нужен) | `default` |
 
 ## Роли

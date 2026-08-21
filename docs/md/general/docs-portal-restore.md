@@ -1,4 +1,4 @@
-# Восстановление docs-портала (docs.snzbeachvolleyball25.ru)
+# Восстановление docs-портала (docs.bospur.ru)
 
 > Статус диагностики: **2026-06-09** — портал сломан после переезда.
 
@@ -6,8 +6,8 @@
 
 | Проверка | Ожидание | Факт |
 |---|---|---|
-| `https://docs.snzbeachvolleyball25.ru/` | HTML-портал (`index.html`, roadmap…) | Отдаётся **admin SPA** (`vp-bot-admin`) |
-| SSL-сертификат | `CN=docs.snzbeachvolleyball25.ru` | Сертификат **admin.snzbeachvolleyball25.ru** |
+| `https://docs.bospur.ru/` | HTML-портал (`index.html`, roadmap…) | Отдаётся **admin SPA** (`vp-bot-admin`) |
+| SSL-сертификат | `CN=docs.bospur.ru` | Сертификат **admin.bospur.ru** |
 | `curl` без `-k` | Успех | **Ошибка SSL** (hostname mismatch) |
 
 **Вывод:** Nginx для поддомена `docs` **не включён** (`sites-enabled` только admin, api, app). Запросы на `docs.*` попадают в default HTTPS vhost → admin. TLS для `docs` не выпущен.
@@ -40,7 +40,7 @@ sudo chown -R deploy:deploy /var/www/you-vet-docs   # или www-data — как
 sudo tee /etc/nginx/sites-available/docs.conf <<'EOF'
 server {
     listen 80;
-    server_name docs.snzbeachvolleyball25.ru;
+    server_name docs.bospur.ru;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -58,29 +58,29 @@ sudo ln -sf /etc/nginx/sites-available/docs.conf /etc/nginx/sites-enabled/docs.c
 sudo nginx -t && sudo systemctl reload nginx
 
 # 3. Проверка: challenge path отвечает (не 404)
-curl -sI http://docs.snzbeachvolleyball25.ru/ | head -3
+curl -sI http://docs.bospur.ru/ | head -3
 
 # 4. Сертификат
-sudo certbot certonly --webroot -w /var/www/certbot -d docs.snzbeachvolleyball25.ru
+sudo certbot certonly --webroot -w /var/www/certbot -d docs.bospur.ru
 
 # 5. Полный конфиг из репо (HTTP→HTTPS + SSL)
 sudo cp /tmp/docs.conf /etc/nginx/sites-available/docs.conf
 sudo nginx -t && sudo systemctl reload nginx
 
 # 6. Smoke
-curl -sI https://docs.snzbeachvolleyball25.ru/ | head -5
-curl -s https://docs.snzbeachvolleyball25.ru/ | head -5
+curl -sI https://docs.bospur.ru/ | head -5
+curl -s https://docs.bospur.ru/ | head -5
 ```
 
-Файл `~/docs.snzbeachvolleyball25.ru.conf` был залит на **старый** VPS под пользователем `deploy` — на новом хосте его нет, берите `apps/server/nginx/docs.conf` из репозитория.
+Файл `~/docs.bospur.ru.conf` был залит на **старый** VPS под пользователем `deploy` — на новом хосте его нет, берите `apps/server/nginx/docs.conf` из репозитория.
 
-Если certbot снова 404 — проверить DNS: `dig +short docs.snzbeachvolleyball25.ru` должен показывать IP **текущего** VPS.
+Если certbot снова 404 — проверить DNS: `dig +short docs.bospur.ru` должен показывать IP **текущего** VPS.
 
 ## Как должно быть
 
 | Параметр | Значение |
 |---|---|
-| Домен | `docs.snzbeachvolleyball25.ru` |
+| Домен | `docs.bospur.ru` |
 | Nginx `root` | `/var/www/you-vet-docs` |
 | Содержимое | Статика из репо `docs/html/*` |
 | Деплой | GitHub Actions `deploy-docs.yml` на push `dev` + `docs/**` |
@@ -109,7 +109,7 @@ sudo grep -r "docs.snzbeachvolleyball25" /etc/nginx/sites-enabled/
 
 Должен быть server block с:
 
-- `server_name docs.snzbeachvolleyball25.ru;`
+- `server_name docs.bospur.ru;`
 - `root /var/www/you-vet-docs;`
 
 Если конфига нет — скопировать из репозитория:
@@ -117,9 +117,9 @@ sudo grep -r "docs.snzbeachvolleyball25" /etc/nginx/sites-enabled/
 ```bash
 # на VPS, из клона репо (или scp с локальной машины)
 sudo cp /home/deploy/you_vet/apps/server/nginx/docs.conf \
-  /etc/nginx/sites-available/docs.snzbeachvolleyball25.ru
-sudo ln -sf /etc/nginx/sites-available/docs.snzbeachvolleyball25.ru \
-  /etc/nginx/sites-enabled/docs.snzbeachvolleyball25.ru
+  /etc/nginx/sites-available/docs.bospur.ru
+sudo ln -sf /etc/nginx/sites-available/docs.bospur.ru \
+  /etc/nginx/sites-enabled/docs.bospur.ru
 ```
 
 > Если полного клона на VPS нет — скопировать файл с локальной машины:
@@ -131,14 +131,14 @@ sudo ln -sf /etc/nginx/sites-available/docs.snzbeachvolleyball25.ru \
 Проверить наличие сертификата:
 
 ```bash
-sudo ls /etc/letsencrypt/live/docs.snzbeachvolleyball25.ru/
+sudo ls /etc/letsencrypt/live/docs.bospur.ru/
 ```
 
 Если каталога нет — выпустить (webroot как в admin/app):
 
 ```bash
 sudo certbot certonly --webroot -w /var/www/certbot \
-  -d docs.snzbeachvolleyball25.ru
+  -d docs.bospur.ru
 ```
 
 Убедиться, что в `docs.conf` пути к `fullchain.pem` и `privkey.pem` совпадают с выводом certbot.
@@ -170,16 +170,16 @@ Workflow использует `strip_components: 2`, т.е. на сервере 
 ### Шаг 6. Smoke-тест
 
 ```bash
-curl -sI https://docs.snzbeachvolleyball25.ru/ | head -5
-curl -s https://docs.snzbeachvolleyball25.ru/ | head -20
-curl -sI https://docs.snzbeachvolleyball25.ru/mobile.html | head -3
+curl -sI https://docs.bospur.ru/ | head -5
+curl -s https://docs.bospur.ru/ | head -20
+curl -sI https://docs.bospur.ru/mobile.html | head -3
 ```
 
 Успех:
 
 - HTTP 200
 - В теле — HTML документации, не React admin
-- `openssl s_client … -servername docs…` → `CN=docs.snzbeachvolleyball25.ru`
+- `openssl s_client … -servername docs…` → `CN=docs.bospur.ru`
 
 ## Частая причина поломки при переезде
 

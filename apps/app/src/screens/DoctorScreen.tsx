@@ -5,7 +5,7 @@ import { Preloader } from '../components/Preloader/Preloader';
 import { DoctorAvatar } from '../components/DoctorAvatar/DoctorAvatar';
 import styles from './DoctorScreen.module.css';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
+const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.bospur.ru';
 
 const DAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 

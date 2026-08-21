@@ -27,7 +27,7 @@ jobs:
 
       - name: Build docs portal
         env:
-          VITE_API_URL: https://api.snzbeachvolleyball25.ru
+          VITE_API_URL: https://api.bospur.ru
         run: npm run build --workspace=@you-vet/docs-portal
 
       - name: Deploy to VPS

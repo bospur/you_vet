@@ -1,6 +1,6 @@
 # API Reference
 
-Base URL: `https://api.snzbeachvolleyball25.ru`
+Base URL: `https://api.bospur.ru`
 
 Admin-эндпоинты требуют авторизацию через **httpOnly cookie** `vp_admin_token` (устанавливается при login) или заголовок `Authorization: Bearer <JWT>` (fallback для тестов).
 

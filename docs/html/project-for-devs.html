@@ -118,9 +118,9 @@
   <div class="subtitle">SaaS-платформа для ветеринарных клиник · Telegram Mini App + Веб-панель</div>
   <div class="meta">
     <a href="https://github.com/bospur/you_vet">GitHub: bospur/you_vet</a>
-    <a href="https://admin.snzbeachvolleyball25.ru">Admin Panel (prod)</a>
-    <a href="https://api.snzbeachvolleyball25.ru">API (prod)</a>
-    <a href="https://app.snzbeachvolleyball25.ru">Mini App (prod)</a>
+    <a href="https://admin.bospur.ru">Admin Panel (prod)</a>
+    <a href="https://api.bospur.ru">API (prod)</a>
+    <a href="https://app.bospur.ru">Mini App (prod)</a>
     <a href="mobile.html">Mobile App (research)</a>
     <span style="color:#888; font-size:12px;">Обновлено: 2026-05-30</span>
   </div>
@@ -438,7 +438,7 @@ feature/*, fix/*, chore/*  ← рабочие ветки</code></pre>
   <tr><td><code>deploy-server.yml</code></td><td><code>apps/server/**</code></td><td>Сборка Docker образа → push в GHCR → SSH на VPS → <code>docker compose pull && up -d</code></td></tr>
   <tr><td><code>deploy-admin.yml</code></td><td><code>apps/admin/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → <code>vite build</code> → scp <code>dist/</code> на VPS</td></tr>
   <tr><td><code>deploy-app.yml</code></td><td><code>apps/app/**</code>, <code>packages/types/**</code></td><td><code>npm ci</code> → build → scp <code>dist/</code> на VPS</td></tr>
-  <tr><td><code>deploy-docs.yml</code></td><td><code>docs/**</code></td><td>scp <code>docs/html/*</code> → docs.snzbeachvolleyball25.ru</td></tr>
+  <tr><td><code>deploy-docs.yml</code></td><td><code>docs/**</code></td><td>scp <code>docs/html/*</code> → docs.bospur.ru</td></tr>
 </table>
 
 <div class="warn">
@@ -459,7 +459,7 @@ feature/*, fix/*, chore/*  ← рабочие ветки</code></pre>
   <tr><td>Go сервер</td><td>Docker (<code>/home/deploy/you_vet/apps/server</code>)</td></tr>
   <tr><td>Admin Panel</td><td>Nginx → <code>/var/www/vp-bot-admin/</code></td></tr>
   <tr><td>Mini App</td><td>Nginx → <code>/var/www/vp-bot-app/</code></td></tr>
-  <tr><td>Домены</td><td><code>api.*</code>, <code>admin.*</code>, <code>app.*</code> .snzbeachvolleyball25.ru</td></tr>
+  <tr><td>Домены</td><td><code>api.*</code>, <code>admin.*</code>, <code>app.*</code> .bospur.ru</td></tr>
 </table>
 
 

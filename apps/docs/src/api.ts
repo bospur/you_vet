@@ -36,7 +36,7 @@ export type TaskPatch = {
   title?: string
 }
 
-const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru'
+const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.bospur.ru'
 
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem(STORAGE_KEY)

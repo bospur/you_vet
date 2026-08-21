@@ -10,7 +10,7 @@
 | Название в сторе | **Ветпрактика** |
 | App ID (package) | `ru.snzbeachvolleyball25.vetpraktika` |
 | Клиника в сборке | `VITE_CLINIC_SLUG=default` |
-| API | `https://api.snzbeachvolleyball25.ru/api/mobile/v1` |
+| API | `https://api.bospur.ru/api/mobile/v1` |
 
 ---
 

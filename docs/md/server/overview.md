@@ -89,7 +89,7 @@ PostgreSQL
 | `TELEGRAM_BOT_TOKEN` | да | Токен Telegram бота |
 | `CLINIC_SLUG` | да | Slug клиники для бота |
 | `JWT_SECRET` | да | Секрет для подписи JWT |
-| `PUBLIC_URL` | нет | Базовый URL для фото (default: `https://api.snzbeachvolleyball25.ru`) |
+| `PUBLIC_URL` | нет | Базовый URL для фото (default: `https://api.bospur.ru`) |
 | `APP_URL` | нет | URL Mini App для кнопки в боте |
 | `UPLOADS_DIR` | нет | Путь к папке загрузок (default: `./uploads`) |
 | `ADMIN_LOGIN` | первый запуск | Логин первого admin |

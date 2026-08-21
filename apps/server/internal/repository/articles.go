@@ -2,9 +2,13 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 
 	"go-server/internal/slug"
 )
+
+// ErrArticleNoAnimal — нельзя опубликовать статью без привязки к животному.
+var ErrArticleNoAnimal = errors.New("article has no animal")
 
 // Article — структура статьи
 type Article struct {
@@ -68,54 +72,90 @@ func (r *ArticleRepository) resolveSlug(clinicID int, title, excludeID string) s
 // Create создаёт новую статью со статусом draft
 func (r *ArticleRepository) Create(clinicID int, input ArticleInput) (*Article, error) {
 	s := r.resolveSlug(clinicID, input.Title, "")
-	var a Article
-	err := r.db.QueryRow(`
+	row := r.db.QueryRow(`
 		INSERT INTO articles (clinic_id, animal_id, title, content, slug, status)
 		VALUES ($1, $2, $3, $4, $5, 'draft')
 		RETURNING id, animal_id, title, content, slug, status, featured
-	`, clinicID, input.AnimalID, input.Title, input.Content, s).
-		Scan(&a.ID, &a.AnimalID, &a.Title, &a.Content, &a.Slug, &a.Status, &a.Featured)
+	`, clinicID, input.AnimalID, input.Title, input.Content, s)
+	created, err := scanArticleRow(row)
 	if err != nil {
 		return nil, err
 	}
-	return &a, nil
+	return created, nil
 }
 
 // Update обновляет статью (slug пересчитывается из заголовка)
 func (r *ArticleRepository) Update(clinicID int, id string, input ArticleInput) (*Article, error) {
 	s := r.resolveSlug(clinicID, input.Title, id)
-	var a Article
-	err := r.db.QueryRow(`
+	row := r.db.QueryRow(`
 		UPDATE articles SET title=$1, content=$2, slug=$3, animal_id=$4, updated_at=NOW()
 		WHERE id=$5 AND clinic_id=$6
 		RETURNING id, animal_id, title, content, slug, status, featured
-	`, input.Title, input.Content, s, input.AnimalID, id, clinicID).
-		Scan(&a.ID, &a.AnimalID, &a.Title, &a.Content, &a.Slug, &a.Status, &a.Featured)
+	`, input.Title, input.Content, s, input.AnimalID, id, clinicID)
+	a, err := scanArticleRow(row)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
+	}
+	return a, nil
+}
+
+func scanArticleRow(row interface {
+	Scan(dest ...any) error
+}) (*Article, error) {
+	var a Article
+	var animalID sql.NullInt64
+	if err := row.Scan(&a.ID, &animalID, &a.Title, &a.Content, &a.Slug, &a.Status, &a.Featured); err != nil {
+		return nil, err
+	}
+	if animalID.Valid {
+		a.AnimalID = int(animalID.Int64)
 	}
 	return &a, nil
 }
 
 // UpdateStatus меняет статус статьи
 func (r *ArticleRepository) UpdateStatus(clinicID int, id, status string) (*Article, error) {
-	var a Article
-	err := r.db.QueryRow(`
+	if status == "published" {
+		var animalID sql.NullInt64
+		err := r.db.QueryRow(
+			`SELECT animal_id FROM articles WHERE id = $1 AND clinic_id = $2`,
+			id, clinicID,
+		).Scan(&animalID)
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		if !animalID.Valid || animalID.Int64 <= 0 {
+			return nil, ErrArticleNoAnimal
+		}
+		ok, err := r.AnimalBelongsToClinic(clinicID, int(animalID.Int64))
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, ErrArticleNoAnimal
+		}
+	}
+
+	row := r.db.QueryRow(`
 		UPDATE articles SET status=$1, featured = CASE WHEN $1 = 'draft' THEN false ELSE featured END, updated_at=NOW()
 		WHERE id=$2 AND clinic_id=$3
 		RETURNING id, animal_id, title, content, slug, status, featured
-	`, status, id, clinicID).
-		Scan(&a.ID, &a.AnimalID, &a.Title, &a.Content, &a.Slug, &a.Status, &a.Featured)
+	`, status, id, clinicID)
+
+	a, err := scanArticleRow(row)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &a, nil
+	return a, nil
 }
 
 // GetStatus возвращает текущий статус статьи
@@ -248,20 +288,19 @@ func (r *ArticleRepository) CountFeatured(clinicID int, excludeID string) (int, 
 
 // UpdateFeatured включает/выключает показ статьи на главной
 func (r *ArticleRepository) UpdateFeatured(clinicID int, id string, featured bool) (*Article, error) {
-	var a Article
-	err := r.db.QueryRow(`
+	row := r.db.QueryRow(`
 		UPDATE articles SET featured = $1, updated_at = NOW()
 		WHERE id = $2 AND clinic_id = $3
 		RETURNING id, animal_id, title, content, slug, status, featured
-	`, featured, id, clinicID).
-		Scan(&a.ID, &a.AnimalID, &a.Title, &a.Content, &a.Slug, &a.Status, &a.Featured)
+	`, featured, id, clinicID)
+	a, err := scanArticleRow(row)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &a, nil
+	return a, nil
 }
 
 // GetFeaturedPublished возвращает опубликованные статьи для блока на главной
