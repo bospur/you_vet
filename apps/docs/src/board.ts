@@ -24,10 +24,38 @@ export const TAG_META: Record<TaskTag, { label: string; className: string }> = {
 
 export const TASK_TAGS: TaskTag[] = ['management', 'development', 'customer']
 
+export const TAG_OPTIONS: { value: TaskTag; label: string }[] = TASK_TAGS.map((tag) => ({
+  value: tag,
+  label: TAG_META[tag].label,
+}))
+
+export const TAG_SELECT_OPTIONS: { value: TaskTag | ''; label: string }[] = [
+  { value: '', label: 'Не указано' },
+  ...TAG_OPTIONS,
+]
+
 export const COLUMNS: { status: TaskStatus; title: string }[] = [
   { status: 'analysis', title: 'Анализ' },
   { status: 'todo', title: 'К выполнению' },
   { status: 'in_progress', title: 'В работе' },
   { status: 'testing', title: 'Тестирование' },
   { status: 'done', title: 'Готова' },
+]
+
+export const COLUMN_OPTIONS: { value: TaskStatus; label: string }[] = COLUMNS.map((col) => ({
+  value: col.status,
+  label: col.title,
+}))
+
+export const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = PRIORITY_ORDER.map(
+  (level) => ({
+    value: level,
+    label: PRIORITY_META[level].label,
+  }),
+)
+
+export const PRIORITY_CREATE_OPTIONS: { value: TaskPriority; label: string }[] = [
+  { value: 'low', label: 'Низкая важность' },
+  { value: 'normal', label: 'Обычная' },
+  { value: 'high', label: 'Срочно' },
 ]

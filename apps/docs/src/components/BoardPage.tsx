@@ -1,32 +1,58 @@
-import { type DragEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  memo,
+  type DragEvent,
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Link } from 'react-router-dom'
+import { LuChevronLeft, LuChevronRight, LuExpand, LuPencil, LuTrash2 } from 'react-icons/lu'
 import {
   createTask,
   deleteTask,
   fetchTasks,
   updateTask,
   type DocsTask,
+  type TaskPatch,
+  type CreateTaskInput,
   type TaskPriority,
   type TaskStatus,
   type TaskTag,
 } from '../api'
-import { COLUMNS, nextPriority, PRIORITY_META, PRIORITY_ORDER, TAG_META, TASK_TAGS } from '../board'
+import {
+  COLUMNS,
+  COLUMN_OPTIONS,
+  nextPriority,
+  PRIORITY_CREATE_OPTIONS,
+  PRIORITY_META,
+  PRIORITY_OPTIONS,
+  TAG_META,
+  TAG_SELECT_OPTIONS,
+  TASK_TAGS,
+} from '../board'
 import { useVisitor } from '../visitor-context'
+import { BoardDrawer } from './ui/BoardDrawer'
+import { Select } from './ui/Select'
 
 export function BoardPage() {
   const [tasks, setTasks] = useState<DocsTask[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState<TaskPriority>('normal')
-  const [tags, setTags] = useState<TaskTag[]>([])
-  const [busy, setBusy] = useState(false)
+  const [formBusy, setFormBusy] = useState(false)
+  const [pendingIds, setPendingIds] = useState<ReadonlySet<number>>(() => new Set())
   const [openId, setOpenId] = useState<number | null>(null)
+  const [creating, setCreating] = useState(false)
   const { visitor, login, logout } = useVisitor()
   const [registerName, setRegisterName] = useState('')
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
   const [filterTags, setFilterTags] = useState<TaskTag[]>([])
+  const tasksRef = useRef(tasks)
+  tasksRef.current = tasks
+  const columnsRef = useRef<HTMLDivElement>(null)
+  const [activeCol, setActiveCol] = useState<TaskStatus>('analysis')
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -55,23 +81,47 @@ export function BoardPage() {
     return () => mq.removeEventListener('change', sync)
   }, [])
 
+  const scrollToColumn = useCallback((status: TaskStatus) => {
+    const root = columnsRef.current
+    const el = root?.querySelector(`[data-board-col="${status}"]`)
+    if (!root || !(el instanceof HTMLElement)) return
+    const delta = el.getBoundingClientRect().left - root.getBoundingClientRect().left
+    root.scrollBy({ left: delta, behavior: 'smooth' })
+    setActiveCol(status)
+  }, [])
+
   useEffect(() => {
-    if (openId === null) return
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpenId(null)
+    const root = columnsRef.current
+    if (!root) return
+    let frame = 0
+    function syncActive() {
+      frame = 0
+      if (!root) return
+      const origin = root.getBoundingClientRect().left
+      let best: { status: TaskStatus; dist: number } | null = null
+      for (const col of COLUMNS) {
+        const el = root.querySelector(`[data-board-col="${col.status}"]`)
+        if (!(el instanceof HTMLElement)) continue
+        const dist = Math.abs(el.getBoundingClientRect().left - origin)
+        if (!best || dist < best.dist) best = { status: col.status, dist }
+      }
+      if (best) setActiveCol(best.status)
     }
-    window.addEventListener('keydown', onKey)
+    function onScroll() {
+      if (frame) return
+      frame = requestAnimationFrame(syncActive)
+    }
+    root.addEventListener('scroll', onScroll, { passive: true })
+    syncActive()
     return () => {
-      document.body.style.overflow = prevOverflow
-      window.removeEventListener('keydown', onKey)
+      root.removeEventListener('scroll', onScroll)
+      if (frame) cancelAnimationFrame(frame)
     }
-  }, [openId])
+  }, [loading])
 
   async function handleRegister(e: FormEvent) {
     e.preventDefault()
-    setBusy(true)
+    setFormBusy(true)
     setError('')
     try {
       await login(registerName)
@@ -79,7 +129,7 @@ export function BoardPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка регистрации')
     } finally {
-      setBusy(false)
+      setFormBusy(false)
     }
   }
 
@@ -88,88 +138,124 @@ export function BoardPage() {
     return tasks.filter((task) => task.tags.some((tag) => filterTags.includes(tag)))
   }, [tasks, filterTags])
 
+  const tasksByStatus = useMemo(() => {
+    const grouped: Record<TaskStatus, DocsTask[]> = {
+      analysis: [],
+      todo: [],
+      in_progress: [],
+      testing: [],
+      done: [],
+    }
+    for (const task of visibleTasks) {
+      grouped[task.status].push(task)
+    }
+    return grouped
+  }, [visibleTasks])
+
   function toggleFilterTag(tag: TaskTag) {
     setFilterTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     )
   }
 
-  function toggleCreateTag(tag: TaskTag) {
-    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault()
-    if (!title.trim() || !visitor) return
-    setBusy(true)
-    setError('')
-    try {
-      const task = await createTask({ title, priority, description, tags })
-      setTasks((prev) => [...prev, task])
-      setTitle('')
-      setDescription('')
-      setPriority('normal')
-      setTags([])
-    } catch (err) {
-      if (err instanceof Error && err.message === 'auth_required') {
-        logout()
-        setError('Войдите, чтобы создавать задачи')
-      } else {
-        setError(err instanceof Error ? err.message : 'Ошибка создания')
+  const handleCreate = useCallback(
+    async (input: CreateTaskInput) => {
+      setFormBusy(true)
+      setError('')
+      try {
+        const task = await createTask(input)
+        setTasks((prev) => [...prev, task])
+        setCreating(false)
+      } catch (err) {
+        if (err instanceof Error && err.message === 'auth_required') {
+          logout()
+          setCreating(false)
+          setError('Войдите, чтобы создавать задачи')
+          return
+        }
+        throw err instanceof Error ? err : new Error('Ошибка создания')
+      } finally {
+        setFormBusy(false)
       }
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+    [logout],
+  )
 
-  async function patchTask(id: number, patch: Parameters<typeof updateTask>[1]) {
-    setBusy(true)
-    setError('')
-    try {
-      const updated = await updateTask(id, patch)
-      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка обновления')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const markPending = useCallback((id: number, on: boolean) => {
+    setPendingIds((prev) => {
+      if (on === prev.has(id)) return prev
+      const next = new Set(prev)
+      if (on) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }, [])
 
-  async function removeTask(id: number) {
+  const patchTask = useCallback(
+    async (id: number, patch: TaskPatch) => {
+      const snapshot = tasksRef.current.find((t) => t.id === id)
+      if (!snapshot) return
+      setError('')
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
+      markPending(id, true)
+      try {
+        const updated = await updateTask(id, patch)
+        setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+      } catch (err) {
+        setTasks((prev) => prev.map((t) => (t.id === id ? snapshot : t)))
+        setError(err instanceof Error ? err.message : 'Ошибка обновления')
+      } finally {
+        markPending(id, false)
+      }
+    },
+    [markPending],
+  )
+
+  const removeTask = useCallback(async (id: number) => {
     if (!window.confirm('Удалить задачу?')) return
-    setBusy(true)
     setError('')
+    markPending(id, true)
     try {
       await deleteTask(id)
       setTasks((prev) => prev.filter((t) => t.id !== id))
-      if (openId === id) setOpenId(null)
+      setOpenId((current) => (current === id ? null : current))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления')
     } finally {
-      setBusy(false)
+      markPending(id, false)
     }
-  }
+  }, [markPending])
 
-  function onDragStart(e: DragEvent, taskId: number) {
+  const onDragStart = useCallback((e: DragEvent, taskId: number) => {
     e.dataTransfer.setData('text/plain', String(taskId))
     e.dataTransfer.effectAllowed = 'move'
-  }
+  }, [])
 
-  function onDragOverColumn(e: DragEvent, status: TaskStatus) {
+  const onDragOverColumn = useCallback((e: DragEvent, status: TaskStatus) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
-    setDragOver(status)
-  }
+    setDragOver((prev) => (prev === status ? prev : status))
+  }, [])
 
-  async function onDropColumn(e: DragEvent, status: TaskStatus) {
-    e.preventDefault()
-    setDragOver(null)
-    if (!visitor) return
-    const taskId = Number(e.dataTransfer.getData('text/plain'))
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task || task.status === status) return
-    await patchTask(taskId, { status })
-  }
+  const onDropColumn = useCallback(
+    async (e: DragEvent, status: TaskStatus) => {
+      e.preventDefault()
+      setDragOver(null)
+      if (!visitor) return
+      const taskId = Number(e.dataTransfer.getData('text/plain'))
+      const task = tasksRef.current.find((t) => t.id === taskId)
+      if (!task || task.status === status) return
+      await patchTask(taskId, { status })
+    },
+    [visitor, patchTask],
+  )
+
+  const onDragLeaveColumn = useCallback(() => setDragOver(null), [])
+
+  const openTaskModal = useCallback((id: number) => {
+    setCreating(false)
+    setOpenId(id)
+  }, [])
 
   return (
     <div className="board-page">
@@ -197,216 +283,90 @@ export function BoardPage() {
               maxLength={40}
               required
             />
-            <button type="submit" disabled={busy}>
+            <button type="submit" disabled={formBusy}>
               Войти
             </button>
           </div>
         </form>
-      ) : (
-        <form className="board-create" onSubmit={handleCreate}>
-          <div className="board-create-row">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Новая задача…"
-              maxLength={200}
-              required
-            />
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as TaskPriority)}
-              aria-label="Важность"
-            >
-              <option value="low">Низкая важность</option>
-              <option value="normal">Обычная</option>
-              <option value="high">Срочно</option>
-            </select>
-            <button type="submit" disabled={busy || !title.trim()}>
-              Добавить
-            </button>
-          </div>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Описание (необязательно)"
-            rows={3}
-            maxLength={4000}
-          />
-          <div className="board-tag-picker" role="group" aria-label="Теги">
-            {TASK_TAGS.map((tag) => (
-              <label key={tag} className={`board-tag-option ${TAG_META[tag].className}`}>
-                <input
-                  type="checkbox"
-                  checked={tags.includes(tag)}
-                  onChange={() => toggleCreateTag(tag)}
-                />
-                {TAG_META[tag].label}
-              </label>
-            ))}
-          </div>
-        </form>
-      )}
+      ) : null}
 
-      <div className="board-filters" role="group" aria-label="Фильтр по тегам">
-        <span className="board-filters-label">Для кого</span>
-        <button
-          type="button"
-          className={`board-filter-chip${filterTags.length === 0 ? ' is-on' : ''}`}
-          onClick={() => setFilterTags([])}
-        >
-          Все
-        </button>
-        {TASK_TAGS.map((tag) => (
+      <div className="board-toolbar">
+        <div className="board-filters" role="group" aria-label="Фильтр по тегам">
+          <span className="board-filters-label">Для кого</span>
           <button
-            key={tag}
             type="button"
-            className={`board-filter-chip ${TAG_META[tag].className}${filterTags.includes(tag) ? ' is-on' : ''}`}
-            onClick={() => toggleFilterTag(tag)}
+            className={`board-filter-chip${filterTags.length === 0 ? ' is-on' : ''}`}
+            onClick={() => setFilterTags([])}
           >
-            {TAG_META[tag].label}
+            Все
           </button>
-        ))}
+          {TASK_TAGS.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className={`board-filter-chip ${TAG_META[tag].className}${filterTags.includes(tag) ? ' is-on' : ''}`}
+              onClick={() => toggleFilterTag(tag)}
+            >
+              {TAG_META[tag].label}
+            </button>
+          ))}
+        </div>
+        {visitor ? (
+          <button
+            type="button"
+            className="board-btn board-btn-primary board-add-btn"
+            onClick={() => {
+              setOpenId(null)
+              setCreating(true)
+            }}
+          >
+            Новая задача
+          </button>
+        ) : null}
       </div>
 
       {loading ? <p className="comments-muted">Загрузка…</p> : null}
 
-      <div className="board-columns">
+      <ColumnNav active={activeCol} byStatus={tasksByStatus} onSelect={scrollToColumn} />
+
+      <div className="board-columns" ref={columnsRef}>
         {COLUMNS.map((col) => (
-          <section
+          <BoardColumn
             key={col.status}
-            className={`board-column${dragOver === col.status ? ' board-column-over' : ''}`}
-            onDragOver={(e) => onDragOverColumn(e, col.status)}
-            onDragLeave={() => setDragOver(null)}
-            onDrop={(e) => onDropColumn(e, col.status)}
-          >
-            <h2>
-              {col.title}
-              <span className="board-column-count">
-                {visibleTasks.filter((t) => t.status === col.status).length}
-              </span>
-            </h2>
-            <div className="board-cards">
-              {visibleTasks
-                .filter((t) => t.status === col.status)
-                .map((task) => (
-                  <article
-                    key={task.id}
-                    className={`board-card ${PRIORITY_META[task.priority].className}`}
-                    draggable={canDrag && !!visitor && !busy}
-                    onDragStart={(e) => onDragStart(e, task.id)}
-                  >
-                    <div className="board-card-top">
-                      <button
-                        type="button"
-                        className="board-card-title"
-                        onClick={() => setOpenId(task.id)}
-                      >
-                        {task.title}
-                      </button>
-                      {visitor ? (
-                        <button
-                          type="button"
-                          className={`board-priority ${PRIORITY_META[task.priority].className}`}
-                          disabled={busy}
-                          title="Сменить важность"
-                          onClick={() =>
-                            patchTask(task.id, { priority: nextPriority(task.priority) })
-                          }
-                        >
-                          {PRIORITY_META[task.priority].label}
-                        </button>
-                      ) : (
-                        <span
-                          className={`board-priority board-priority-readonly ${PRIORITY_META[task.priority].className}`}
-                        >
-                          {PRIORITY_META[task.priority].label}
-                        </span>
-                      )}
-                    </div>
-                    {task.tags.length > 0 ? (
-                      <div className="board-tags">
-                        {task.tags.map((tag) =>
-                          TAG_META[tag] ? (
-                            <span key={tag} className={`board-tag ${TAG_META[tag].className}`}>
-                              {TAG_META[tag].label}
-                            </span>
-                          ) : null,
-                        )}
-                      </div>
-                    ) : null}
-                    {task.description ? (
-                      <p className="board-card-preview">{task.description}</p>
-                    ) : null}
-                    <p className="board-card-meta">{task.display_name}</p>
-                    {visitor ? (
-                      <div className="board-card-actions">
-                        <select
-                          className="board-status-select"
-                          value={task.status}
-                          disabled={busy}
-                          aria-label="Колонка"
-                          onChange={(e) => {
-                            const next = e.target.value as TaskStatus
-                            if (next !== task.status) patchTask(task.id, { status: next })
-                          }}
-                        >
-                          {COLUMNS.map((column) => (
-                            <option key={column.status} value={column.status}>
-                              {column.title}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="board-card-icons">
-                          <button
-                            type="button"
-                            className="board-icon-btn board-open"
-                            disabled={busy}
-                            aria-label="Открыть"
-                            title="Открыть"
-                            onClick={() => setOpenId(task.id)}
-                          >
-                            <OpenIcon />
-                          </button>
-                          <button
-                            type="button"
-                            className="board-icon-btn board-delete"
-                            disabled={busy}
-                            aria-label="Удалить"
-                            title="Удалить"
-                            onClick={() => removeTask(task.id)}
-                          >
-                            <TrashIcon />
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="board-card-icons">
-                        <button
-                          type="button"
-                          className="board-icon-btn board-open"
-                          aria-label="Открыть"
-                          title="Открыть"
-                          onClick={() => setOpenId(task.id)}
-                        >
-                          <OpenIcon />
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                ))}
-            </div>
-          </section>
+            title={col.title}
+            status={col.status}
+            tasks={tasksByStatus[col.status]}
+            isOver={dragOver === col.status}
+            visitor={!!visitor}
+            canDrag={canDrag}
+            pendingIds={pendingIds}
+            onDragOver={onDragOverColumn}
+            onDragLeave={onDragLeaveColumn}
+            onDrop={onDropColumn}
+            onDragStart={onDragStart}
+            onOpen={openTaskModal}
+            onPatch={patchTask}
+            onDelete={removeTask}
+          />
         ))}
       </div>
 
       {error ? <p className="comments-error">{error}</p> : null}
+
+      {creating ? (
+        <CreateTaskModal
+          busy={formBusy}
+          onClose={() => setCreating(false)}
+          onCreate={handleCreate}
+        />
+      ) : null}
 
       {openTask ? (
         <TaskModal
           key={openTask.id}
           task={openTask}
           visitor={!!visitor}
-          busy={busy}
+          pending={pendingIds.has(openTask.id)}
           onClose={() => setOpenId(null)}
           onPatch={(patch) => patchTask(openTask.id, patch)}
           onDelete={() => removeTask(openTask.id)}
@@ -416,104 +376,436 @@ export function BoardPage() {
   )
 }
 
+function ColumnNav({
+  active,
+  byStatus,
+  onSelect,
+}: {
+  active: TaskStatus
+  byStatus: Record<TaskStatus, DocsTask[]>
+  onSelect: (status: TaskStatus) => void
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const idx = COLUMNS.findIndex((col) => col.status === active)
+
+  useEffect(() => {
+    const track = trackRef.current
+    const pill = track?.querySelector<HTMLElement>('.board-col-nav-item.is-on')
+    if (!track || !pill) return
+    const left = pill.offsetLeft - (track.clientWidth - pill.offsetWidth) / 2
+    track.scrollTo({ left, behavior: 'smooth' })
+  }, [active])
+
+  return (
+    <nav className="board-col-nav" aria-label="Колонки доски">
+      <button
+        type="button"
+        className="board-col-nav-arrow"
+        disabled={idx <= 0}
+        aria-label="Предыдущая колонка"
+        onClick={() => onSelect(COLUMNS[idx - 1].status)}
+      >
+        <LuChevronLeft size={20} aria-hidden />
+      </button>
+      <div className="board-col-nav-track" ref={trackRef}>
+        {COLUMNS.map((col) => (
+          <button
+            key={col.status}
+            type="button"
+            className={`board-col-nav-item${active === col.status ? ' is-on' : ''}`}
+            onClick={() => onSelect(col.status)}
+          >
+            {col.title}
+            <span>{byStatus[col.status].length}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="board-col-nav-arrow"
+        disabled={idx >= COLUMNS.length - 1}
+        aria-label="Следующая колонка"
+        onClick={() => onSelect(COLUMNS[idx + 1].status)}
+      >
+        <LuChevronRight size={20} aria-hidden />
+      </button>
+    </nav>
+  )
+}
+
+const BoardColumn = memo(function BoardColumn({
+  title,
+  status,
+  tasks,
+  isOver,
+  visitor,
+  canDrag,
+  pendingIds,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragStart,
+  onOpen,
+  onPatch,
+  onDelete,
+}: {
+  title: string
+  status: TaskStatus
+  tasks: DocsTask[]
+  isOver: boolean
+  visitor: boolean
+  canDrag: boolean
+  pendingIds: ReadonlySet<number>
+  onDragOver: (e: DragEvent, status: TaskStatus) => void
+  onDragLeave: () => void
+  onDrop: (e: DragEvent, status: TaskStatus) => void
+  onDragStart: (e: DragEvent, taskId: number) => void
+  onOpen: (id: number) => void
+  onPatch: (id: number, patch: TaskPatch) => void
+  onDelete: (id: number) => void
+}) {
+  return (
+    <section
+      className={`board-column${isOver ? ' board-column-over' : ''}`}
+      data-board-col={status}
+      onDragOver={(e) => onDragOver(e, status)}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, status)}
+    >
+      <h2>
+        {title}
+        <span className="board-column-count">{tasks.length}</span>
+      </h2>
+      <div className="board-cards">
+        {tasks.map((task) => (
+          <BoardCard
+            key={task.id}
+            task={task}
+            visitor={visitor}
+            canDrag={canDrag}
+            pending={pendingIds.has(task.id)}
+            onDragStart={onDragStart}
+            onOpen={onOpen}
+            onPatch={onPatch}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+    </section>
+  )
+})
+
+const BoardCard = memo(function BoardCard({
+  task,
+  visitor,
+  canDrag,
+  pending,
+  onDragStart,
+  onOpen,
+  onPatch,
+  onDelete,
+}: {
+  task: DocsTask
+  visitor: boolean
+  canDrag: boolean
+  pending: boolean
+  onDragStart: (e: DragEvent, taskId: number) => void
+  onOpen: (id: number) => void
+  onPatch: (id: number, patch: TaskPatch) => void
+  onDelete: (id: number) => void
+}) {
+  return (
+    <article
+      className={`board-card ${PRIORITY_META[task.priority].className}`}
+      draggable={canDrag && visitor && !pending}
+      onDragStart={(e) => onDragStart(e, task.id)}
+    >
+      <div className="board-card-top">
+        <button type="button" className="board-card-title" onClick={() => onOpen(task.id)}>
+          {task.title}
+        </button>
+        {visitor ? (
+          <button
+            type="button"
+            className={`board-priority ${PRIORITY_META[task.priority].className}`}
+            disabled={pending}
+            title="Сменить важность"
+            onClick={() => onPatch(task.id, { priority: nextPriority(task.priority) })}
+          >
+            {PRIORITY_META[task.priority].label}
+          </button>
+        ) : (
+          <span className={`board-priority board-priority-readonly ${PRIORITY_META[task.priority].className}`}>
+            {PRIORITY_META[task.priority].label}
+          </span>
+        )}
+      </div>
+      {task.tags.length > 0 ? (
+        <div className="board-tags">
+          {task.tags.map((tag) =>
+            TAG_META[tag] ? (
+              <span key={tag} className={`board-tag ${TAG_META[tag].className}`}>
+                {TAG_META[tag].label}
+              </span>
+            ) : null,
+          )}
+        </div>
+      ) : null}
+      {task.description ? <p className="board-card-preview">{task.description}</p> : null}
+      <p className="board-card-meta">{task.display_name}</p>
+      {visitor ? (
+        <div className="board-card-actions">
+          <Select
+            size="sm"
+            value={task.status}
+            options={COLUMN_OPTIONS}
+            disabled={pending}
+            aria-label="Колонка"
+            onChange={(next) => {
+              if (next !== task.status) onPatch(task.id, { status: next })
+            }}
+          />
+          <div className="board-card-icons">
+            <button
+              type="button"
+              className="board-icon-btn board-open"
+              disabled={pending}
+              aria-label="Открыть"
+              title="Открыть"
+              onClick={() => onOpen(task.id)}
+            >
+              <LuExpand size={16} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="board-icon-btn board-delete"
+              disabled={pending}
+              aria-label="Удалить"
+              title="Удалить"
+              onClick={() => onDelete(task.id)}
+            >
+              <LuTrash2 size={16} aria-hidden />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="board-card-icons">
+          <button
+            type="button"
+            className="board-icon-btn board-open"
+            aria-label="Открыть"
+            title="Открыть"
+            onClick={() => onOpen(task.id)}
+          >
+            <LuExpand size={16} aria-hidden />
+          </button>
+        </div>
+      )}
+    </article>
+  )
+})
+
+function CreateTaskModal({
+  busy,
+  onClose,
+  onCreate,
+}: {
+  busy: boolean
+  onClose: () => void
+  onCreate: (input: CreateTaskInput) => Promise<void>
+}) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState<TaskPriority>('normal')
+  const [tags, setTags] = useState<TaskTag[]>([])
+  const [error, setError] = useState('')
+
+  function toggleTag(tag: TaskTag) {
+    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!title.trim()) return
+    setError('')
+    try {
+      await onCreate({ title: title.trim(), priority, description, tags })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка создания')
+    }
+  }
+
+  return (
+    <BoardDrawer
+      as="form"
+      title="Новая задача"
+      titleId="create-task-modal"
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          <button type="button" className="board-btn board-btn-secondary" onClick={onClose}>
+            Отмена
+          </button>
+          <button
+            type="submit"
+            className="board-btn board-btn-primary"
+            disabled={busy || !title.trim()}
+          >
+            Добавить
+          </button>
+        </>
+      }
+    >
+      <div className="board-create-form">
+            <label>
+              Название
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Что нужно сделать"
+                maxLength={200}
+                required
+                autoFocus
+              />
+            </label>
+            <label>
+              Срочность
+              <Select
+                value={priority}
+                options={PRIORITY_CREATE_OPTIONS}
+                onChange={setPriority}
+              />
+            </label>
+            <div className="board-create-field">
+              <span>Для кого</span>
+              <div className="board-tag-picker" role="group" aria-label="Теги">
+                {TASK_TAGS.map((tag) => (
+                  <label key={tag} className={`board-tag-option ${TAG_META[tag].className}`}>
+                    <input
+                      type="checkbox"
+                      checked={tags.includes(tag)}
+                      onChange={() => toggleTag(tag)}
+                    />
+                    {TAG_META[tag].label}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <label>
+              Описание
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Необязательно"
+                rows={5}
+                maxLength={4000}
+              />
+            </label>
+            {error ? <p className="comments-error">{error}</p> : null}
+          </div>
+    </BoardDrawer>
+  )
+}
+
 function TaskModal({
   task,
   visitor,
-  busy,
+  pending,
   onClose,
   onPatch,
   onDelete,
 }: {
   task: DocsTask
   visitor: boolean
-  busy: boolean
+  pending: boolean
   onClose: () => void
-  onPatch: (patch: Parameters<typeof updateTask>[1]) => void
+  onPatch: (patch: TaskPatch) => void
   onDelete: () => void
 }) {
   const [draft, setDraft] = useState(task.description)
   const [editing, setEditing] = useState(false)
 
-  function toggleTag(tag: TaskTag) {
-    const next = task.tags.includes(tag)
-      ? task.tags.filter((t) => t !== tag)
-      : [...task.tags, tag]
-    onPatch({ tags: next })
-  }
-
   return (
-    <div className="board-modal-overlay" onClick={onClose} role="presentation">
-      <div
-        className="board-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`task-modal-${task.id}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="board-modal-handle" aria-hidden />
-        <div className="board-modal-head">
-          <h2 id={`task-modal-${task.id}`}>{task.title}</h2>
-          <button type="button" className="board-modal-close" onClick={onClose}>
-            Закрыть
+    <BoardDrawer
+      title={task.title}
+      titleId={`task-modal-${task.id}`}
+      onClose={onClose}
+      footer={
+        visitor ? (
+          <button
+            type="button"
+            className="board-icon-btn board-delete"
+            disabled={pending}
+            aria-label="Удалить"
+            title="Удалить"
+            onClick={onDelete}
+          >
+            <LuTrash2 size={16} aria-hidden />
           </button>
-        </div>
-        <div className="board-modal-scroll">
+        ) : null
+      }
+    >
           <p className="board-card-meta">
             {task.display_name} · {new Date(task.updated_at).toLocaleString('ru-RU')}
           </p>
-          <div className="board-tags">
-            {TASK_TAGS.map((tag) =>
-              visitor ? (
-                <button
-                  key={tag}
-                  type="button"
-                  className={`board-tag board-tag-toggle ${TAG_META[tag].className}${task.tags.includes(tag) ? ' is-on' : ''}`}
-                  disabled={busy}
-                  onClick={() => toggleTag(tag)}
-                >
-                  {TAG_META[tag].label}
-                </button>
-              ) : task.tags.includes(tag) ? (
-                <span key={tag} className={`board-tag ${TAG_META[tag].className}`}>
-                  {TAG_META[tag].label}
-                </span>
-              ) : null,
-            )}
-          </div>
+          {!visitor && task.tags.length > 0 ? (
+            <div className="board-tags">
+              {task.tags.map((tag) =>
+                TAG_META[tag] ? (
+                  <span key={tag} className={`board-tag ${TAG_META[tag].className}`}>
+                    {TAG_META[tag].label}
+                  </span>
+                ) : null,
+              )}
+            </div>
+          ) : null}
           {visitor ? (
             <div className="board-modal-controls">
               <label>
                 Колонка
-                <select
-                  className="board-status-select"
+                <Select
                   value={task.status}
-                  disabled={busy}
-                  onChange={(e) => onPatch({ status: e.target.value as TaskStatus })}
-                >
-                  {COLUMNS.map((column) => (
-                    <option key={column.status} value={column.status}>
-                      {column.title}
-                    </option>
-                  ))}
-                </select>
+                  options={COLUMN_OPTIONS}
+                  disabled={pending}
+                  onChange={(status) => onPatch({ status })}
+                />
               </label>
               <label>
                 Срочность
-                <select
-                  className="board-status-select"
+                <Select
                   value={task.priority}
-                  disabled={busy}
-                  onChange={(e) => onPatch({ priority: e.target.value as TaskPriority })}
-                >
-                  {PRIORITY_ORDER.map((level) => (
-                    <option key={level} value={level}>
-                      {PRIORITY_META[level].label}
-                    </option>
-                  ))}
-                </select>
+                  options={PRIORITY_OPTIONS}
+                  disabled={pending}
+                  onChange={(level) => onPatch({ priority: level })}
+                />
+              </label>
+              <label>
+                Для кого
+                <Select
+                  value={task.tags[0] ?? ''}
+                  options={TAG_SELECT_OPTIONS}
+                  disabled={pending}
+                  onChange={(tag) => onPatch({ tags: tag ? [tag] : [] })}
+                />
               </label>
             </div>
           ) : null}
+          <div className="board-modal-desc-head">
+            <span>Описание</span>
+            {visitor && !editing ? (
+              <button
+                type="button"
+                className="board-icon-btn"
+                disabled={pending}
+                aria-label="Править описание"
+                title="Править описание"
+                onClick={() => setEditing(true)}
+              >
+                <LuPencil size={16} aria-hidden />
+              </button>
+            ) : null}
+          </div>
           {visitor && editing ? (
             <form
               className="board-modal-edit"
@@ -530,13 +822,13 @@ function TaskModal({
                 maxLength={4000}
                 autoFocus
               />
-              <div className="comment-edit-actions">
-                <button type="submit" disabled={busy}>
+              <div className="board-modal-edit-actions">
+                <button type="submit" className="board-btn board-btn-primary" disabled={pending}>
                   Сохранить
                 </button>
                 <button
                   type="button"
-                  className="link-btn"
+                  className="board-btn board-btn-secondary"
                   onClick={() => {
                     setDraft(task.description)
                     setEditing(false)
@@ -555,57 +847,7 @@ function TaskModal({
               )}
             </div>
           )}
-        </div>
-        {visitor ? (
-          <div className="board-modal-footer">
-            {!editing ? (
-              <button type="button" disabled={busy} onClick={() => setEditing(true)}>
-                Править описание
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className="board-icon-btn board-delete"
-              disabled={busy}
-              aria-label="Удалить"
-              title="Удалить"
-              onClick={onDelete}
-            >
-              <TrashIcon />
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </div>
+    </BoardDrawer>
   )
 }
 
-function OpenIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
-      <path
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
-      />
-    </svg>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
-      <path
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m6 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m4 4v7m6-7v7"
-      />
-    </svg>
-  )
-}
