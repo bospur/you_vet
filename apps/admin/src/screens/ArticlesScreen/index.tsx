@@ -48,7 +48,12 @@ export function ArticlesScreen() {
         'success',
       );
     },
-    onError: () => notify('Ошибка изменения статуса', 'error'),
+    onError: (err: Error) => {
+      const msg = err.message?.includes('животное')
+        ? 'Сначала откройте статью, выберите животное и сохраните'
+        : 'Ошибка изменения статуса';
+      notify(msg, 'error');
+    },
   });
 
   const role = user?.role ?? 'editor';

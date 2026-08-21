@@ -8,7 +8,7 @@ const VK_VERIFIER_KEY = 'vk_code_verifier';
 const VK_RETURN_KEY = 'vk_return_url';
 
 /** HTTPS redirect для Web-приложения VK (Capacitor = Web SDK, не native Android SDK). */
-const VK_HTTPS_BRIDGE = 'https://app.snzbeachvolleyball25.ru/vk-callback.html';
+const VK_HTTPS_BRIDGE = 'https://app.bospur.ru/vk-callback.html';
 
 function getVkAppId(): number {
   const appId = Number(import.meta.env.VITE_VK_APP_ID);
@@ -71,7 +71,7 @@ async function buildVkAuthorizeUrl(
   });
   // origin = базовый домен из кабинета VK (Web-приложение)
   if (Capacitor.isNativePlatform()) {
-    params.set('origin', 'https://app.snzbeachvolleyball25.ru');
+    params.set('origin', 'https://app.bospur.ru');
   } else {
     params.set('origin', window.location.origin);
   }

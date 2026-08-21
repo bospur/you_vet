@@ -89,7 +89,7 @@ src/
 
 | Переменная | Описание |
 |---|---|
-| `VITE_API_URL` | Базовый URL бэкенда (default: `https://api.snzbeachvolleyball25.ru`) |
+| `VITE_API_URL` | Базовый URL бэкенда (default: `https://api.bospur.ru`) |
 | `VITE_CLINIC_SLUG` | Slug клиники (default: `default`) |
 
 ## Локальная разработка
@@ -113,4 +113,4 @@ API-запросы отправляют initData в `X-Telegram-Init-Data` и `A
 
 CI/CD: пуш в `dev` → GitHub Actions → `npm build` → `scp dist/` → `/var/www/vp-bot-app/`
 
-Nginx раздаёт статику с `app.snzbeachvolleyball25.ru`.
+Nginx раздаёт статику с `app.bospur.ru`.

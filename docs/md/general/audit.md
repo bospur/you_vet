@@ -39,7 +39,7 @@ YouVet — **зрелый MVP в продакшене**: монорепо, тр�
 
 - Path-based GitHub Actions deploy
 - Server через GHCR (образ `ghcr.io/bospur/you_vet-server:latest`)
-- Docs portal: `docs.snzbeachvolleyball25.ru`
+- Docs portal: `docs.bospur.ru`
 - Pre-commit hook в `apps/server/.githooks/` (gofmt, vet, test, build)
 
 ---

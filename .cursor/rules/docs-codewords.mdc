@@ -36,7 +36,7 @@ alwaysApply: true
 
 ## `портал` [+ маршрут]
 
-Обновить React-портал `apps/docs/` для https://docs.snzbeachvolleyball25.ru
+Обновить React-портал `apps/docs/` для https://docs.bospur.ru
 
 - Prod: CI собирает `apps/docs` → VPS (`deploy-docs.yml` после push `dev`).
 - Контент: править `docs/md/` + при новой странице `apps/docs/src/pages.ts` и `HomePage.tsx`.

@@ -5,7 +5,7 @@
 ```
 Telegram
    │
-   ├── Mini App (apps/app) ← app.snzbeachvolleyball25.ru
+   ├── Mini App (apps/app) ← app.bospur.ru
    │      │
    │      └── GET /api/clinics/{slug}/*
    │
@@ -13,7 +13,7 @@ Telegram
 
 Браузер (сотрудники клиники)
    │
-   └── Админ-панель (apps/admin) → admin.snzbeachvolleyball25.ru
+   └── Админ-панель (apps/admin) → admin.bospur.ru
           │
           ├── POST /api/admin/login
           └── /api/admin/* (JWT Bearer)
@@ -22,10 +22,10 @@ Telegram
 
 Nginx (Ubuntu VPS, системный)
    │
-   ├── admin.snzbeachvolleyball25.ru → /var/www/vp-bot-admin (статика)
-   ├── app.snzbeachvolleyball25.ru   → /var/www/vp-bot-app   (статика)
-   ├── docs.snzbeachvolleyball25.ru  → /var/www/you-vet-docs (HTML)
-   └── api.snzbeachvolleyball25.ru   → Go app :8080
+   ├── admin.bospur.ru → /var/www/vp-bot-admin (статика)
+   ├── app.bospur.ru   → /var/www/vp-bot-app   (статика)
+   ├── docs.bospur.ru  → /var/www/you-vet-docs (HTML)
+   └── api.bospur.ru   → Go app :8080
                                            │
                                            ├── Go HTTP сервер (Docker)
                                            └── PostgreSQL :5432 (Docker)

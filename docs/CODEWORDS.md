@@ -1,7 +1,7 @@
 # Кодовые слова для работы с документацией и AI
 
 > Три короткие команды, чтобы не путать **контекст для AI**, **технические markdown** и **HTML-портал** для команды.  
-> Портал: https://docs.snzbeachvolleyball25.ru · React-приложение `apps/docs` (workflow `deploy-docs.yml`).
+> Портал: https://docs.bospur.ru · React-приложение `apps/docs` (workflow `deploy-docs.yml`).
 
 ---
 

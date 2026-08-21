@@ -116,10 +116,17 @@ export function ArticleEditorScreen() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: () => updateArticleStatus(
-      articleId!,
-      article?.status === 'published' ? 'draft' : 'published',
-    ),
+    mutationFn: async () => {
+      const nextStatus = article?.status === 'published' ? 'draft' : 'published';
+      if (nextStatus === 'published' && isDirty) {
+        const values = getValues();
+        if (!values.animal_id || values.animal_id < 1) {
+          throw new Error('no_animal');
+        }
+        await updateArticle(articleId!, values);
+      }
+      return updateArticleStatus(articleId!, nextStatus);
+    },
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ['article', articleId] });
       queryClient.invalidateQueries({ queryKey: ['articles'] });
@@ -128,7 +135,16 @@ export function ArticleEditorScreen() {
         'success',
       );
     },
-    onError: () => notify('Ошибка изменения статуса', 'error'),
+    onError: (err: Error) => {
+      if (err.message === 'no_animal') {
+        notify('Выберите животное перед публикацией', 'error');
+        return;
+      }
+      const msg = err.message?.includes('животное')
+        ? 'Сначала выберите животное и нажмите «Сохранить»'
+        : 'Ошибка изменения статуса';
+      notify(msg, 'error');
+    },
   });
 
   const featuredMutation = useMutation({

@@ -7,7 +7,7 @@ import { NavList } from '../components/NavList/NavList';
 import { DoctorAvatar } from '../components/DoctorAvatar/DoctorAvatar';
 import { Preloader } from '../components/Preloader/Preloader';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.snzbeachvolleyball25.ru';
+const API_URL = import.meta.env.VITE_API_URL ?? 'https://api.bospur.ru';
 
 export default function DoctorsScreen() {
   const navigate = useNavigate();

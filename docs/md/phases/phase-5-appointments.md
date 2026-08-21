@@ -229,7 +229,7 @@ Staff whitelist в личку бота — **не v1** (достаточно о�
 | Запись на приём | ⏳ **sprint 5** (следующий) |
 | RuStore | ⏳ M3 |
 
-**VK кабинет:** тип **Web**, домен `app.snzbeachvolleyball25.ru`, redirect `https://app.snzbeachvolleyball25.ru/vk-callback.html`. Страница в `apps/app/public/` — статический хостинг на домене Mini App.
+**VK кабинет:** тип **Web**, домен `app.bospur.ru`, redirect `https://app.bospur.ru/vk-callback.html`. Страница в `apps/app/public/` — статический хостинг на домене Mini App.
 
 **Сборка APK:** `apps/mobile` → `npm run build` → `npx cap sync android`.
 

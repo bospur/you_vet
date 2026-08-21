@@ -7,9 +7,9 @@ SaaS-платформа для ветклиник: владельцы питом
 | | |
 |---|---|
 | **Telegram бот** | @VPract_bot |
-| **Mini App** | https://app.snzbeachvolleyball25.ru |
-| **Админ-панель** | https://admin.snzbeachvolleyball25.ru |
-| **API** | https://api.snzbeachvolleyball25.ru |
+| **Mini App** | https://app.bospur.ru |
+| **Админ-панель** | https://admin.bospur.ru |
+| **API** | https://api.bospur.ru |
 
 ## Приложения в монорепо
 
@@ -51,7 +51,7 @@ npm run dev   # запускает admin и app параллельно
 
 ## Документация
 
-**Портал для команды:** https://docs.snzbeachvolleyball25.ru (HTML: roadmap, dev overview, design brief, audit)
+**Портал для команды:** https://docs.bospur.ru (HTML: roadmap, dev overview, design brief, audit)
 
 | Документ | Описание |
 |---|---|

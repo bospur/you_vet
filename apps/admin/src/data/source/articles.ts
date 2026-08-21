@@ -1,5 +1,13 @@
+import axios from 'axios';
 import axiosInstance from './axiosInstance';
 import type { Article, ArticleFormValues } from '../../modules/articles/domain/types';
+
+function apiError(err: unknown, fallback: string): Error {
+  if (axios.isAxiosError(err) && err.response?.data) {
+    return new Error(String(err.response.data));
+  }
+  return err instanceof Error ? err : new Error(fallback);
+}
 
 export async function getArticles(): Promise<Article[]> {
   const { data } = await axiosInstance.get<Article[]>('/api/admin/articles');
@@ -30,8 +38,12 @@ export async function updateArticle(id: number, input: ArticleFormValues): Promi
 }
 
 export async function updateArticleStatus(id: number, status: 'draft' | 'published'): Promise<Article> {
-  const { data } = await axiosInstance.patch<Article>(`/api/admin/articles/${id}/status`, { status });
-  return data;
+  try {
+    const { data } = await axiosInstance.patch<Article>(`/api/admin/articles/${id}/status`, { status });
+    return data;
+  } catch (err) {
+    throw apiError(err, 'Ошибка изменения статуса');
+  }
 }
 
 export async function updateArticleFeatured(id: number, featured: boolean): Promise<Article> {

@@ -11,10 +11,10 @@ SaaS для ветклиник: **Telegram Mini App** (клиенты) + **ве�
 | Сервис | URL |
 |---|---|
 | Бот | @VPract_bot |
-| Mini App | https://app.snzbeachvolleyball25.ru |
-| Admin | https://admin.snzbeachvolleyball25.ru |
-| API | https://api.snzbeachvolleyball25.ru |
-| Docs portal | https://docs.snzbeachvolleyball25.ru |
+| Mini App | https://app.bospur.ru |
+| Admin | https://admin.bospur.ru |
+| API | https://api.bospur.ru |
+| Docs portal | https://docs.bospur.ru |
 | VPS | Ubuntu, `213.176.65.71` (переезд 2026-06); SSH `vps` / `deploy` |
 
 ## Монорепо

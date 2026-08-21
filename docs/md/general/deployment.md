@@ -16,10 +16,10 @@
 
 | Домен | Назначение | Обслуживается |
 |---|---|---|
-| `api.snzbeachvolleyball25.ru` | Go API + Telegram бот | Docker (Go :8080) |
-| `admin.snzbeachvolleyball25.ru` | Веб-панель | Nginx → `/var/www/vp-bot-admin` |
-| `app.snzbeachvolleyball25.ru` | Telegram Mini App | Nginx → `/var/www/vp-bot-app` |
-| `docs.snzbeachvolleyball25.ru` | HTML-документация | Nginx → `/var/www/you-vet-docs` |
+| `api.bospur.ru` | Go API + Telegram бот | Docker (Go :8080) |
+| `admin.bospur.ru` | Веб-панель | Nginx → `/var/www/vp-bot-admin` |
+| `app.bospur.ru` | Telegram Mini App | Nginx → `/var/www/vp-bot-app` |
+| `docs.bospur.ru` | HTML-документация | Nginx → `/var/www/you-vet-docs` |
 
 ## Пути на сервере
 
@@ -54,9 +54,9 @@
 | `CLINIC_SLUG` | Slug клиники для бота |
 | `JWT_SECRET` | Секрет для JWT |
 | `COOKIE_SECURE` | `1` на prod (HTTPS) — флаг Secure для admin cookie |
-| `COOKIE_DOMAIN` | `.snzbeachvolleyball25.ru` — общий домен admin + api |
-| `PUBLIC_URL` | Базовый URL для фото (`https://api.snzbeachvolleyball25.ru`) |
-| `APP_URL` | URL Mini App для кнопки в боте (`https://app.snzbeachvolleyball25.ru`) |
+| `COOKIE_DOMAIN` | `.bospur.ru` — общий домен admin + api |
+| `PUBLIC_URL` | Базовый URL для фото (`https://api.bospur.ru`) |
+| `APP_URL` | URL Mini App для кнопки в боте (`https://app.bospur.ru`) |
 | `ADMIN_LOGIN` | Логин первого admin (только при первом запуске) |
 | `ADMIN_PASSWORD` | Пароль первого admin (только при первом запуске) |
 | `VK_APP_ID` | ID приложения VK ID (число) — mobile `POST /auth/vk` |
@@ -111,7 +111,7 @@ Markdown (`docs/md/`, `docs/context/`) в HTML-портал не деплоит�
 | `VPS_HOST` | IP VPS |
 | `VPS_USER` | `deploy` |
 | `VPS_SSH_KEY` | Приватный SSH ключ |
-| `VITE_API_URL` | `https://api.snzbeachvolleyball25.ru` |
+| `VITE_API_URL` | `https://api.bospur.ru` |
 | `VITE_CLINIC_SLUG` | slug клиники (напр. `default`) |
 
 ## Ручной деплой
@@ -139,13 +139,13 @@ docker build -t you_vet-server:local .
 
 ```bash
 cd apps/admin   # или apps/app
-VITE_API_URL=https://api.snzbeachvolleyball25.ru VITE_CLINIC_SLUG=default npm run build
+VITE_API_URL=https://api.bospur.ru VITE_CLINIC_SLUG=default npm run build
 scp -r dist/* vps:/var/www/vp-bot-admin/   # или vp-bot-app
 ```
 
 ## Docs-портал: если сломан
 
-Симптомы: `docs.snzbeachvolleyball25.ru` показывает admin, SSL-ошибка в браузере.
+Симптомы: `docs.bospur.ru` показывает admin, SSL-ошибка в браузере.
 
 Пошаговое восстановление: **[docs-portal-restore.md](./docs-portal-restore.md)**.
 

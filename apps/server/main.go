@@ -101,11 +101,11 @@ func main() {
 
 	publicURL := os.Getenv("PUBLIC_URL")
 	if publicURL == "" {
-		publicURL = "https://api.snzbeachvolleyball25.ru"
+		publicURL = "https://api.bospur.ru"
 	}
 	appURL := os.Getenv("APP_URL")
 	if appURL == "" {
-		appURL = "https://app.snzbeachvolleyball25.ru"
+		appURL = "https://app.bospur.ru"
 	}
 
 	tgBot, err := bot.New(botToken, clinicSlug, clinicID, publicURL, appURL, animalRepo, articleRepo, doctorRepo, bookingRepo, questionRepo, mobileAuthRepo, telegramUserRepo)

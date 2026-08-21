@@ -60,7 +60,7 @@ export function HomePage() {
       <div className="footer">
         <a href="https://github.com/bospur/you_vet">github.com/bospur/you_vet</a>
         {' · '}
-        docs.snzbeachvolleyball25.ru
+        docs.bospur.ru
       </div>
     </div>
   )

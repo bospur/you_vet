@@ -21,7 +21,7 @@ ru . snzbeachvolleyball25 . vetpraktika
 
 | Что | Пример | Для чего |
 |---|---|---|
-| **Поддомен (DNS)** | `vetpraktika.snzbeachvolleyball25.ru` | Сайт/API в браузере (как `app.…`, `api.…`) |
+| **Поддомен (DNS)** | `vetpraktika.bospur.ru` | Сайт/API в браузере (как `app.…`, `api.…`) |
 | **App ID (Android)** | `ru.snzbeachvolleyball25.vetpraktika` | Идентификатор в RuStore / Android OS |
 
 Порядок **разный**:
@@ -29,9 +29,9 @@ ru . snzbeachvolleyball25 . vetpraktika
 - URL читается слева направо: `vetpraktika` → `snzbeachvolleyball25` → `ru`
 - App ID — **наоборот**, как Java-пакеты: `ru` → `snzbeachvolleyball25` → `vetpraktika`
 
-Если бы поддомен для веба был `vetpraktika.snzbeachvolleyball25.ru`, то **правильный** appId всё равно был бы `ru.snzbeachvolleyball25.vetpraktika`, а не строка `vetpraktika.snzbeachvolleyball25.ru`.
+Если бы поддомен для веба был `vetpraktika.bospur.ru`, то **правильный** appId всё равно был бы `ru.snzbeachvolleyball25.vetpraktika`, а не строка `vetpraktika.bospur.ru`.
 
-`vetpraktika.snzbeachvolleyball25.ru` как appId технически иногда проходит, но это **не стандарт**: путает с hostname, хуже для сторов и документации. Не используем.
+`vetpraktika.bospur.ru` как appId технически иногда проходит, но это **не стандарт**: путает с hostname, хуже для сторов и документации. Не используем.
 
 ### Зачем он нужен
 
@@ -58,7 +58,7 @@ appName: Ветпрактика
 
 **Почему так:**
 
-- Домен `snzbeachvolleyball25.ru` уже ваш — идентификатор «привязан» к инфраструктуре проекта.
+- App ID выбран при старте проекта и **зафиксирован**. Веб-домен сейчас `bospur.ru`; `appId` при смене домена **не меняем** (иначе RuStore увидит другое приложение).
 - `vetpraktika` — транслит названия «Ветпрактика», латиница, без дефисов (дефисы в appId допустимы, но реже используют).
 - При white-label для другой клиники позже: **другой appId** и отдельная сборка, например `ru.otherclinic.vetapp` (см. [multi-tenant-notes.md](./multi-tenant-notes.md)).
 
@@ -136,7 +136,7 @@ App ID **не участвует** в API-запросах. Клиника за�
 | Переменная | Пример | Назначение |
 |---|---|---|
 | `VITE_CLINIC_SLUG` | `default` | Какую клинику показывать (`/api/mobile/v1/clinics/default/...`) |
-| `VITE_API_URL` | `https://api.snzbeachvolleyball25.ru` | Хост API |
+| `VITE_API_URL` | `https://api.bospur.ru` | Хост API |
 
 Один APK «Ветпрактика» = один slug в сборке. Другая клиника в будущем = другая сборка (другой slug, возможно другой appId).
 
