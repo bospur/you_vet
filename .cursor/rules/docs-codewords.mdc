@@ -30,7 +30,8 @@ alwaysApply: true
 | server, api | `server/overview.md`, `server/api.md` |
 | mobile | `mobile/overview.md` |
 | аудит | `general/audit.md` |
-| дизайн | `general/design-brief.md` |
+| продажи, sales | `portal/sales.md` |
+| архитектура | `general/architecture.md`, `general/data-model.md` |
 
 Ответ: краткое резюме «где мы» + следующий шаг. Не тащить весь репозиторий.
 

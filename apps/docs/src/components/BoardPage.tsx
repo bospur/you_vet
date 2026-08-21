@@ -19,6 +19,20 @@ const COLUMNS: { status: TaskStatus; title: string }[] = [
   { status: 'done', title: 'Готова' },
 ]
 
+const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'done']
+
+function neighborStatus(status: TaskStatus, dir: -1 | 1): TaskStatus | null {
+  const i = STATUS_ORDER.indexOf(status)
+  const next = i + dir
+  return next >= 0 && next < STATUS_ORDER.length ? STATUS_ORDER[next] : null
+}
+
+const MOVE_LABEL: Record<TaskStatus, string> = {
+  todo: 'К выполнению',
+  in_progress: 'В работу',
+  done: 'Готово',
+}
+
 export function BoardPage() {
   const [tasks, setTasks] = useState<DocsTask[]>([])
   const [loading, setLoading] = useState(true)
@@ -139,7 +153,7 @@ export function BoardPage() {
       <header className="board-header">
         <h1>Задачи команды</h1>
         <p className="board-lead">
-          Перетаскивайте карточки между колонками. Приоритет — цветная метка на карточке.
+          На компьютере карточки можно перетаскивать. На телефоне — кнопки «В работу» / «Готово».
         </p>
       </header>
 
@@ -231,6 +245,32 @@ export function BoardPage() {
                     <p className="board-card-meta">{task.display_name}</p>
                     {visitor ? (
                       <div className="board-card-actions">
+                        {neighborStatus(task.status, -1) ? (
+                          <button
+                            type="button"
+                            className="board-move"
+                            disabled={busy}
+                            onClick={() => {
+                              const next = neighborStatus(task.status, -1)
+                              if (next) patchTask(task.id, { status: next })
+                            }}
+                          >
+                            ← {MOVE_LABEL[neighborStatus(task.status, -1)!]}
+                          </button>
+                        ) : null}
+                        {neighborStatus(task.status, 1) ? (
+                          <button
+                            type="button"
+                            className="board-move"
+                            disabled={busy}
+                            onClick={() => {
+                              const next = neighborStatus(task.status, 1)
+                              if (next) patchTask(task.id, { status: next })
+                            }}
+                          >
+                            {MOVE_LABEL[neighborStatus(task.status, 1)!]} →
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="board-delete"

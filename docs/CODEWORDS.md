@@ -1,6 +1,6 @@
 # Кодовые слова для работы с документацией и AI
 
-> Три короткие команды, чтобы не путать **контекст для AI**, **технические markdown** и **HTML-портал** для команды.  
+> Три короткие команды, чтобы не путать **контекст для AI**, **технические markdown** и **портал** для команды.  
 > Портал: https://docs.bospur.ru · React-приложение `apps/docs` (workflow `deploy-docs.yml`).
 
 ---
@@ -42,13 +42,13 @@
 | `mobile`, `мобайл` | [md/mobile/overview.md](./md/mobile/overview.md), [md/mobile/roadmap.md](./md/mobile/roadmap.md) |
 | `аудит`, `audit`, `безопасность` | [md/general/audit.md](./md/general/audit.md) |
 | `дизайн`, `design` | [md/general/design-brief.md](./md/general/design-brief.md) |
-| `архитектура` | [md/general/architecture.md](./md/general/architecture.md), [md/general/data-model.md](./md/general/data-model.md) |
+| `продажи`, `sales` | [md/portal/sales.md](./md/portal/sales.md) |
 
 **Не читать в `контекст`:** весь репозиторий подряд — только таблица выше.
 
 ---
 
-## 2. `портал` — React-приложение docs.snz…
+## 2. `портал` — React-приложение docs.bospur.ru
 
 ### Три слоя (не путать)
 
@@ -102,11 +102,12 @@
 контекст              → начало, HANDOFF + STATUS + ISSUES
 контекст запись       → + md/phases/phase-5
 контекст деплой       → + md/general/deployment
+контекст продажи      → + md/portal/sales
 
-портал запись         → phase-5 .md (+ pages.ts если новая страница)
+портал                → md + pages.ts → docs.bospur.ru после push dev
+портал запись         → phase-5 / booking-for-clinic
 
 передача              → закрыть сессию, обновить context/
-передача портал запись → передача + синхрон HTML
 ```
 
 ---

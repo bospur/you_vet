@@ -4,12 +4,33 @@
   padding: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   font-size: 14px;
   color: #1a1a1a;
   background: #f7f7f5;
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 a {
@@ -28,6 +49,9 @@ a {
   max-width: 960px;
   margin: 0 auto;
   padding: 24px 20px 0;
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
 }
 
 .layout-brand {
@@ -52,6 +76,9 @@ a {
   max-width: 960px;
   margin: 0 auto;
   padding: 24px 20px 64px;
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-bottom: max(64px, env(safe-area-inset-bottom));
 }
 
 .logo-icon {
@@ -240,6 +267,14 @@ a {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 0;
+}
+
+.card-title-text {
+  margin-right: 4px;
 }
 
 .card-desc {
@@ -362,10 +397,24 @@ a {
   margin-bottom: 5px;
 }
 
-.markdown table {
+.markdown a,
+.markdown p,
+.markdown li {
+  overflow-wrap: anywhere;
+}
+
+.markdown-table-wrap {
   width: 100%;
-  border-collapse: collapse;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 12px 0 20px;
+}
+
+.markdown table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  margin: 0;
   font-size: 13px;
 }
 
@@ -786,8 +835,15 @@ a {
   border: 1px solid #ddd;
   background: #fafafa;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 8px 10px;
+  min-height: 36px;
   cursor: pointer;
+}
+
+.board-move {
+  color: #2e7d32;
+  border-color: #c8e6c9 !important;
+  background: #f1f8e9 !important;
 }
 
 .board-delete {
@@ -796,26 +852,164 @@ a {
   background: #fff !important;
 }
 
-@media (max-width: 640px) {
-  .board-columns {
-    grid-template-columns: 1fr;
+@media (hover: none) {
+  .card:hover {
+    box-shadow: none;
+    border-color: #e8e8e8;
   }
 
+  .card:active {
+    border-color: #c8e6c9;
+    background: #fafefa;
+  }
+}
+
+@media (max-width: 640px) {
   .layout-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 16px 0;
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+
+  .layout-brand-sub {
+    font-size: 12px;
+  }
+
+  .layout-main {
+    padding: 16px 12px 48px;
+    padding-bottom: max(48px, env(safe-area-inset-bottom));
+  }
+
+  .visitor-bar {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .visitor-bar input,
+  .board-register-row input,
+  .board-create input,
+  .board-create select,
+  .comments-form input,
+  .comments-form textarea,
+  .comment-edit-form textarea {
+    font-size: 16px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .visitor-bar input {
+    flex: 1 1 140px;
+  }
+
+  .visitor-bar button,
+  .board-register-row button,
+  .board-create button,
+  .comments-form button {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .home {
+    max-width: none;
+  }
+
+  .card {
+    padding: 14px 12px;
+    gap: 10px;
+    min-height: 56px;
+  }
+
+  .card-icon {
+    width: 32px;
+    font-size: 22px;
+  }
+
+  .card-arrow {
+    display: none;
   }
 
   .doc-page {
-    padding: 20px 16px 32px;
+    padding: 16px 14px 28px;
+    border-radius: 10px;
+  }
+
+  .doc-header {
+    padding-bottom: 14px;
+    margin: 12px 0 20px;
   }
 
   .doc-header h1 {
     font-size: 22px;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
   }
 
-  .card {
+  .doc-subtitle,
+  .doc-lead {
+    font-size: 14px;
+  }
+
+  .markdown h2 {
+    font-size: 17px;
+    margin: 28px 0 10px;
+  }
+
+  .markdown h3 {
+    font-size: 14px;
+  }
+
+  .markdown ul,
+  .markdown ol {
+    padding-left: 18px;
+  }
+
+  .markdown pre {
     padding: 12px 14px;
-    gap: 12px;
+    font-size: 12px;
+  }
+
+  .markdown th,
+  .markdown td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .board-header h1 {
+    font-size: 22px;
+  }
+
+  .board-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .board-column {
+    min-height: 0;
+  }
+
+  .board-register-row,
+  .board-create {
+    flex-direction: column;
+  }
+
+  .board-create select {
+    max-width: none;
+    width: 100%;
+  }
+
+  .board-card {
+    cursor: default;
+  }
+
+  .comment-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .comments-form button {
+    width: 100%;
   }
 }

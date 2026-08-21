@@ -1,62 +1,37 @@
 # Markdown-документация
 
-Источник правды для разработчиков и AI. В prod **не деплоится** — только `docs/html/`.
+Источник правды для разработчиков и AI. На **портал** попадает только то, что подключено в `apps/docs/src/pages.ts` (после push `dev`).  
+`docs/html/` — legacy, не деплоится. `docs/context/` — только для AI.
+
+## Портал (`md/portal/` + страницы из других папок)
+
+| На сайте | Файл | Для кого |
+|----------|------|----------|
+| [/](https://docs.bospur.ru/) | карточки в `HomePage.tsx` | все |
+| [/sales](https://docs.bospur.ru/sales) | [portal/sales.md](./portal/sales.md) | продажи |
+| [/project-for-devs](https://docs.bospur.ru/project-for-devs) | [general/architecture.md](./general/architecture.md) | команда |
+| [/roadmap](https://docs.bospur.ru/roadmap) | [portal/roadmap.md](./portal/roadmap.md) | команда |
+| [/rustore-app](https://docs.bospur.ru/rustore-app) | [mobile/rustore-guide.md](./mobile/rustore-guide.md) | команда |
+| [/mobile](https://docs.bospur.ru/mobile) | [mobile/overview.md](./mobile/overview.md) | команда |
+| [/booking-for-clinic](https://docs.bospur.ru/booking-for-clinic) | [portal/booking-for-clinic.md](./portal/booking-for-clinic.md) | клиника |
+| [/phase-5-appointments](https://docs.bospur.ru/phase-5-appointments) | [phases/phase-5-appointments.md](./phases/phase-5-appointments.md) | клиника / dev |
 
 ## Общее (`md/general/`)
 
 | Документ | Описание |
 |----------|----------|
-| [architecture.md](./general/architecture.md) | Схема системы, монорепо, CI/CD |
-| [data-model.md](./general/data-model.md) | Схема БД, миграции |
-| [roles.md](./general/roles.md) | Ролевая модель |
-| [deployment.md](./general/deployment.md) | VPS, деплой, env |
+| [architecture.md](./general/architecture.md) | Схема системы, CI/CD |
+| [data-model.md](./general/data-model.md) | Схема БД |
+| [roles.md](./general/roles.md) | Роли |
+| [deployment.md](./general/deployment.md) | VPS, домены `*.bospur.ru`, env |
 | [development.md](./general/development.md) | Локальная разработка |
-| [monorepo.md](./general/monorepo.md) | Turborepo, workspaces |
-| [audit.md](./general/audit.md) | Технический аудит |
+| [monorepo.md](./general/monorepo.md) | Turborepo |
+| [audit.md](./general/audit.md) | Аудит |
 | [design-brief.md](./general/design-brief.md) | Бриф для дизайна |
+| [docs-portal-restore.md](./general/docs-portal-restore.md) | Починка nginx/certs docs |
 
-## Фазы (`md/phases/`)
+## Фазы · сервер · admin · Mini App · mobile
 
-| Документ | Описание |
-|----------|----------|
-| [phase-5-appointments.md](./phases/phase-5-appointments.md) | Запись на приём |
+См. те же файлы, что раньше: [phases/](./phases/), [server/](./server/), [admin/](./admin/), [app/](./app/), [mobile/](./mobile/).
 
-## Бэкенд (`md/server/`)
-
-| Документ | Описание |
-|----------|----------|
-| [overview.md](./server/overview.md) | Архитектура, env, структура |
-| [api.md](./server/api.md) | API reference |
-
-## Admin (`md/admin/`)
-
-| Документ | Описание |
-|----------|----------|
-| [architecture.md](./admin/architecture.md) | Паттерны, роутинг, модули |
-| [user-guide.md](./admin/user-guide.md) | Инструкция для пользователей |
-
-## Mini App (`md/app/`)
-
-| Документ | Описание |
-|----------|----------|
-| [overview.md](./app/overview.md) | Экраны, компоненты |
-
-## Mobile — planned (`md/mobile/`)
-
-| Документ | Описание |
-|----------|----------|
-| [design-mvp.md](./mobile/design-mvp.md) | MVP RuStore v1: экраны, API, UI |
-| [app-id-and-stores.md](./mobile/app-id-and-stores.md) | App ID, RuStore, подпись (обучение) |
-| [multi-tenant-notes.md](./mobile/multi-tenant-notes.md) | 1 клиника / сборку, задел SaaS |
-| [overview.md](./mobile/overview.md) | Обзор, решения |
-| [research.md](./mobile/research.md) | Аналитика |
-| [roadmap.md](./mobile/roadmap.md) | План Capacitor |
-
-## Прочее
-
-| Путь | Описание |
-|------|----------|
-| [adr/](./adr/) | Architecture decision records |
-| [frontend/templates/](./frontend/templates/) | Шаблоны новых модулей admin |
-| [../context/](../context/) | Handoff для AI |
-| [../CODEWORDS.md](../CODEWORDS.md) | `контекст` · `портал` · `передача` |
+Кодовые слова: [../CODEWORDS.md](../CODEWORDS.md). Память AI: [../context/](../context/).

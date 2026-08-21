@@ -1,6 +1,6 @@
 # Контекст для AI-сессий
 
-Эта папка — **живая память проекта** для перехода между сессиями Cursor / Claude.
+Эта папка — **живая память проекта** для перехода между сессиями Cursor.
 Обновляй файлы после значимых изменений или в конце рабочей сессии.
 
 ## Кодовые слова
@@ -8,7 +8,7 @@
 | Слово | Действие |
 |--------|----------|
 | **`контекст`** | AI читает HANDOFF → STATUS → ISSUES → PROJECT (+ маршрут) |
-| **`портал`** | Синхрон markdown ↔ `docs/html/*.html` для docs.snz… |
+| **`портал`** | Markdown в `docs/md/` + `apps/docs` → https://docs.bospur.ru |
 | **`передача`** | Обновить эту папку в конце сессии |
 
 Подробно: [../CODEWORDS.md](../CODEWORDS.md)
@@ -17,24 +17,19 @@
 
 | Файл | Назначение | Когда обновлять |
 |---|---|---|
-| [PROJECT.md](./PROJECT.md) | Краткая суть проекта, стек, структура, prod URLs | При смене архитектуры или стека |
-| [STATUS.md](./STATUS.md) | Текущее состояние: что работает, что в работе | После деплоя, релиза, проверки prod |
-| [ISSUES.md](./ISSUES.md) | Бэклог проблем и техдолга с приоритетами | При обнаружении бага или закрытии задачи |
-| [HANDOFF.md](./HANDOFF.md) | Заметки последней сессии + следующие шаги | **В конце каждой сессии** |
+| [PROJECT.md](./PROJECT.md) | Суть проекта, стек, prod URL | Смена архитектуры, домена, стека |
+| [STATUS.md](./STATUS.md) | Что работает / в работе | После деплоя, проверки prod |
+| [ISSUES.md](./ISSUES.md) | Бэклог с ID | Баг или закрытие задачи |
+| [HANDOFF.md](./HANDOFF.md) | Последняя сессия | **В конце каждой сессии** |
 
 ## Как использовать (для AI)
 
-1. В начале сессии прочитать `HANDOFF.md` → `STATUS.md` → `ISSUES.md`
-2. Фаза 5 (запись) — [../md/phases/phase-5-appointments.md](../md/phases/phase-5-appointments.md)
-3. Полный аудит — [../md/general/audit.md](../md/general/audit.md)
-3. Markdown-документация — [../README.md](../README.md)
-4. HTML-портал для команды — https://docs.bospur.ru
+1. Начало сессии: `HANDOFF.md` → `STATUS.md` → `ISSUES.md` → `PROJECT.md`
+2. Фаза 5 — [../md/phases/phase-5-appointments.md](../md/phases/phase-5-appointments.md)
+3. Продажи — [../md/portal/sales.md](../md/portal/sales.md)
+4. Техдоки — [../md/README.md](../md/README.md)
+5. Сайт для команды — https://docs.bospur.ru (`apps/docs`, не `docs/html/`)
 
 ## Правило синхронизации
 
-Если меняется поведение кода — обнови соответствующий markdown в `docs/md/` и при необходимости HTML-портал (`docs/html/`).
-Расхождение docs ↔ code — известная проблема; этот каталог помогает её не накапливать.
-
-## Admin — мобильная вёрстка
-
-При работе с `apps/admin`: breakpoint MUI `sm`, таблицы → карточки на телефоне, диалоги `fullScreen`, вкладки `scrollable`. Эталон: **`/booking`** (`BookingScreen`), `GroomingScreen`.
+Поведение кода → `docs/md/`. То, что читает команда/клиника/продажи в браузере → **`портал`** (`pages.ts` при новой странице). Этот каталог (`context/`) на сайт не попадает.

@@ -10,6 +10,7 @@ SaaS-платформа для ветклиник: владельцы питом
 | **Mini App** | https://app.bospur.ru |
 | **Админ-панель** | https://admin.bospur.ru |
 | **API** | https://api.bospur.ru |
+| **Docs** | https://docs.bospur.ru |
 
 ## Приложения в монорепо
 
@@ -17,7 +18,9 @@ SaaS-платформа для ветклиник: владельцы питом
 apps/
 ├── server/   — Go бэкенд + Telegram бот (PostgreSQL)
 ├── admin/    — Веб-панель управления клиникой (React + MUI)
-└── app/      — Telegram Mini App для клиентов (React + TG UI)
+├── app/      — Telegram Mini App для клиентов (React + TG UI)
+├── mobile/   — «Ветпрактика» (Capacitor / RuStore)
+├── docs/     — портал документации
 
 packages/
 ├── types/    — @you-vet/types — общие TypeScript типы (admin + app)
@@ -51,7 +54,7 @@ npm run dev   # запускает admin и app параллельно
 
 ## Документация
 
-**Портал для команды:** https://docs.bospur.ru (HTML: roadmap, dev overview, design brief, audit)
+**Портал:** https://docs.bospur.ru (roadmap, архитектура, запись для клиники, [продажи](https://docs.bospur.ru/sales))
 
 | Документ | Описание |
 |---|---|

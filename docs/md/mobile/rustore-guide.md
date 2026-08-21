@@ -1,6 +1,6 @@
 # Ветпрактика — публикация в RuStore
 
-> Практическое руководство для первого релиза · Обновлено: 2026-06-09  
+> Практическое руководство для первого релиза · Обновлено: 2026-08-21  
 > Связано: [app-id-and-stores.md](./app-id-and-stores.md) · [design-mvp.md](./design-mvp.md)
 
 Отдельное Android-приложение **«Ветпрактика»** (Capacitor). Не путать с Telegram Mini App.
@@ -99,9 +99,12 @@ RuStore принимает **APK** и **AAB**. Для AAB подпись нас�
 
 | Этап | Статус |
 |---|---|
-| M0 API + миграция 019 | в коде, deploy server |
-| M1 shell (splash, tabs, главная) | в коде |
-| Sprints 2–5 (статьи, auth UI, booking) | backlog |
-| RuStore первая публикация | после M2 + материалы |
+| M0 API + миграции 019–021 | prod (`api.bospur.ru`) |
+| M1 shell + контент | APK |
+| M2 auth UX, VK, ЛК, баннер, гость | в коде; пересобрать APK на новый API |
+| M2b booking в приложении | sprint 5 |
+| RuStore (M3) | после M2b + материалы модерации |
 
-Подробнее: [screen-specs.md](./screen-specs.md) · [mobile.html](../../html/mobile.html)
+Подробнее: [screen-specs.md](./screen-specs.md) · тех. обзор: [/mobile](/mobile).
+
+После смены домена (август 2026) в `.env.local`: `VITE_API_URL=https://api.bospur.ru`. Иначе WebView ходит на старый хост.

@@ -19,7 +19,7 @@
 | `api.bospur.ru` | Go API + Telegram бот | Docker (Go :8080) |
 | `admin.bospur.ru` | Веб-панель | Nginx → `/var/www/vp-bot-admin` |
 | `app.bospur.ru` | Telegram Mini App | Nginx → `/var/www/vp-bot-app` |
-| `docs.bospur.ru` | HTML-документация | Nginx → `/var/www/you-vet-docs` |
+| `docs.bospur.ru` | Портал документации (React, `apps/docs`) | Nginx → `/var/www/you-vet-docs` |
 
 ## Пути на сервере
 
@@ -28,7 +28,7 @@
 | `/home/deploy/you_vet/apps/server` | Docker compose (Go + PostgreSQL), `.env` |
 | `/var/www/vp-bot-admin` | Статика админ-панели |
 | `/var/www/vp-bot-app` | Статика Mini App |
-| `/var/www/you-vet-docs` | HTML-документация (`docs/html/*`) |
+| `/var/www/you-vet-docs` | Сборка портала (`apps/docs/dist`) |
 | `/etc/nginx/sites-available/` | Nginx конфиги |
 | `/etc/letsencrypt/live/` | SSL сертификаты |
 
@@ -63,6 +63,7 @@
 | `VK_APP_SECRET` | **Защищённый ключ** VK (не сервисный ключ) |
 | `VK_REDIRECT_URI` | `https://oauth.vk.com/blank.html` (как в mobile `.env.local`) |
 | `JWT_MOBILE_SECRET` | Опционально; иначе fallback `JWT_SECRET` |
+| `CORS_ORIGINS` | Через запятую: `https://admin.bospur.ru,https://app.bospur.ru,https://docs.bospur.ru` |
 
 ## CI/CD
 
@@ -96,13 +97,14 @@ VPS **не собирает** образ локально и **не делает
 
 ### Docs — `deploy-docs.yml`
 
-Триггер: `docs/**`
+Триггер: `docs/**`, `apps/docs/**`
 
-1. `scp docs/html/*` → `/var/www/you-vet-docs/`
+1. `npm ci` → сборка `@you-vet/docs-portal` (`VITE_API_URL` в workflow)
+2. `scp apps/docs/dist` → `/var/www/you-vet-docs/`
 
-Markdown (`docs/md/`, `docs/context/`) в HTML-портал не деплоится — только через GitHub.
+`docs/html/` и `docs/context/` на сайт **не** попадают. Контент страниц — `docs/md/**` + `apps/docs/src/pages.ts`.
 
-> **Если docs.snz… отдаёт admin или SSL-ошибка** — см. [docs-portal-restore.md](./docs-portal-restore.md) (диагностика и починка Nginx + cert на VPS).
+> Если docs отдаёт admin или чужой SSL — см. [docs-portal-restore.md](./docs-portal-restore.md). На `:443` должен быть nginx, не xray/VPN.
 
 ### GitHub Secrets
 
@@ -164,8 +166,16 @@ sudo certbot certonly --webroot -w /var/www/certbot -d <subdomain>
 | app | `ghcr.io/bospur/you_vet-server:latest` | :8080 (localhost only) |
 | db | postgres:16-alpine | :5432 (internal network) |
 
-Nginx проксирует `api.*` → `localhost:8080`. PostgreSQL снаружи недоступен.
+Nginx проксирует `api.bospur.ru` → `localhost:8080`. PostgreSQL снаружи недоступен.
 Uploads: volume `uploads_data` → `/app/uploads`.
+
+Конфиги vhost в репо: `apps/server/nginx/` (`default.conf` = API, `docs.conf`), `apps/admin/nginx/admin.conf`. На VPS также `app.bospur.ru`.
+
+### Смена домена (2026-08-21)
+
+С `*.snzbeachvolleyball25.ru` на `*.bospur.ru`: DNS A → `213.176.65.71`, certbot webroot, nginx HTTPS, `.env` (`PUBLIC_URL`, `APP_URL`, `COOKIE_DOMAIN=.bospur.ru`, `CORS_ORIGINS`), GitHub Secret `VITE_API_URL`. Сервис `x-ui` / xray на `:443` **выключен** (`disable --now x-ui`) — иначе сайты не встают на HTTPS.
+
+`appId` мобильного приложения **не** менялся.
 
 ## Идеи (backlog инфраструктуры и ops)
 

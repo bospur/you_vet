@@ -11,7 +11,7 @@ function DocCard({ page }: { page: DocPageConfig }) {
       <div className="card-icon">{page.icon}</div>
       <div className="card-body">
         <div className="card-title">
-          {page.title}
+          <span className="card-title-text">{page.title}</span>
           {page.badge ? (
             <span className={badgeClass(page.badge.tone)}>{page.badge.label}</span>
           ) : null}
@@ -26,6 +26,7 @@ function DocCard({ page }: { page: DocPageConfig }) {
 export function HomePage() {
   const team = docPages.filter((p) => p.section === 'team')
   const clinic = docPages.filter((p) => p.section === 'clinic')
+  const sales = docPages.filter((p) => p.section === 'sales')
 
   return (
     <div className="home">
@@ -41,6 +42,13 @@ export function HomePage() {
           </div>
           <div className="card-arrow">›</div>
         </Link>
+      </div>
+
+      <div className="section-title">Продажи</div>
+      <div className="cards">
+        {sales.map((page) => (
+          <DocCard key={page.slug} page={page} />
+        ))}
       </div>
 
       <div className="section-title">Для команды</div>
