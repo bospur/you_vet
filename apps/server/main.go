@@ -189,6 +189,7 @@ func main() {
 	http.HandleFunc("GET /api/docs/v1/comments", middleware.IPRateLimit(120, time.Minute, docsPortalHandler.ListComments))
 	http.HandleFunc("POST /api/docs/v1/comments", middleware.LoginRateLimit(20, 15*time.Minute, docsAuth(docsPortalHandler.CreateComment)))
 	http.HandleFunc("PATCH /api/docs/v1/comments/{id}", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.UpdateComment)))
+	http.HandleFunc("DELETE /api/docs/v1/comments/{id}", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.DeleteComment)))
 	http.HandleFunc("GET /api/docs/v1/tasks", middleware.IPRateLimit(120, time.Minute, docsPortalHandler.ListTasks))
 	http.HandleFunc("POST /api/docs/v1/tasks", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.CreateTask)))
 	http.HandleFunc("PATCH /api/docs/v1/tasks/{id}", middleware.LoginRateLimit(60, 15*time.Minute, docsAuth(docsPortalHandler.UpdateTask)))

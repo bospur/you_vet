@@ -1,10 +1,10 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-08-21 (домен `*.bospur.ru`)
+> Последнее обновление: 2026-08-21 (передача)
 
 ## Что это
 
-SaaS для ветклиник: **Telegram Mini App** (клиенты) + **веб-admin** (персонал) + **Go API** + **PostgreSQL** + **Telegram-бот** + **mobile app** (RuStore).
+SaaS для ветклиник: **Telegram Mini App** (клиенты) + **веб-admin** (персонал) + **Go API** + **PostgreSQL** + **Telegram-бот** + **mobile app** (RuStore) + **docs-портал**.
 
 ## Prod
 
@@ -35,7 +35,7 @@ packages/types/  @you-vet/types
 |---|---|
 | B1–B4, C1, Q1 | 🟡 код на `*.bospur.ru`; C1 smoke |
 
-Миграции **013–017** (+ **019** mobile).
+Миграции **013–017** (запись), **019–021** (mobile), **022–025** (docs-портал / канбан).
 
 ### Mobile — RuStore v1 «Ветпрактика»
 
@@ -53,6 +53,7 @@ packages/types/  @you-vet/types
 ## Git
 
 - `dev` — деплой по push (`deploy-server` / `deploy-admin` / `deploy-app` / `deploy-docs` по paths)
+- Текущая фича-ветка сессии: `work-doc-portal`
 
 ## Ключевые документы
 

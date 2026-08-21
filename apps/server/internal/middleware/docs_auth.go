@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -55,8 +57,14 @@ func DocsAuth(secret string, next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		visitorID, ok := visitorIDFromClaims(mapClaims)
+		if !ok {
+			http.Error(w, "недействительный токен", http.StatusUnauthorized)
+			return
+		}
+
 		claims := &DocsClaims{
-			VisitorID: int64(mapClaims["sub"].(float64)),
+			VisitorID: visitorID,
 		}
 		if v, ok := mapClaims["name"].(string); ok {
 			claims.DisplayName = v
@@ -73,4 +81,22 @@ func docsTokenFromRequest(r *http.Request) string {
 		return strings.TrimPrefix(auth, "Bearer ")
 	}
 	return ""
+}
+
+func visitorIDFromClaims(mapClaims jwt.MapClaims) (int64, bool) {
+	switch v := mapClaims["sub"].(type) {
+	case float64:
+		if v <= 0 {
+			return 0, false
+		}
+		return int64(v), true
+	case json.Number:
+		n, err := v.Int64()
+		return n, err == nil && n > 0
+	case string:
+		n, err := strconv.ParseInt(v, 10, 64)
+		return n, err == nil && n > 0
+	default:
+		return 0, false
+	}
 }

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type DocsVisitor struct {
@@ -25,6 +27,8 @@ type DocsComment struct {
 type DocsTask struct {
 	ID          int64
 	Title       string
+	Description string
+	Tags        []string
 	Status      string
 	Priority    string
 	Position    int
@@ -50,6 +54,24 @@ func (r *DocsPortalRepository) CreateVisitor(displayName string) (*DocsVisitor, 
 		 RETURNING id, display_name, created_at`,
 		name,
 	).Scan(&v.ID, &v.DisplayName, &v.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
+func (r *DocsPortalRepository) GetOrCreateVisitor(displayName string) (*DocsVisitor, error) {
+	name := strings.TrimSpace(displayName)
+	var v DocsVisitor
+	err := r.db.QueryRow(
+		`SELECT id, display_name, created_at FROM docs_visitors
+		 WHERE lower(display_name) = lower($1)
+		 ORDER BY id ASC LIMIT 1`,
+		name,
+	).Scan(&v.ID, &v.DisplayName, &v.CreatedAt)
+	if err == sql.ErrNoRows {
+		return r.CreateVisitor(name)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -151,9 +173,41 @@ func (r *DocsPortalRepository) UpdateComment(id, visitorID int64, body string) (
 	return r.GetComment(id)
 }
 
+func (r *DocsPortalRepository) DeleteComment(id, visitorID int64) error {
+	res, err := r.db.Exec(
+		`DELETE FROM docs_comments WHERE id = $1 AND visitor_id = $2`,
+		id, visitorID,
+	)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func scanTask(scanner interface{ Scan(dest ...any) error }) (*DocsTask, error) {
+	var t DocsTask
+	var tags pq.StringArray
+	err := scanner.Scan(
+		&t.ID, &t.Title, &t.Description, &tags, &t.Status, &t.Priority, &t.Position,
+		&t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	t.Tags = []string(tags)
+	if t.Tags == nil {
+		t.Tags = []string{}
+	}
+	return &t, nil
+}
+
 func (r *DocsPortalRepository) ListTasks() ([]DocsTask, error) {
 	rows, err := r.db.Query(
-		`SELECT t.id, t.title, t.status, t.priority, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
+		`SELECT t.id, t.title, t.description, t.tags, t.status, t.priority, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
 		 FROM docs_tasks t
 		 JOIN docs_visitors v ON v.id = t.visitor_id
 		 ORDER BY
@@ -175,13 +229,11 @@ func (r *DocsPortalRepository) ListTasks() ([]DocsTask, error) {
 
 	var items []DocsTask
 	for rows.Next() {
-		var t DocsTask
-		if err := rows.Scan(
-			&t.ID, &t.Title, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		task, err := scanTask(rows)
+		if err != nil {
 			return nil, err
 		}
-		items = append(items, t)
+		items = append(items, *task)
 	}
 	return items, rows.Err()
 }
@@ -195,20 +247,28 @@ func (r *DocsPortalRepository) nextTaskPosition(status string) (int, error) {
 	return pos, err
 }
 
-func (r *DocsPortalRepository) CreateTask(visitorID int64, title, priority string) (*DocsTask, error) {
+func (r *DocsPortalRepository) CreateTask(visitorID int64, title, priority, description string, tags []string) (*DocsTask, error) {
 	pos, err := r.nextTaskPosition("todo")
 	if err != nil {
 		return nil, err
 	}
+	if tags == nil {
+		tags = []string{}
+	}
 	var t DocsTask
+	var tagArr pq.StringArray
 	err = r.db.QueryRow(
-		`INSERT INTO docs_tasks (title, status, priority, position, visitor_id)
-		 VALUES ($1, 'todo', $2, $3, $4)
-		 RETURNING id, title, status, priority, position, visitor_id, created_at, updated_at`,
-		strings.TrimSpace(title), priority, pos, visitorID,
-	).Scan(&t.ID, &t.Title, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.CreatedAt, &t.UpdatedAt)
+		`INSERT INTO docs_tasks (title, status, priority, position, visitor_id, description, tags)
+		 VALUES ($1, 'todo', $2, $3, $4, $5, $6)
+		 RETURNING id, title, description, tags, status, priority, position, visitor_id, created_at, updated_at`,
+		strings.TrimSpace(title), priority, pos, visitorID, description, pq.Array(tags),
+	).Scan(&t.ID, &t.Title, &t.Description, &tagArr, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		return nil, err
+	}
+	t.Tags = []string(tagArr)
+	if t.Tags == nil {
+		t.Tags = []string{}
 	}
 	visitor, err := r.GetVisitor(visitorID)
 	if err != nil {
@@ -221,24 +281,24 @@ func (r *DocsPortalRepository) CreateTask(visitorID int64, title, priority strin
 }
 
 func (r *DocsPortalRepository) GetTask(id int64) (*DocsTask, error) {
-	var t DocsTask
-	err := r.db.QueryRow(
-		`SELECT t.id, t.title, t.status, t.priority, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
+	row := r.db.QueryRow(
+		`SELECT t.id, t.title, t.description, t.tags, t.status, t.priority, t.position, t.visitor_id, v.display_name, t.created_at, t.updated_at
 		 FROM docs_tasks t
 		 JOIN docs_visitors v ON v.id = t.visitor_id
 		 WHERE t.id = $1`,
 		id,
-	).Scan(&t.ID, &t.Title, &t.Status, &t.Priority, &t.Position, &t.VisitorID, &t.DisplayName, &t.CreatedAt, &t.UpdatedAt)
+	)
+	task, err := scanTask(row)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &t, nil
+	return task, nil
 }
 
-func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *string, priority *string) (*DocsTask, error) {
+func (r *DocsPortalRepository) UpdateTask(id int64, title, status, priority, description *string, tags *[]string) (*DocsTask, error) {
 	task, err := r.GetTask(id)
 	if err != nil {
 		return nil, err
@@ -259,6 +319,17 @@ func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *strin
 	if priority != nil {
 		newPriority = *priority
 	}
+	newDescription := task.Description
+	if description != nil {
+		newDescription = *description
+	}
+	newTags := task.Tags
+	if tags != nil {
+		newTags = *tags
+		if newTags == nil {
+			newTags = []string{}
+		}
+	}
 
 	newPos := task.Position
 	if status != nil && *status != task.Status {
@@ -270,8 +341,10 @@ func (r *DocsPortalRepository) UpdateTask(id int64, title *string, status *strin
 	}
 
 	_, err = r.db.Exec(
-		`UPDATE docs_tasks SET title = $1, status = $2, priority = $3, position = $4, updated_at = NOW() WHERE id = $5`,
-		newTitle, newStatus, newPriority, newPos, id,
+		`UPDATE docs_tasks
+		 SET title = $1, status = $2, priority = $3, position = $4, description = $5, tags = $6, updated_at = NOW()
+		 WHERE id = $7`,
+		newTitle, newStatus, newPriority, newPos, newDescription, pq.Array(newTags), id,
 	)
 	if err != nil {
 		return nil, err

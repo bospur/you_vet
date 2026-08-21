@@ -1,6 +1,6 @@
 # Текущий статус проекта
 
-> Последнее обновление: 2026-08-21 (домен + портал)
+> Последнее обновление: 2026-08-21 (передача, конец сессии)
 
 ## Prod
 
@@ -10,11 +10,11 @@
 | Mini App | 🟡 | https://app.bospur.ru · C1 smoke |
 | Admin | 🟡 | https://admin.bospur.ru |
 | API | ✅ | https://api.bospur.ru · nginx HTTPS |
-| Docs portal | 🟡 | https://docs.bospur.ru · обновить push `dev` |
-| **Mobile Android** | 🟡 | APK; API URL новый — пересборка |
+| Docs portal | 🟡 | https://docs.bospur.ru · ветка `work-doc-portal`; полный пакет после merge в `dev` |
+| **Mobile Android** | 🟡 | пересборка APK на новый API |
 | **Mobile iOS** | ⏸ | `ios/` есть; ждёт Xcode |
 
-VPS `213.176.65.71`. nginx слушает 80/443. x-ui выключен.
+VPS `213.176.65.71`. nginx 80/443. x-ui выключен.
 
 ## Функциональность (MVP)
 
@@ -28,11 +28,11 @@ VPS `213.176.65.71`. nginx слушает 80/443. x-ui выключен.
 
 ## Фокус
 
-1. Push документации и фронтов на новый API
+1. Merge портала в `dev` (docs + server: 025, slug `sales`)
 2. **Mobile sprint 5** — booking в APK
-3. C1 smoke Mini App · BotFather / VK на `app.bospur.ru`
-4. iOS — после Xcode
+3. BotFather / VK на `app.bospur.ru` · пересборка APK
+4. C1 smoke · ADM-02 · iOS после Xcode
 
 ## CI
 
-`ci.yml`: Go test + lint/build admin/app/mobile. Деплой: push `dev`.
+`ci.yml`: Go test + lint/build. Локально: husky **lint-staged** на commit.
