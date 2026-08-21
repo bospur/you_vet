@@ -1,6 +1,6 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-06-10 (передача)
+> Последнее обновление: 2026-08-21 (домен `*.bospur.ru`)
 
 ## Что это
 
@@ -33,7 +33,7 @@ packages/types/  @you-vet/types
 
 | Этап | Статус |
 |---|---|
-| B1–B4, C1, Q1 | 🟡 deploy / smoke |
+| B1–B4, C1, Q1 | 🟡 код на `*.bospur.ru`; C1 smoke |
 
 Миграции **013–017** (+ **019** mobile).
 
@@ -43,7 +43,7 @@ packages/types/  @you-vet/types
 |---|---|
 | M0 backend API + auth | ✅ prod |
 | M1 Capacitor shell + контент | ✅ APK |
-| M2 auth UX + гостевой режим + polish | 🟡 deploy APK (баннер, лого, врачи) |
+| M2 auth UX + гостевой режим + polish | 🟡 пересборка APK на `api.bospur.ru` |
 | M2b booking flow | backlog **sprint 5** |
 | M3 RuStore | backlog |
 | **iOS shell** | ⏸ `ios/` + `@capacitor/ios@7`; симулятор после Xcode |
@@ -57,6 +57,7 @@ packages/types/  @you-vet/types
 ## Ключевые документы
 
 - [phase-5-appointments.md](../md/phases/phase-5-appointments.md)
+- [portal/sales.md](../md/portal/sales.md)
 - [mobile/design-mvp.md](../md/mobile/design-mvp.md) · [screen-specs.md](../md/mobile/screen-specs.md)
-- [docs-portal-restore.md](../md/general/docs-portal-restore.md)
+- [deployment.md](../md/general/deployment.md)
 - [context/](./)

@@ -1,93 +1,79 @@
 # Архитектура системы
 
+> Обновлено: 21 августа 2026. Prod-домены: `*.bospur.ru`.
+
 ## Схема взаимодействия
 
 ```
 Telegram
    │
-   ├── Mini App (apps/app) ← app.bospur.ru
-   │      │
-   │      └── GET /api/clinics/{slug}/*
+   ├── Mini App (apps/app) ← https://app.bospur.ru
+   │      └── GET /api/clinics/{slug}/*  (+ initData)
    │
-   └── Бот (long polling, внутри Go сервера)
+   └── Бот (long polling, внутри Go-сервера)
 
-Браузер (сотрудники клиники)
-   │
-   └── Админ-панель (apps/admin) → admin.bospur.ru
-          │
-          ├── POST /api/admin/login
-          └── /api/admin/* (JWT Bearer)
+Браузер (персонал)
+   └── Админ-панель (apps/admin) ← https://admin.bospur.ru
+          └── /api/admin/*  (httpOnly cookie + /api/admin/me)
 
-                    ↓ всё через Nginx
+Android «Ветпрактика» (apps/mobile, Capacitor)
+   └── /api/mobile/v1/*  (mobile JWT; OTP в Telegram / VK ID)
 
-Nginx (Ubuntu VPS, системный)
-   │
-   ├── admin.bospur.ru → /var/www/vp-bot-admin (статика)
-   ├── app.bospur.ru   → /var/www/vp-bot-app   (статика)
-   ├── docs.bospur.ru  → /var/www/you-vet-docs (HTML)
-   └── api.bospur.ru   → Go app :8080
+Документация команды
+   └── https://docs.bospur.ru  (React SPA, apps/docs)
+
+                    ↓ всё через Nginx на VPS
+
+Nginx (Ubuntu, системный; не Docker)
+   ├── admin.bospur.ru → /var/www/vp-bot-admin
+   ├── app.bospur.ru   → /var/www/vp-bot-app
+   ├── docs.bospur.ru  → /var/www/you-vet-docs
+   └── api.bospur.ru   → 127.0.0.1:8080  (Docker Go)
                                            │
-                                           ├── Go HTTP сервер (Docker)
-                                           └── PostgreSQL :5432 (Docker)
+                                           ├── Go HTTP (GHCR-образ)
+                                           └── PostgreSQL :5432 (Docker, наружу закрыт)
 ```
+
+TLS: Let's Encrypt, отдельные сертификаты на каждый поддомен. `:443` должен слушать **nginx** (не VPN/xray).
 
 ## Приложения
 
-### apps/server — Go бэкенд
+| Каталог | Что |
+|---|---|
+| `apps/server` | Go API + Telegram-бот + миграции |
+| `apps/admin` | React 19 + MUI v7, mobile-first `< sm` |
+| `apps/app` | Telegram Mini App (React 18) |
+| `apps/mobile` | Capacitor, «Ветпрактика», RuStore (ещё не опубликован) |
+| `apps/docs` | Портал документации |
+| `packages/types` | `@you-vet/types` |
 
-```
-main.go
-internal/
-├── db/           — подключение к БД, запуск миграций
-├── repository/   — SQL запросы (animals, articles, clinic_info, doctors, users, grooming)
-├── handler/      — HTTP хендлеры
-├── middleware/   — JWT auth, CORS
-└── bot/          — Telegram бот (long polling, htmlformat)
-migrations/       — SQL файлы up/down (001–008)
-```
+### apps/server
 
-Слои: `HTTP → middleware → handler → repository → PostgreSQL`
+Слои: `HTTP → middleware → handler → repository → PostgreSQL`.
 
-### apps/admin — Веб-панель
+Миграции SQL в `apps/server/migrations/` (**001–021+**: контент, запись, вопросы, mobile/VK).
 
-```
-src/
-├── data/source/      — axios вызовы к API (с Bearer interceptor)
-├── modules/          — бизнес-модули (animals, articles, doctors, grooming, auth)
-│   └── <module>/
-│       ├── domain/types.ts   — типы модуля
-│       └── features/         — компоненты (таблицы, диалоги)
-├── screens/          — страницы (Layout + модули + логика)
-│   └── ClinicInfoScreen/     — О клинике: название, контакты, лого, баннер
-└── shared/           — AuthContext, Layout, ProtectedRoute, ui-компоненты
-```
+### apps/admin
 
-### apps/app — Telegram Mini App
+Модули: animals, articles, doctors, grooming, booking, clinic-info, users, stats. JWT для персонала — cookie (`COOKIE_DOMAIN=.bospur.ru`).
 
-```
-src/
-├── api/          — запросы к публичному API (fetchClinicInfo, fetchAnimals…)
-├── screens/      — Home, Animals, Categories, Articles, Doctors, Schedule, Grooming
-└── components/   — NavGrid (2×2, tap-анимации), FeaturedArticles, NavList, DoctorAvatar…
-```
+### apps/app
 
-### packages/types — Общие TypeScript типы
+Экраны: Home, статьи, врачи, расписание, груминг, запись (C1), «мои заявки», вопрос врачу.
 
-`@you-vet/types` — используется в `apps/admin` и `apps/app`.
+### apps/mobile
 
-### packages/cat — UI-компоненты
-
-`@you-vet/cat` — legacy-пакет (CatLogo, CatPreloader); Mini App с 2026-05-30 использует локальный CSS spinner.
+Тот же контент + auth (телефон/OTP, VK) + ЛК. Запись в APK — sprint 5. `appId` (не менять): `ru.snzbeachvolleyball25.vetpraktika`.
 
 ## Модель деплоя vs схема данных
 
 | Уровень | Состояние |
 |---|---|
-| PostgreSQL schema | Multi-tenant ready (`clinics`, `clinic_id`) |
-| Production runtime | **Single-clinic per VPS** (`CLINIC_SLUG`, `VITE_CLINIC_SLUG`) |
-| Admin mutations | Create scoped by JWT `clinic_id`; update/delete — частично без scoping |
+| PostgreSQL | Multi-tenant ready (`clinics`, `clinic_id`) |
+| Production runtime | **Один VPS = одна клиника** (`CLINIC_SLUG`, `VITE_CLINIC_SLUG`) |
+| Admin mutations | Create/update/delete в скоупе JWT `clinic_id` |
 
-Подробнее: [roles.md](./roles.md), [audit.md](./audit.md).
+Подробнее: [roles.md](./roles.md), [deployment.md](./deployment.md).
 
 ## CI/CD
 
@@ -95,34 +81,26 @@ src/
 git push origin dev
        │
        ▼
-GitHub Actions (path-based триггеры)
+GitHub Actions (path-based)
        │
-       ├── apps/server/**  → build image → GHCR → SSH → docker compose pull/up
-       ├── apps/admin/**   → npm build → scp → /var/www/vp-bot-admin/
-       ├── apps/app/**     → npm build → scp → /var/www/vp-bot-app/
-       └── docs/html/**    → scp → /var/www/you-vet-docs/
+       ├── apps/server/**     → Docker → GHCR → SSH → compose pull/up
+       ├── apps/admin/**      → npm build → scp /var/www/vp-bot-admin/
+       ├── apps/app/**        → npm build → scp /var/www/vp-bot-app/
+       └── docs/**, apps/docs → npm build портала → scp /var/www/you-vet-docs/
 ```
 
-Workflows: `.github/workflows/deploy-{server,admin,app,docs}.yml`
+Секрет сборки фронтов: `VITE_API_URL=https://api.bospur.ru`. Смена секрета **без** нового push admin/app не пересобирает `dist` — перезапустить workflow вручную.
 
-## Схема данных
+`docs/html/` — legacy, **не** деплоится.
+
+## Схема данных (кратко)
 
 ```
 clinics
-  └── users (admin/editor/groomer)
-  └── clinic_info (название, описание, телефон, адрес, email, сайт, logo_url, banner_url)
-  └── animals
-       └── articles (animal_id, content — HTML от TipTap, status: draft/published, slug auto)
-  └── doctors (status: draft/published)
-       └── doctor_schedules (еженедельные слоты)
-       └── doctor_schedule_exceptions (исключения на дату)
-  └── clinic_settings (schedule_display_weeks)
-  └── grooming_breeds (порода, duration, price)
-  └── grooming_weekly_template (рабочие дни грумера)
-  └── grooming_appointments (записи на конкретную дату)
+  └── users (admin / editor / groomer / manager)
+  └── clinic_info, animals → articles, doctors + schedules
+  └── grooming_*, booking_*, client questions
+  └── telegram_users, mobile_users (OTP / VK)
 ```
 
-Публичный API: клиника по `clinicSlug` в URL  
-Admin API: клиника из JWT (`clinic_id`)  
-Telegram бот: клиника из `CLINIC_SLUG` env
-
+Публичный API: клиника по `clinicSlug`. Admin: `clinic_id` из сессии. Бот: `CLINIC_SLUG`. Mobile: JWT `/api/mobile/v1`.

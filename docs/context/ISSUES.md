@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-06-10 (передача, mobile polish + iOS задел)
+> Последнее обновление: 2026-08-21 (домен bospur.ru, портал, продажи)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -83,7 +83,7 @@
 | INF-06 | ⚪ | Мониторинг VPS/API в admin для superadmin | planned — [deployment.md](../md/general/deployment.md) § Идеи |
 | INF-07 | ⚪ | Упрощённый error tracking (свой «мини-Sentry») | planned — fingerprint, booking/auth/upload |
 | INF-08 | ⚪ | Роль `superadmin` (разработчик платформы) | planned — отдельно от `admin` клиники |
-| INF-09 | 🟡 | Переезд VPS: IP `213.176.65.71` | **частично** — docs восстановлен; проверить `VPS_HOST` в GitHub Secrets + DNS остальных поддоменов |
+| INF-09 | 🟡 | Переезд VPS + домен `bospur.ru` | **fixed 2026-08-21** — DNS, certs, nginx HTTPS; x-ui снят с `:443` |
 
 ## Mobile (PRD-06)
 
@@ -119,7 +119,7 @@
 
 ## Следующие шаги
 
-1. **Mobile sprint 5** — booking
-2. Deploy polish (admin PNG, server VK name, APK)
-3. iOS: Xcode → `cap sync ios`
-4. **ADM-02** · C1 smoke
+1. Push `dev` — портал `/sales` + актуальные md
+2. **Mobile sprint 5** — booking
+3. BotFather + VK на `app.bospur.ru`; пересборка APK
+4. **ADM-02** · C1 smoke Mini App

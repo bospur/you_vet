@@ -15,6 +15,7 @@ const legacyRedirects: Record<string, string> = {
   'phase-5-appointments.html': '/phase-5-appointments',
   'audit.html': '/',
   'design-brief.html': '/',
+  'sales.html': '/sales',
 }
 
 export default function App() {

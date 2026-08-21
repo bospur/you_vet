@@ -1,57 +1,40 @@
 # YouVet — документация
 
-SaaS-платформа для ветеринарных клиник. Telegram Mini App + веб-панель + Go API.
+SaaS для ветклиник: Telegram Mini App + admin + Go API + бот + mobile «Ветпрактика».
 
 ## Структура
 
 ```
 docs/
-├── CODEWORDS.md      # кодовые слова AI: контекст · портал · передача
-├── README.md         # этот файл
-├── context/          # память между AI-сессиями (handoff)
-├── md/               # markdown для разработчиков и AI (не деплоится)
-│   ├── general/      # архитектура, деплой, роли, аудит…
-│   ├── server/       # Go API, бот
-│   ├── admin/        # веб-панель
-│   ├── app/          # Mini App
-│   ├── mobile/       # нативное приложение (planned)
-│   ├── phases/       # фазы продукта (запись и т.д.)
-│   ├── adr/          # architecture decision records
-│   └── frontend/     # шаблоны модулей admin
-└── html/             # портал для команды и клиники → docs.snz…
+├── CODEWORDS.md      # контекст · портал · передача
+├── context/          # память AI (на сайт не попадает)
+├── md/               # markdown; часть страниц портала импортируется изсюда
+│   ├── portal/       # продажи, roadmap, памятка клиники
+│   ├── general/      # архитектура, деплой, роли…
+│   ├── server/ admin/ app/ mobile/ phases/
+└── html/             # legacy, не деплоится
 ```
 
-| Каталог | Кто читает | Деплой на VPS |
-|---------|------------|---------------|
-| `context/` | AI, вы | нет |
-| `md/` | разработчики, AI | нет |
-| `html/` | команда, клиника | да (`deploy-docs.yml`) |
+Сайт: **https://docs.bospur.ru** — React `apps/docs`, CI `deploy-docs.yml`.
 
-Полный индекс markdown: [md/README.md](./md/README.md)  
-Кодовые слова: [CODEWORDS.md](./CODEWORDS.md)
+| Каталог | Кто читает | На docs.bospur.ru? |
+|---------|------------|---------------------|
+| `context/` | AI | нет |
+| `md/` | разработчики, AI | да, если файл в `apps/docs/src/pages.ts` |
+| `html/` | — | нет |
 
-## HTML-портал
+Индекс md: [md/README.md](./md/README.md) · кодовые слова: [CODEWORDS.md](./CODEWORDS.md)
 
-> https://docs.bospur.ru · обновление: **`портал`** (+ маршрут)
+## Страницы портала
 
-| Страница | Аудитория |
-|----------|-----------|
-| [html/index.html](./html/index.html) | Навигация |
-| [html/project-for-devs.html](./html/project-for-devs.html) | Разработчики |
-| [html/roadmap.html](./html/roadmap.html) | Roadmap |
-| [html/booking-for-clinic.html](./html/booking-for-clinic.html) | **Клиника** — запись |
-| [html/phase-5-appointments.html](./html/phase-5-appointments.html) | Фаза 5 (тех.) |
-| [html/rustore-app.html](./html/rustore-app.html) | **RuStore** — Ветпрактика |
-| [html/audit.html](./html/audit.html) | Аудит |
-| [html/mobile.html](./html/mobile.html) | Mobile (тех.) |
+| URL | Аудитория |
+|-----|-----------|
+| [/sales](https://docs.bospur.ru/sales) | продажи |
+| [/project-for-devs](https://docs.bospur.ru/project-for-devs) | разработка |
+| [/roadmap](https://docs.bospur.ru/roadmap) | команда |
+| [/rustore-app](https://docs.bospur.ru/rustore-app) · [/mobile](https://docs.bospur.ru/mobile) | mobile |
+| [/booking-for-clinic](https://docs.bospur.ru/booking-for-clinic) | клиника |
+| [/phase-5-appointments](https://docs.bospur.ru/phase-5-appointments) | запись (техплан) |
+| [/board](https://docs.bospur.ru/board) | канбан |
 
-## Быстрый старт (разработка)
-
-```bash
-git clone https://github.com/Bospur/you_vet.git
-cd you_vet
-npm install
-npm run dev
-```
-
-Подробнее → [md/general/development.md](./md/general/development.md)
+Обновление: кодовое слово **`портал`**.

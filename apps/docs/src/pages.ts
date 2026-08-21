@@ -4,8 +4,9 @@ import rustoreMd from '@docs-md/mobile/rustore-guide.md?raw'
 import mobileMd from '@docs-md/mobile/overview.md?raw'
 import phase5Md from '@docs-md/phases/phase-5-appointments.md?raw'
 import bookingClinicMd from '@docs-md/portal/booking-for-clinic.md?raw'
+import salesMd from '@docs-md/portal/sales.md?raw'
 
-export type DocSection = 'team' | 'clinic'
+export type DocSection = 'team' | 'clinic' | 'sales'
 
 export type DocPageConfig = {
   slug: string
@@ -19,6 +20,16 @@ export type DocPageConfig = {
 }
 
 export const docPages: DocPageConfig[] = [
+  {
+    slug: 'sales',
+    title: 'Продажи и презентация',
+    description: 'Как начинать продажи, демо, пилот, возражения, книги и статьи',
+    section: 'sales',
+    badge: { label: 'Sales', tone: 'pink' },
+    icon: '🤝',
+    markdown: salesMd,
+    subtitle: 'Для менеджера по продажам',
+  },
   {
     slug: 'project-for-devs',
     title: 'Project Overview',

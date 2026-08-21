@@ -1,8 +1,7 @@
 # Фаза 5 — Запись на приём (PRD-03)
 
-> Статус: **C1 + вопросы** · mobile: auth ✅, контент ✅, ЛК ✅, запись sprint 5 · Обновлено: **2026-06-10**  
-> Для клиники (простым языком): [booking-for-clinic.html](../../html/booking-for-clinic.html)  
-> Связанные документы: [roadmap.html](../../html/roadmap.html) · [roles.md](../general/roles.md) · [mobile/roadmap.md](../mobile/roadmap.md) · [rustore-guide.md](../mobile/rustore-guide.md)
+> Статус: **C1 + вопросы в коде** · mobile: auth/контент/ЛК ✅, запись sprint 5 · Обновлено: **2026-08-21** (`*.bospur.ru`)  
+> Для клиники: [запись — памятка](/booking-for-clinic) · [roadmap](/roadmap) · [роли](../general/roles.md) · [mobile](../mobile/overview.md)
 
 ## Суть (уточнено с клиникой)
 
