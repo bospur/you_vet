@@ -774,10 +774,60 @@ a {
   cursor: pointer;
 }
 
-.board-tag-picker {
+.board-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.board-filters-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-right: 4px;
+}
+
+.board-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.board-filter-chip.is-on {
+  border-color: #4caf50;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.board-filter-chip.tag-management.is-on {
+  background: #fff3e0;
+  color: #e65100;
+  border-color: #ffcc80;
+}
+
+.board-filter-chip.tag-development.is-on {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #90caf9;
+}
+
+.board-filter-chip.tag-customer.is-on {
+  background: #f3e5f5;
+  color: #6a1b9a;
+  border-color: #ce93d8;
 }
 
 .board-tag-option {
@@ -785,6 +835,7 @@ a {
   align-items: center;
   gap: 6px;
   font-size: 13px;
+  line-height: 1;
   border: 1px solid #ddd;
   border-radius: 999px;
   padding: 6px 10px;
@@ -795,15 +846,19 @@ a {
 .board-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .board-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
   font-weight: 600;
+  line-height: 1;
   border-radius: 999px;
-  padding: 3px 8px;
+  padding: 4px 8px;
 }
 
 .board-tag.tag-management,
@@ -841,7 +896,7 @@ a {
 .board-columns {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
   flex: 1;
   min-height: 0;
@@ -850,7 +905,7 @@ a {
 .board-column {
   background: #f0f0ee;
   border-radius: 10px;
-  padding: 12px;
+  padding: 10px;
   min-height: 0;
   min-width: 0;
   display: flex;
@@ -899,7 +954,7 @@ a {
 .board-cards {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -910,9 +965,9 @@ a {
 .board-card {
   background: #fff;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px;
-  border-left: 4px solid #e0e0e0;
+  border-radius: 7px;
+  padding: 8px 9px;
+  border-left: 3px solid #e0e0e0;
   cursor: grab;
 }
 
@@ -939,14 +994,15 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .board-card-title {
   font: inherit;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.3;
   flex: 1;
   background: none;
   border: none;
@@ -957,12 +1013,12 @@ a {
 }
 
 .board-priority {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  padding: 3px 7px;
-  border-radius: 6px;
+  padding: 2px 6px;
+  border-radius: 5px;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
@@ -988,45 +1044,81 @@ a {
 }
 
 .board-card-preview {
-  font-size: 12px;
+  font-size: 11px;
   color: #555;
-  line-height: 1.4;
-  margin: 0 0 8px;
+  line-height: 1.35;
+  margin: 0 0 4px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .board-card-meta {
-  font-size: 11px;
+  font-size: 10px;
   color: #888;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .board-card-actions {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 4px;
+  flex-wrap: nowrap;
   align-items: center;
 }
 
-.board-card-actions button,
-.board-status-select,
-.board-open {
-  font: inherit;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  background: #fafafa;
-  border-radius: 6px;
-  padding: 8px 10px;
-  min-height: 36px;
-  cursor: pointer;
+.board-card-icons {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-.board-status-select {
-  flex: 1 1 140px;
+.board-card-actions .board-status-select {
+  font: inherit;
+  font-size: 11px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  border-radius: 5px;
+  padding: 3px 7px;
+  min-height: 26px;
+  line-height: 1.2;
+  cursor: pointer;
+  flex: 1 1 auto;
+  width: auto;
   min-width: 0;
+  max-width: none;
+}
+
+.board-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #555;
+  flex: none;
+}
+
+.board-icon-btn svg {
+  display: block;
+}
+
+.board-modal-controls .board-status-select {
+  flex: none;
+  width: auto;
+  min-width: 10.5em;
+  max-width: 14em;
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
 }
 
 .board-open {
@@ -1036,9 +1128,22 @@ a {
 }
 
 .board-delete {
-  color: #c62828 !important;
-  border-color: #ffcdd2 !important;
-  background: #fff !important;
+  color: #c62828;
+  border-color: #ffcdd2;
+  background: #fff;
+}
+
+.board-card-actions .board-icon-btn,
+.board-modal-footer .board-delete {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+}
+
+.board-modal-footer .board-delete {
+  margin-left: auto;
 }
 
 .board-modal-overlay {
@@ -1114,9 +1219,9 @@ a {
 .board-modal-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  margin: 12px 0;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
 }
 
 .board-modal-controls label {
@@ -1126,7 +1231,8 @@ a {
   font-size: 12px;
   font-weight: 600;
   color: #555;
-  flex: 1 1 160px;
+  flex: 0 0 auto;
+  width: max-content;
 }
 
 .board-modal-edit textarea {
@@ -1301,10 +1407,8 @@ a {
   .comments-form button,
   .comment-action-btn,
   .comment-edit-actions button[type='submit'],
-  .board-card-actions button,
-  .board-open,
   .board-status-select,
-  .board-modal-footer button {
+  .board-modal-footer button:not(.board-delete) {
     min-height: 44px;
     padding: 10px 16px;
   }
@@ -1386,8 +1490,14 @@ a {
     font-size: 12px;
   }
 
-  .board-header {
-    margin: 12px 0 16px;
+  .board-filters {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .board-filter-chip {
+    min-height: 32px;
+    padding: 6px 10px;
   }
 
   .board-header h1 {
@@ -1425,47 +1535,52 @@ a {
     flex-direction: column;
   }
 
-  .board-create-row select,
-  .board-status-select {
+  .board-create-row select {
     max-width: none;
     width: 100%;
   }
 
-  .board-tag-option {
-    min-height: 44px;
-    padding: 10px 14px;
+  .board-card-actions .board-status-select {
+    width: auto;
+    flex: 1 1 auto;
   }
 
+  .board-tag-option {
+    min-height: 32px;
+    padding: 6px 12px;
+    align-items: center;
+  }
+
+  .board-tag,
   .board-tag-toggle {
-    min-height: 40px;
-    padding: 8px 12px;
+    min-height: 0;
+    padding: 5px 9px;
+    line-height: 1;
   }
 
   .board-card {
     cursor: default;
+    padding: 8px 9px;
   }
 
   .board-card-title {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
+    min-height: 0;
+    font-size: 13px;
   }
 
-  .board-card-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .board-card-preview {
+    display: none;
   }
 
-  .board-card-actions button,
-  .board-status-select,
-  .board-open {
-    width: 100%;
-    flex: none;
+  .board-card-meta {
+    margin-bottom: 6px;
   }
 
   .board-priority {
-    min-height: 36px;
-    padding: 6px 10px;
+    min-height: 0;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .board-modal-overlay {
@@ -1504,12 +1619,34 @@ a {
     align-items: stretch;
   }
 
-  .board-modal-footer {
-    flex-direction: column;
+  .board-modal-controls label {
+    width: 100%;
   }
 
-  .board-modal-footer button {
+  .board-modal-controls .board-status-select {
     width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .board-modal-footer {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .board-modal-footer button:not(.board-delete) {
+    width: auto;
+    flex: 1;
+  }
+
+  .board-icon-btn,
+  .board-delete {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
   }
 
   .comment-meta {
