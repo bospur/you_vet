@@ -29,11 +29,6 @@ export const TAG_OPTIONS: { value: TaskTag; label: string }[] = TASK_TAGS.map((t
   label: TAG_META[tag].label,
 }))
 
-export const TAG_SELECT_OPTIONS: { value: TaskTag | ''; label: string }[] = [
-  { value: '', label: 'Не указано' },
-  ...TAG_OPTIONS,
-]
-
 export const COLUMNS: { status: TaskStatus; title: string }[] = [
   { status: 'analysis', title: 'Анализ' },
   { status: 'todo', title: 'К выполнению' },

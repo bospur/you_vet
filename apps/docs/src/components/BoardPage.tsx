@@ -30,7 +30,7 @@ import {
   PRIORITY_META,
   PRIORITY_OPTIONS,
   TAG_META,
-  TAG_SELECT_OPTIONS,
+  TAG_OPTIONS,
   TASK_TAGS,
 } from '../board'
 import { useVisitor } from '../visitor-context'
@@ -620,10 +620,6 @@ function CreateTaskModal({
   const [tags, setTags] = useState<TaskTag[]>([])
   const [error, setError] = useState('')
 
-  function toggleTag(tag: TaskTag) {
-    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
@@ -677,21 +673,15 @@ function CreateTaskModal({
                 onChange={setPriority}
               />
             </label>
-            <div className="board-create-field">
-              <span>Для кого</span>
-              <div className="board-tag-picker" role="group" aria-label="Теги">
-                {TASK_TAGS.map((tag) => (
-                  <label key={tag} className={`board-tag-option ${TAG_META[tag].className}`}>
-                    <input
-                      type="checkbox"
-                      checked={tags.includes(tag)}
-                      onChange={() => toggleTag(tag)}
-                    />
-                    {TAG_META[tag].label}
-                  </label>
-                ))}
-              </div>
-            </div>
+            <label>
+              Для кого
+              <Select
+                multiple
+                value={tags}
+                options={TAG_OPTIONS}
+                onChange={setTags}
+              />
+            </label>
             <label>
               Описание
               <textarea
@@ -783,10 +773,11 @@ function TaskModal({
               <label>
                 Для кого
                 <Select
-                  value={task.tags[0] ?? ''}
-                  options={TAG_SELECT_OPTIONS}
+                  multiple
+                  value={task.tags}
+                  options={TAG_OPTIONS}
                   disabled={pending}
-                  onChange={(tag) => onPatch({ tags: tag ? [tag] : [] })}
+                  onChange={(tags) => onPatch({ tags })}
                 />
               </label>
             </div>
