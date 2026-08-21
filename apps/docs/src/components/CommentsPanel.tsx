@@ -5,7 +5,7 @@ import {
   postComment,
   type DocsComment,
 } from '../api'
-import { useVisitor } from '../visitor'
+import { useVisitor } from '../visitor-context'
 
 type Props = {
   pageSlug: string

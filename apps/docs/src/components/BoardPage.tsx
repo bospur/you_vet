@@ -10,7 +10,7 @@ import {
   type TaskStatus,
 } from '../api'
 import { nextPriority, PRIORITY_META } from '../board'
-import { useVisitor } from '../visitor'
+import { useVisitor } from '../visitor-context'
 
 const COLUMNS: { status: TaskStatus; title: string }[] = [
   { status: 'analysis', title: 'Анализ' },

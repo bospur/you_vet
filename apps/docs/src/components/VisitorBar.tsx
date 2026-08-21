@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useVisitor } from '../visitor'
+import { useVisitor } from '../visitor-context'
 
 export function VisitorBar() {
   const { visitor, login, logout } = useVisitor()
