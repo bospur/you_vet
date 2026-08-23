@@ -163,15 +163,6 @@ export async function fetchMe(): Promise<DocsVisitor> {
   return normalizeVisitor(data.visitor)
 }
 
-export async function recordVisit(path: string): Promise<void> {
-  if (path === '/login' || !hasSessionFlag()) return
-  await docsFetch('/api/docs/v1/visits', {
-    method: 'POST',
-    headers: jsonHeaders(),
-    body: JSON.stringify({ path }),
-  })
-}
-
 export async function fetchComments(pageSlug: string): Promise<DocsComment[]> {
   const res = await docsFetch(`/api/docs/v1/comments?page=${encodeURIComponent(pageSlug)}`)
   handleAuthError(res)
