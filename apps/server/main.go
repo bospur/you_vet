@@ -190,7 +190,6 @@ func main() {
 	http.HandleFunc("POST /api/docs/v1/logout", docsPortalHandler.Logout)
 	http.HandleFunc("POST /api/docs/v1/refresh", middleware.LoginRateLimit(30, 15*time.Minute, docsPortalHandler.Refresh))
 	http.HandleFunc("GET /api/docs/v1/me", docsAuth(docsPortalHandler.Me))
-	http.HandleFunc("POST /api/docs/v1/visits", middleware.LoginRateLimit(60, time.Minute, docsAuth(docsPortalHandler.RecordVisit)))
 	http.HandleFunc("GET /api/docs/v1/comments", docsAuth(docsPortalHandler.ListComments))
 	http.HandleFunc("POST /api/docs/v1/comments", middleware.LoginRateLimit(20, 15*time.Minute, docsAuth(docsPortalHandler.CreateComment)))
 	http.HandleFunc("PATCH /api/docs/v1/comments/{id}", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.UpdateComment)))
@@ -245,7 +244,6 @@ func main() {
 
 	http.HandleFunc("GET /api/admin/docs/stats", adminAuth(docsPortalHandler.AdminStats))
 	http.HandleFunc("GET /api/admin/docs/visitors", adminAuth(docsPortalHandler.AdminListVisitors))
-	http.HandleFunc("GET /api/admin/docs/visitors/{id}/visits", adminAuth(docsPortalHandler.AdminListVisits))
 
 	// Articles
 	http.HandleFunc("GET /api/admin/articles", contentAuth(adminHandler.GetAdminArticles))

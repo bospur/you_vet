@@ -51,10 +51,6 @@ type docsLoginBody struct {
 	Password    string `json:"password"`
 }
 
-type docsVisitBody struct {
-	Path string `json:"path"`
-}
-
 type docsCommentBody struct {
 	PageSlug string `json:"page_slug"`
 	Body     string `json:"body"`
@@ -132,23 +128,6 @@ func visitorJSON(v *repository.DocsVisitor) map[string]any {
 	}
 }
 
-func normalizeDocsPath(raw string) (string, bool) {
-	p := strings.TrimSpace(raw)
-	if p == "" {
-		return "", false
-	}
-	if i := strings.IndexByte(p, '#'); i >= 0 {
-		p = p[:i]
-	}
-	if p == "" || !strings.HasPrefix(p, "/") || strings.HasPrefix(p, "//") || strings.Contains(p, "..") || strings.Contains(p, "://") {
-		return "", false
-	}
-	if strings.ContainsAny(p, " \n\r\t") || len(p) > 200 {
-		return "", false
-	}
-	return p, true
-}
-
 func isUniqueViolation(err error) bool {
 	var pqErr *pq.Error
 	return errors.As(err, &pqErr) && pqErr.Code == "23505"
@@ -179,6 +158,7 @@ func (h *DocsPortalHandler) writeSession(w http.ResponseWriter, status int, visi
 		return
 	}
 	middleware.SetDocsAuthCookies(w, access, refresh)
+	_ = h.repo.TouchLastSeen(visitor.ID)
 	writeJSON(w, status, map[string]any{
 		"visitor": visitorJSON(visitor),
 	})
@@ -331,31 +311,8 @@ func (h *DocsPortalHandler) Me(w http.ResponseWriter, r *http.Request) {
 	if visitor == nil {
 		return
 	}
+	_ = h.repo.TouchLastSeen(visitor.ID)
 	writeJSON(w, http.StatusOK, map[string]any{"visitor": visitorJSON(visitor)})
-}
-
-func (h *DocsPortalHandler) RecordVisit(w http.ResponseWriter, r *http.Request) {
-	visitor := h.requireAccount(w, r)
-	if visitor == nil {
-		return
-	}
-
-	var req docsVisitBody
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
-		return
-	}
-	path, ok := normalizeDocsPath(req.Path)
-	if !ok {
-		http.Error(w, "некорректный путь", http.StatusBadRequest)
-		return
-	}
-
-	if err := h.repo.RecordVisit(visitor.ID, path); err != nil {
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func adminVisitorJSON(v repository.DocsVisitorAdmin) map[string]any {
@@ -363,8 +320,6 @@ func adminVisitorJSON(v repository.DocsVisitorAdmin) map[string]any {
 		"id":           v.ID,
 		"display_name": v.DisplayName,
 		"created_at":   v.CreatedAt.UTC().Format(time.RFC3339),
-		"last_path":    v.LastPath,
-		"visit_count":  v.VisitCount,
 		"has_password": v.HasPassword,
 	}
 	if v.LastSeenAt != nil {
@@ -395,41 +350,6 @@ func (h *DocsPortalHandler) AdminListVisitors(w http.ResponseWriter, r *http.Req
 		out = append(out, adminVisitorJSON(v))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"visitors": out})
-}
-
-func (h *DocsPortalHandler) AdminListVisits(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil || id <= 0 {
-		http.Error(w, "неверный id", http.StatusBadRequest)
-		return
-	}
-	visitor, err := h.repo.GetVisitor(id)
-	if err != nil {
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	if visitor == nil {
-		http.Error(w, "не найдено", http.StatusNotFound)
-		return
-	}
-	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	items, err := h.repo.ListVisitsAdmin(id, limit)
-	if err != nil {
-		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
-		return
-	}
-	out := make([]map[string]any, 0, len(items))
-	for _, v := range items {
-		out = append(out, map[string]any{
-			"id":         v.ID,
-			"path":       v.Path,
-			"created_at": v.CreatedAt.UTC().Format(time.RFC3339),
-		})
-	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"visitor": visitorJSON(visitor),
-		"visits":  out,
-	})
 }
 
 func (h *DocsPortalHandler) ListComments(w http.ResponseWriter, r *http.Request) {
