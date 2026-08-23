@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react'
-import type { DocsVisitor } from './api'
+import type { AuthPayload, DocsVisitor } from './api'
 
 export type VisitorContextValue = {
   visitor: DocsVisitor | null
-  login: (name: string) => Promise<DocsVisitor>
+  ready: boolean
+  login: (payload: AuthPayload) => Promise<DocsVisitor>
+  register: (payload: AuthPayload) => Promise<DocsVisitor>
   logout: () => void
 }
 

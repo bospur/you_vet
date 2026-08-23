@@ -9,9 +9,39 @@ import (
 )
 
 type DocsVisitor struct {
+	ID           int64
+	DisplayName  string
+	PasswordHash string
+	CreatedAt    time.Time
+	LastSeenAt   *time.Time
+	LastPath     string
+	VisitCount   int
+}
+
+type DocsVisitorAdmin struct {
 	ID          int64
 	DisplayName string
 	CreatedAt   time.Time
+	LastSeenAt  *time.Time
+	LastPath    string
+	VisitCount  int
+	HasPassword bool
+}
+
+type DocsVisit struct {
+	ID        int64
+	VisitorID int64
+	Path      string
+	CreatedAt time.Time
+}
+
+type DocsPortalStats struct {
+	VisitorsTotal        int `json:"visitors_total"`
+	VisitorsWithPassword int `json:"visitors_with_password"`
+	ActiveToday          int `json:"active_today"`
+	VisitsToday          int `json:"visits_today"`
+	VisitsLast7Days      int `json:"visits_last_7_days"`
+	VisitsLast30Days     int `json:"visits_last_30_days"`
 }
 
 type DocsComment struct {
@@ -46,51 +76,213 @@ func NewDocsPortalRepository(db *sql.DB) *DocsPortalRepository {
 	return &DocsPortalRepository{db: db}
 }
 
-func (r *DocsPortalRepository) CreateVisitor(displayName string) (*DocsVisitor, error) {
-	name := strings.TrimSpace(displayName)
+func scanDocsVisitor(scanner interface{ Scan(dest ...any) error }) (*DocsVisitor, error) {
 	var v DocsVisitor
-	err := r.db.QueryRow(
-		`INSERT INTO docs_visitors (display_name) VALUES ($1)
-		 RETURNING id, display_name, created_at`,
-		name,
-	).Scan(&v.ID, &v.DisplayName, &v.CreatedAt)
+	var hash sql.NullString
+	var lastSeen sql.NullTime
+	err := scanner.Scan(&v.ID, &v.DisplayName, &hash, &v.CreatedAt, &lastSeen, &v.LastPath, &v.VisitCount)
 	if err != nil {
 		return nil, err
+	}
+	if hash.Valid {
+		v.PasswordHash = hash.String
+	}
+	if lastSeen.Valid {
+		t := lastSeen.Time
+		v.LastSeenAt = &t
 	}
 	return &v, nil
 }
 
-func (r *DocsPortalRepository) GetOrCreateVisitor(displayName string) (*DocsVisitor, error) {
+const docsVisitorCols = `id, display_name, password_hash, created_at, last_seen_at, last_path, visit_count`
+
+func (r *DocsPortalRepository) CreateVisitorWithPassword(displayName, passwordHash string) (*DocsVisitor, error) {
 	name := strings.TrimSpace(displayName)
-	var v DocsVisitor
-	err := r.db.QueryRow(
-		`SELECT id, display_name, created_at FROM docs_visitors
+	row := r.db.QueryRow(
+		`INSERT INTO docs_visitors (display_name, password_hash, last_seen_at)
+		 VALUES ($1, $2, NOW())
+		 RETURNING `+docsVisitorCols,
+		name, passwordHash,
+	)
+	v, err := scanDocsVisitor(row)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+func (r *DocsPortalRepository) GetVisitorByName(displayName string) (*DocsVisitor, error) {
+	row := r.db.QueryRow(
+		`SELECT `+docsVisitorCols+` FROM docs_visitors
 		 WHERE lower(display_name) = lower($1)
-		 ORDER BY id ASC LIMIT 1`,
-		name,
-	).Scan(&v.ID, &v.DisplayName, &v.CreatedAt)
-	if err == sql.ErrNoRows {
-		return r.CreateVisitor(name)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &v, nil
-}
-
-func (r *DocsPortalRepository) GetVisitor(id int64) (*DocsVisitor, error) {
-	var v DocsVisitor
-	err := r.db.QueryRow(
-		`SELECT id, display_name, created_at FROM docs_visitors WHERE id = $1`,
-		id,
-	).Scan(&v.ID, &v.DisplayName, &v.CreatedAt)
+		 LIMIT 1`,
+		strings.TrimSpace(displayName),
+	)
+	v, err := scanDocsVisitor(row)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &v, nil
+	return v, nil
+}
+
+func (r *DocsPortalRepository) SetVisitorPassword(id int64, passwordHash string) error {
+	res, err := r.db.Exec(
+		`UPDATE docs_visitors SET password_hash = $1 WHERE id = $2 AND (password_hash IS NULL OR password_hash = '')`,
+		passwordHash, id,
+	)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r *DocsPortalRepository) GetVisitor(id int64) (*DocsVisitor, error) {
+	row := r.db.QueryRow(
+		`SELECT `+docsVisitorCols+` FROM docs_visitors WHERE id = $1`,
+		id,
+	)
+	v, err := scanDocsVisitor(row)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+func (r *DocsPortalRepository) RecordVisit(visitorID int64, path string) error {
+	var lastPath string
+	var lastAt time.Time
+	err := r.db.QueryRow(
+		`SELECT path, created_at FROM docs_visits
+		 WHERE visitor_id = $1
+		 ORDER BY id DESC LIMIT 1`,
+		visitorID,
+	).Scan(&lastPath, &lastAt)
+
+	insert := false
+	switch {
+	case err == sql.ErrNoRows:
+		insert = true
+	case err != nil:
+		return err
+	default:
+		insert = lastPath != path || time.Since(lastAt) > 2*time.Minute
+	}
+
+	if insert {
+		if _, err := r.db.Exec(
+			`INSERT INTO docs_visits (visitor_id, path) VALUES ($1, $2)`,
+			visitorID, path,
+		); err != nil {
+			return err
+		}
+	}
+
+	q := `UPDATE docs_visitors SET last_seen_at = NOW(), last_path = $2`
+	if insert {
+		q += `, visit_count = visit_count + 1`
+	}
+	q += ` WHERE id = $1`
+	_, err = r.db.Exec(q, visitorID, path)
+	return err
+}
+
+func (r *DocsPortalRepository) ListVisitorsAdmin() ([]DocsVisitorAdmin, error) {
+	rows, err := r.db.Query(
+		`SELECT id, display_name, created_at, last_seen_at, last_path, visit_count,
+		        (password_hash IS NOT NULL AND password_hash <> '')
+		 FROM docs_visitors
+		 ORDER BY last_seen_at DESC NULLS LAST, id DESC`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []DocsVisitorAdmin
+	for rows.Next() {
+		var v DocsVisitorAdmin
+		var lastSeen sql.NullTime
+		if err := rows.Scan(
+			&v.ID, &v.DisplayName, &v.CreatedAt, &lastSeen, &v.LastPath, &v.VisitCount, &v.HasPassword,
+		); err != nil {
+			return nil, err
+		}
+		if lastSeen.Valid {
+			t := lastSeen.Time
+			v.LastSeenAt = &t
+		}
+		items = append(items, v)
+	}
+	if items == nil {
+		items = []DocsVisitorAdmin{}
+	}
+	return items, rows.Err()
+}
+
+func (r *DocsPortalRepository) ListVisitsAdmin(visitorID int64, limit int) ([]DocsVisit, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	rows, err := r.db.Query(
+		`SELECT id, visitor_id, path, created_at
+		 FROM docs_visits
+		 WHERE visitor_id = $1
+		 ORDER BY created_at DESC
+		 LIMIT $2`,
+		visitorID, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []DocsVisit
+	for rows.Next() {
+		var v DocsVisit
+		if err := rows.Scan(&v.ID, &v.VisitorID, &v.Path, &v.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, v)
+	}
+	if items == nil {
+		items = []DocsVisit{}
+	}
+	return items, rows.Err()
+}
+
+func (r *DocsPortalRepository) GetPortalStats() (*DocsPortalStats, error) {
+	var s DocsPortalStats
+	err := r.db.QueryRow(
+		`SELECT
+		    COUNT(*),
+		    COUNT(*) FILTER (WHERE password_hash IS NOT NULL AND password_hash <> ''),
+		    COUNT(*) FILTER (WHERE last_seen_at >= date_trunc('day', NOW()))
+		 FROM docs_visitors`,
+	).Scan(&s.VisitorsTotal, &s.VisitorsWithPassword, &s.ActiveToday)
+	if err != nil {
+		return nil, err
+	}
+	err = r.db.QueryRow(
+		`SELECT
+		    COUNT(*) FILTER (WHERE created_at >= date_trunc('day', NOW())),
+		    COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days'),
+		    COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days')
+		 FROM docs_visits`,
+	).Scan(&s.VisitsToday, &s.VisitsLast7Days, &s.VisitsLast30Days)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
 
 func (r *DocsPortalRepository) ListComments(pageSlug string) ([]DocsComment, error) {

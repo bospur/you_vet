@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import {
   deleteComment,
   fetchComments,
@@ -23,26 +24,37 @@ function isOwnComment(visitor: DocsVisitor | null, c: DocsComment): boolean {
 }
 
 export function CommentsPanel({ pageSlug }: Props) {
-  const { visitor, login, logout } = useVisitor()
+  const { visitor, ready, logout } = useVisitor()
+  const location = useLocation()
+  const loginTo = `/login?next=${encodeURIComponent(`${location.pathname}${location.search}`)}`
   const [comments, setComments] = useState<DocsComment[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [name, setName] = useState('')
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [showRegister, setShowRegister] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBody, setEditBody] = useState('')
 
   useEffect(() => {
+    if (!ready || !visitor) {
+      setComments([])
+      setLoading(false)
+      return
+    }
     let cancelled = false
     setLoading(true)
     fetchComments(pageSlug)
       .then((items) => {
         if (!cancelled) setComments(items)
       })
-      .catch(() => {
-        if (!cancelled) setError('Не удалось загрузить комментарии')
+      .catch((err) => {
+        if (cancelled) return
+        if (err instanceof Error && err.message === 'auth_required') {
+          logout()
+          setError('Войдите снова, чтобы видеть комментарии')
+          return
+        }
+        setError('Не удалось загрузить комментарии')
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -50,30 +62,11 @@ export function CommentsPanel({ pageSlug }: Props) {
     return () => {
       cancelled = true
     }
-  }, [pageSlug])
-
-  async function handleRegister(e: FormEvent) {
-    e.preventDefault()
-    setError('')
-    setSubmitting(true)
-    try {
-      await login(name)
-      setShowRegister(false)
-      setName('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка регистрации')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  }, [pageSlug, ready, visitor, logout])
 
   async function handleComment(e: FormEvent) {
     e.preventDefault()
-    if (!body.trim()) return
-    if (!visitor) {
-      setShowRegister(true)
-      return
-    }
+    if (!body.trim() || !visitor) return
     setError('')
     setSubmitting(true)
     try {
@@ -83,7 +76,6 @@ export function CommentsPanel({ pageSlug }: Props) {
     } catch (err) {
       if (err instanceof Error && err.message === 'auth_required') {
         logout()
-        setShowRegister(true)
         setError('Войдите снова, чтобы оставить комментарий')
       } else {
         setError(err instanceof Error ? err.message : 'Ошибка отправки')
@@ -145,13 +137,35 @@ export function CommentsPanel({ pageSlug }: Props) {
     }
   }
 
+  if (!ready) {
+    return (
+      <section className="comments">
+        <h2>Комментарии</h2>
+        <p className="comments-muted">Загрузка…</p>
+      </section>
+    )
+  }
+
+  if (!visitor) {
+    return (
+      <section className="comments">
+        <h2>Комментарии</h2>
+        <p className="comments-hint">
+          Комментарии видны после входа. Документ выше можно читать без аккаунта.
+        </p>
+        <p>
+          <Link className="visitor-login-link" to={loginTo}>
+            Войти, чтобы обсудить
+          </Link>
+        </p>
+      </section>
+    )
+  }
+
   return (
     <section className="comments">
       <h2>Комментарии</h2>
-      <p className="comments-hint">
-        Свои комментарии можно изменить или удалить. Если кнопок нет — выйдите в шапке и
-        войдите с тем же именем.
-      </p>
+      <p className="comments-hint">Свои комментарии можно изменить или удалить.</p>
 
       {loading ? <p className="comments-muted">Загрузка…</p> : null}
       {!loading && comments.length === 0 ? (
@@ -216,30 +230,9 @@ export function CommentsPanel({ pageSlug }: Props) {
         ))}
       </ul>
 
-      {visitor ? (
-        <p className="comments-user">
-          Вы: <strong>{visitor.display_name}</strong>
-        </p>
-      ) : null}
-
-      {showRegister || !visitor ? (
-        <form className="comments-form" onSubmit={handleRegister}>
-          <label>
-            Имя для комментариев
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Например: Мария"
-              minLength={2}
-              maxLength={40}
-              required
-            />
-          </label>
-          <button type="submit" disabled={submitting}>
-            {submitting ? '…' : 'Войти'}
-          </button>
-        </form>
-      ) : null}
+      <p className="comments-user">
+        Вы: <strong>{visitor.display_name}</strong>
+      </p>
 
       <form className="comments-form" onSubmit={handleComment}>
         <label>
@@ -253,7 +246,7 @@ export function CommentsPanel({ pageSlug }: Props) {
             required
           />
         </label>
-        <button type="submit" disabled={submitting || !visitor}>
+        <button type="submit" disabled={submitting}>
           {submitting ? '…' : 'Отправить'}
         </button>
       </form>

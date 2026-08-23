@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -29,7 +28,7 @@ func DocsClaimsFromContext(r *http.Request) *DocsClaims {
 
 func DocsAuth(secret string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		raw := docsTokenFromRequest(r)
+		raw := DocsAccessTokenFromRequest(r)
 		if raw == "" {
 			http.Error(w, "требуется авторизация", http.StatusUnauthorized)
 			return
@@ -52,12 +51,12 @@ func DocsAuth(secret string, next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if typ, _ := mapClaims["typ"].(string); typ != "docs" {
+		if typ, _ := mapClaims["typ"].(string); typ != "docs_access" {
 			http.Error(w, "недействительный токен", http.StatusUnauthorized)
 			return
 		}
 
-		visitorID, ok := visitorIDFromClaims(mapClaims)
+		visitorID, ok := VisitorIDFromMapClaims(mapClaims)
 		if !ok {
 			http.Error(w, "недействительный токен", http.StatusUnauthorized)
 			return
@@ -75,15 +74,7 @@ func DocsAuth(secret string, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func docsTokenFromRequest(r *http.Request) string {
-	auth := r.Header.Get("Authorization")
-	if strings.HasPrefix(auth, "Bearer ") {
-		return strings.TrimPrefix(auth, "Bearer ")
-	}
-	return ""
-}
-
-func visitorIDFromClaims(mapClaims jwt.MapClaims) (int64, bool) {
+func VisitorIDFromMapClaims(mapClaims jwt.MapClaims) (int64, bool) {
 	switch v := mapClaims["sub"].(type) {
 	case float64:
 		if v <= 0 {

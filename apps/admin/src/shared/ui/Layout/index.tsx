@@ -24,6 +24,7 @@ import ContentCutIcon from '@mui/icons-material/ContentCut';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import InfoIcon from '@mui/icons-material/Info';
 import InsightsIcon from '@mui/icons-material/Insights';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAuth } from '../../config/AuthContext';
@@ -40,6 +41,7 @@ const NAV_ITEMS = [
   { label: 'Груминг', to: '/grooming', icon: <ContentCutIcon />, roles: ['admin', 'editor', 'groomer'] },
   { label: 'Запись', to: '/booking', icon: <EventAvailableIcon />, roles: ['admin', 'manager'] },
   { label: 'Пользователи', to: '/users', icon: <PeopleIcon />, roles: ['admin'] },
+  { label: 'Портал docs', to: '/docs-portal', icon: <MenuBookIcon />, roles: ['admin'] },
 ];
 
 interface LayoutProps {
