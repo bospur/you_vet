@@ -1,22 +1,14 @@
-import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useVisitor } from '../visitor-context'
 
 export function VisitorBar() {
-  const { visitor, login, logout } = useVisitor()
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [busy, setBusy] = useState(false)
+  const { visitor, ready, logout } = useVisitor()
+  const location = useLocation()
+  const next = `${location.pathname}${location.search}`
+  const loginTo = next && next !== '/' ? `/login?next=${encodeURIComponent(next)}` : '/login'
 
-  async function submit() {
-    if (name.trim().length < 2) return
-    setBusy(true)
-    try {
-      await login(name)
-      setOpen(false)
-      setName('')
-    } finally {
-      setBusy(false)
-    }
+  if (!ready) {
+    return <div className="visitor-bar visitor-bar-muted">…</div>
   }
 
   if (visitor) {
@@ -32,26 +24,9 @@ export function VisitorBar() {
 
   return (
     <div className="visitor-bar">
-      {open ? (
-        <>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ваше имя"
-            maxLength={40}
-          />
-          <button type="button" onClick={submit} disabled={busy}>
-            OK
-          </button>
-          <button type="button" className="link-btn" onClick={() => setOpen(false)}>
-            Отмена
-          </button>
-        </>
-      ) : (
-        <button type="button" className="link-btn" onClick={() => setOpen(true)}>
-          Войти
-        </button>
-      )}
+      <Link className="visitor-login-link" to={loginTo}>
+        Войти
+      </Link>
     </div>
   )
 }

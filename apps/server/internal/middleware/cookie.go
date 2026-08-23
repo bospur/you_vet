@@ -20,14 +20,18 @@ func AdminTokenTTL(remember bool) time.Duration {
 	return adminTokenSessionMaxAge
 }
 
-func adminCookieDomain() string {
+func cookieDomain() string {
 	return strings.TrimSpace(os.Getenv("COOKIE_DOMAIN"))
 }
 
-func adminCookieSecure() bool {
+func cookieSecure() bool {
 	v := strings.ToLower(strings.TrimSpace(os.Getenv("COOKIE_SECURE")))
 	return v == "1" || v == "true" || v == "yes"
 }
+
+func adminCookieDomain() string { return cookieDomain() }
+
+func adminCookieSecure() bool { return cookieSecure() }
 
 // SetAdminAuthCookie сохраняет JWT в httpOnly cookie.
 func SetAdminAuthCookie(w http.ResponseWriter, token string, remember bool) {
@@ -73,4 +77,58 @@ func TokenFromRequest(r *http.Request) string {
 		return ""
 	}
 	return parts[1]
+}
+
+const (
+	DocsAccessCookie  = "yv_docs_access"
+	DocsRefreshCookie = "yv_docs_refresh"
+	DocsSessionCookie = "yv_docs_session"
+
+	DocsAccessTTL  = 15 * time.Minute
+	DocsRefreshTTL = 30 * 24 * time.Hour
+)
+
+func docsCookie(name, value string, maxAge int, httpOnly bool) *http.Cookie {
+	return &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		Domain:   cookieDomain(),
+		MaxAge:   maxAge,
+		HttpOnly: httpOnly,
+		Secure:   cookieSecure(),
+		SameSite: http.SameSiteLaxMode,
+	}
+}
+
+// SetDocsAuthCookies ставит access + refresh (httpOnly) и флаг сессии (виден JS).
+func SetDocsAuthCookies(w http.ResponseWriter, access, refresh string) {
+	http.SetCookie(w, docsCookie(DocsAccessCookie, access, int(DocsAccessTTL.Seconds()), true))
+	http.SetCookie(w, docsCookie(DocsRefreshCookie, refresh, int(DocsRefreshTTL.Seconds()), true))
+	http.SetCookie(w, docsCookie(DocsSessionCookie, "1", int(DocsRefreshTTL.Seconds()), false))
+}
+
+// ClearDocsAuthCookies снимает все cookies портала.
+func ClearDocsAuthCookies(w http.ResponseWriter) {
+	http.SetCookie(w, docsCookie(DocsAccessCookie, "", -1, true))
+	http.SetCookie(w, docsCookie(DocsRefreshCookie, "", -1, true))
+	http.SetCookie(w, docsCookie(DocsSessionCookie, "", -1, false))
+}
+
+func DocsAccessTokenFromRequest(r *http.Request) string {
+	if c, err := r.Cookie(DocsAccessCookie); err == nil && c.Value != "" {
+		return c.Value
+	}
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "Bearer ") {
+		return strings.TrimPrefix(auth, "Bearer ")
+	}
+	return ""
+}
+
+func DocsRefreshTokenFromRequest(r *http.Request) string {
+	if c, err := r.Cookie(DocsRefreshCookie); err == nil && c.Value != "" {
+		return c.Value
+	}
+	return ""
 }

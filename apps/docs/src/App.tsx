@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AuthPage } from './components/AuthPage'
 import { BoardPage } from './components/BoardPage'
 import { DocPageView } from './components/DocPageView'
 import { HomePage } from './components/HomePage'
@@ -23,6 +24,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="login" element={<AuthPage />} />
         <Route path="board" element={<BoardPage />} />
         {Object.entries(legacyRedirects).map(([from, to]) => (
           <Route key={from} path={from} element={<Navigate to={to} replace />} />

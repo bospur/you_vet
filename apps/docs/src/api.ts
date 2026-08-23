@@ -1,9 +1,12 @@
-const STORAGE_KEY = 'youvet_docs_token'
-const VISITOR_KEY = 'youvet_docs_visitor'
-
 export type DocsVisitor = {
   id: number
   display_name: string
+  created_at?: string
+}
+
+export type AuthPayload = {
+  display_name: string
+  password: string
 }
 
 export type DocsComment = {
@@ -49,17 +52,53 @@ export type CreateTaskInput = {
 }
 
 const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.bospur.ru'
+const SESSION_FLAG = 'yv_docs_session='
 
-function authHeaders(): HeadersInit {
-  const token = localStorage.getItem(STORAGE_KEY)
-  return token ? { Authorization: `Bearer ${token}` } : {}
+let refreshInFlight: Promise<boolean> | null = null
+
+export function hasSessionFlag(): boolean {
+  if (typeof document === 'undefined') return false
+  return document.cookie.split(';').some((part) => part.trim().startsWith(SESSION_FLAG))
+}
+
+function jsonHeaders(): HeadersInit {
+  return { 'Content-Type': 'application/json' }
+}
+
+async function refreshSession(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = fetch(`${apiBase}/api/docs/v1/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then((res) => res.ok)
+      .finally(() => {
+        refreshInFlight = null
+      })
+  }
+  return refreshInFlight
+}
+
+async function docsFetch(path: string, init: RequestInit = {}, retry = true): Promise<Response> {
+  const res = await fetch(`${apiBase}${path}`, {
+    ...init,
+    credentials: 'include',
+    headers: init.headers,
+  })
+  if (res.status !== 401 || !retry) return res
+  const refreshed = await refreshSession()
+  if (!refreshed) return res
+  return docsFetch(path, init, false)
 }
 
 function handleAuthError(res: Response) {
   if (res.status === 401) {
-    clearSession()
     throw new Error('auth_required')
   }
+}
+
+function normalizeVisitor(raw: DocsVisitor): DocsVisitor {
+  return { ...raw, id: Number(raw.id) }
 }
 
 function normalizeTask(raw: DocsTask): DocsTask {
@@ -70,59 +109,81 @@ function normalizeTask(raw: DocsTask): DocsTask {
   }
 }
 
-export function loadVisitor(): DocsVisitor | null {
-  const raw = localStorage.getItem(VISITOR_KEY)
-  if (!raw) return null
-  try {
-    const visitor = JSON.parse(raw) as DocsVisitor
-    return { ...visitor, id: Number(visitor.id) }
-  } catch {
-    return null
-  }
+function normalizeComment(c: DocsComment): DocsComment {
+  return { ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }
 }
 
-export function saveSession(token: string, visitor: DocsVisitor) {
-  localStorage.setItem(STORAGE_KEY, token)
-  localStorage.setItem(VISITOR_KEY, JSON.stringify({ ...visitor, id: Number(visitor.id) }))
-}
-
-export function clearSession() {
-  localStorage.removeItem(STORAGE_KEY)
-  localStorage.removeItem(VISITOR_KEY)
-}
-
-export async function registerVisitor(displayName: string): Promise<DocsVisitor> {
-  const res = await fetch(`${apiBase}/api/docs/v1/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ display_name: displayName.trim() }),
-  })
+async function parseAuthResponse(res: Response): Promise<DocsVisitor> {
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(text || 'Не удалось зарегистрироваться')
+    throw new Error(text || 'Не удалось войти')
   }
-  const data = (await res.json()) as { token: string; visitor: DocsVisitor }
-  const visitor = { ...data.visitor, id: Number(data.visitor.id) }
-  saveSession(data.token, visitor)
-  return visitor
+  const data = (await res.json()) as { visitor: DocsVisitor }
+  return normalizeVisitor(data.visitor)
+}
+
+export async function registerVisitor(payload: AuthPayload): Promise<DocsVisitor> {
+  const res = await fetch(`${apiBase}/api/docs/v1/register`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: jsonHeaders(),
+    body: JSON.stringify({
+      display_name: payload.display_name.trim(),
+      password: payload.password,
+    }),
+  })
+  return parseAuthResponse(res)
+}
+
+export async function loginVisitor(payload: AuthPayload): Promise<DocsVisitor> {
+  const res = await fetch(`${apiBase}/api/docs/v1/login`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: jsonHeaders(),
+    body: JSON.stringify({
+      display_name: payload.display_name.trim(),
+      password: payload.password,
+    }),
+  })
+  return parseAuthResponse(res)
+}
+
+export async function logoutVisitor(): Promise<void> {
+  await fetch(`${apiBase}/api/docs/v1/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+}
+
+export async function fetchMe(): Promise<DocsVisitor> {
+  const res = await docsFetch('/api/docs/v1/me')
+  handleAuthError(res)
+  if (!res.ok) throw new Error('Не удалось проверить сессию')
+  const data = (await res.json()) as { visitor: DocsVisitor }
+  return normalizeVisitor(data.visitor)
+}
+
+export async function recordVisit(path: string): Promise<void> {
+  if (path === '/login' || !hasSessionFlag()) return
+  await docsFetch('/api/docs/v1/visits', {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify({ path }),
+  })
 }
 
 export async function fetchComments(pageSlug: string): Promise<DocsComment[]> {
-  const res = await fetch(
-    `${apiBase}/api/docs/v1/comments?page=${encodeURIComponent(pageSlug)}`,
-  )
+  const res = await docsFetch(`/api/docs/v1/comments?page=${encodeURIComponent(pageSlug)}`)
+  handleAuthError(res)
   if (!res.ok) throw new Error('Не удалось загрузить комментарии')
   const data = (await res.json()) as { comments: DocsComment[] }
-  return data.comments.map((c) => ({ ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }))
+  return data.comments.map(normalizeComment)
 }
 
 export async function postComment(pageSlug: string, body: string): Promise<DocsComment> {
-  const res = await fetch(`${apiBase}/api/docs/v1/comments`, {
+  const res = await docsFetch('/api/docs/v1/comments', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
+    headers: jsonHeaders(),
     body: JSON.stringify({ page_slug: pageSlug, body: body.trim() }),
   })
   handleAuthError(res)
@@ -131,17 +192,13 @@ export async function postComment(pageSlug: string, body: string): Promise<DocsC
     throw new Error(text || 'Не удалось отправить комментарий')
   }
   const data = (await res.json()) as { comment: DocsComment }
-  const c = data.comment
-  return { ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }
+  return normalizeComment(data.comment)
 }
 
 export async function patchComment(id: number, body: string): Promise<DocsComment> {
-  const res = await fetch(`${apiBase}/api/docs/v1/comments/${id}`, {
+  const res = await docsFetch(`/api/docs/v1/comments/${id}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
+    headers: jsonHeaders(),
     body: JSON.stringify({ body: body.trim() }),
   })
   handleAuthError(res)
@@ -150,15 +207,11 @@ export async function patchComment(id: number, body: string): Promise<DocsCommen
     throw new Error(text || 'Не удалось изменить комментарий')
   }
   const data = (await res.json()) as { comment: DocsComment }
-  const c = data.comment
-  return { ...c, visitor_id: Number(c.visitor_id), id: Number(c.id) }
+  return normalizeComment(data.comment)
 }
 
 export async function deleteComment(id: number): Promise<void> {
-  const res = await fetch(`${apiBase}/api/docs/v1/comments/${id}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  })
+  const res = await docsFetch(`/api/docs/v1/comments/${id}`, { method: 'DELETE' })
   handleAuthError(res)
   if (!res.ok && res.status !== 204) {
     const text = await res.text()
@@ -167,19 +220,17 @@ export async function deleteComment(id: number): Promise<void> {
 }
 
 export async function fetchTasks(): Promise<DocsTask[]> {
-  const res = await fetch(`${apiBase}/api/docs/v1/tasks`)
+  const res = await docsFetch('/api/docs/v1/tasks')
+  handleAuthError(res)
   if (!res.ok) throw new Error('Не удалось загрузить задачи')
   const data = (await res.json()) as { tasks: DocsTask[] }
   return data.tasks.map(normalizeTask)
 }
 
 export async function createTask(input: CreateTaskInput): Promise<DocsTask> {
-  const res = await fetch(`${apiBase}/api/docs/v1/tasks`, {
+  const res = await docsFetch('/api/docs/v1/tasks', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
+    headers: jsonHeaders(),
     body: JSON.stringify({
       title: input.title.trim(),
       priority: input.priority ?? 'normal',
@@ -197,12 +248,9 @@ export async function createTask(input: CreateTaskInput): Promise<DocsTask> {
 }
 
 export async function updateTask(id: number, patch: TaskPatch): Promise<DocsTask> {
-  const res = await fetch(`${apiBase}/api/docs/v1/tasks/${id}`, {
+  const res = await docsFetch(`/api/docs/v1/tasks/${id}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
+    headers: jsonHeaders(),
     body: JSON.stringify(patch),
   })
   handleAuthError(res)
@@ -215,10 +263,7 @@ export async function updateTask(id: number, patch: TaskPatch): Promise<DocsTask
 }
 
 export async function deleteTask(id: number): Promise<void> {
-  const res = await fetch(`${apiBase}/api/docs/v1/tasks/${id}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  })
+  const res = await docsFetch(`/api/docs/v1/tasks/${id}`, { method: 'DELETE' })
   handleAuthError(res)
   if (!res.ok && res.status !== 204) {
     const text = await res.text()

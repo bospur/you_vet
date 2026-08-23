@@ -38,7 +38,7 @@ export function HomePage() {
             <div className="card-title">
               Задачи <span className="badge badge-orange">Канбан</span>
             </div>
-            <div className="card-desc">Колонки, теги, описание карточки — общая доска команды</div>
+            <div className="card-desc">Колонки, теги, описание — после входа на портал</div>
           </div>
           <div className="card-arrow">›</div>
         </Link>

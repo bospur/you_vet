@@ -181,16 +181,21 @@ func main() {
 	http.HandleFunc("PATCH /api/mobile/v1/clinics/{clinicSlug}/booking/requests/{id}", mobileAuth(bookingHandler.CancelPublicRequest))
 	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/questions", mobileAuth(questionHandler.CreateMobileQuestion))
 
-	// ── Docs portal (анонимные комментарии) ─────────────────────────────────────
+	// ── Docs portal ─────────────────────────────────────────────────────────────
 	docsAuth := func(h http.HandlerFunc) http.HandlerFunc {
 		return middleware.IPRateLimit(30, time.Minute, middleware.DocsAuth(jwtSecret, h))
 	}
 	http.HandleFunc("POST /api/docs/v1/register", middleware.LoginRateLimit(10, 15*time.Minute, docsPortalHandler.Register))
-	http.HandleFunc("GET /api/docs/v1/comments", middleware.IPRateLimit(120, time.Minute, docsPortalHandler.ListComments))
+	http.HandleFunc("POST /api/docs/v1/login", middleware.LoginRateLimit(10, 15*time.Minute, docsPortalHandler.Login))
+	http.HandleFunc("POST /api/docs/v1/logout", docsPortalHandler.Logout)
+	http.HandleFunc("POST /api/docs/v1/refresh", middleware.LoginRateLimit(30, 15*time.Minute, docsPortalHandler.Refresh))
+	http.HandleFunc("GET /api/docs/v1/me", docsAuth(docsPortalHandler.Me))
+	http.HandleFunc("POST /api/docs/v1/visits", middleware.LoginRateLimit(60, time.Minute, docsAuth(docsPortalHandler.RecordVisit)))
+	http.HandleFunc("GET /api/docs/v1/comments", docsAuth(docsPortalHandler.ListComments))
 	http.HandleFunc("POST /api/docs/v1/comments", middleware.LoginRateLimit(20, 15*time.Minute, docsAuth(docsPortalHandler.CreateComment)))
 	http.HandleFunc("PATCH /api/docs/v1/comments/{id}", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.UpdateComment)))
 	http.HandleFunc("DELETE /api/docs/v1/comments/{id}", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.DeleteComment)))
-	http.HandleFunc("GET /api/docs/v1/tasks", middleware.IPRateLimit(120, time.Minute, docsPortalHandler.ListTasks))
+	http.HandleFunc("GET /api/docs/v1/tasks", docsAuth(docsPortalHandler.ListTasks))
 	http.HandleFunc("POST /api/docs/v1/tasks", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.CreateTask)))
 	http.HandleFunc("PATCH /api/docs/v1/tasks/{id}", middleware.LoginRateLimit(60, 15*time.Minute, docsAuth(docsPortalHandler.UpdateTask)))
 	http.HandleFunc("DELETE /api/docs/v1/tasks/{id}", middleware.LoginRateLimit(30, 15*time.Minute, docsAuth(docsPortalHandler.DeleteTask)))
@@ -237,6 +242,10 @@ func main() {
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))
 	http.HandleFunc("POST /api/admin/users", adminAuth(adminHandler.CreateAdminUser))
 	http.HandleFunc("DELETE /api/admin/users/{id}", adminAuth(adminHandler.DeleteAdminUser))
+
+	http.HandleFunc("GET /api/admin/docs/stats", adminAuth(docsPortalHandler.AdminStats))
+	http.HandleFunc("GET /api/admin/docs/visitors", adminAuth(docsPortalHandler.AdminListVisitors))
+	http.HandleFunc("GET /api/admin/docs/visitors/{id}/visits", adminAuth(docsPortalHandler.AdminListVisits))
 
 	// Articles
 	http.HandleFunc("GET /api/admin/articles", contentAuth(adminHandler.GetAdminArticles))

@@ -57,8 +57,7 @@ export function BoardPage() {
   const [formBusy, setFormBusy] = useState(false)
   const [pendingIds, setPendingIds] = useState<ReadonlySet<number>>(() => new Set())
   const [creating, setCreating] = useState(false)
-  const { visitor, login, logout } = useVisitor()
-  const [registerName, setRegisterName] = useState('')
+  const { visitor, ready, logout } = useVisitor()
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
   const [filterTags, setFilterTags] = useState<TaskTag[]>([])
   const tasksRef = useRef(tasks)
@@ -86,16 +85,26 @@ export function BoardPage() {
     setError('')
     try {
       setTasks(await fetchTasks())
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.message === 'auth_required') {
+        logout()
+        setError('Войдите, чтобы открыть доску')
+        return
+      }
       setError('Не удалось загрузить доску')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [logout])
 
   useEffect(() => {
+    if (!ready || !visitor) {
+      setTasks([])
+      setLoading(false)
+      return
+    }
     reload()
-  }, [reload])
+  }, [ready, visitor, reload])
 
   const openTask = tasks.find((t) => t.id === openId) ?? null
   const [canDrag, setCanDrag] = useState(false)
@@ -156,20 +165,6 @@ export function BoardPage() {
       if (frame) cancelAnimationFrame(frame)
     }
   }, [loading])
-
-  async function handleRegister(e: FormEvent) {
-    e.preventDefault()
-    setFormBusy(true)
-    setError('')
-    try {
-      await login(registerName)
-      setRegisterName('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка регистрации')
-    } finally {
-      setFormBusy(false)
-    }
-  }
 
   const visibleTasks = useMemo(() => {
     if (filterTags.length === 0) return tasks
@@ -309,25 +304,19 @@ export function BoardPage() {
         </p>
       </header>
 
-      {!visitor ? (
-        <form className="board-register" onSubmit={handleRegister}>
-          <p>Войдите с именем, чтобы добавлять и двигать задачи.</p>
-          <div className="board-register-row">
-            <input
-              value={registerName}
-              onChange={(e) => setRegisterName(e.target.value)}
-              placeholder="Ваше имя"
-              minLength={2}
-              maxLength={40}
-              required
-            />
-            <button type="submit" disabled={formBusy}>
-              Войти
-            </button>
-          </div>
-        </form>
+      {!ready ? <p className="comments-muted">Загрузка…</p> : null}
+
+      {ready && !visitor ? (
+        <div className="auth-gate">
+          <p>Канбан доступен после входа с паролем. Документы на главной можно читать без аккаунта.</p>
+          <Link className="visitor-login-link" to="/login?next=/board">
+            Войти на доску
+          </Link>
+        </div>
       ) : null}
 
+      {ready && visitor ? (
+        <>
       <div className="board-toolbar">
         <div className="board-filters" role="group" aria-label="Фильтр по тегам">
           <span className="board-filters-label">Для кого</span>
@@ -408,6 +397,8 @@ export function BoardPage() {
           onPatch={(patch) => patchTask(openTask.id, patch)}
           onDelete={() => removeTask(openTask.id)}
         />
+      ) : null}
+        </>
       ) : null}
     </div>
   )

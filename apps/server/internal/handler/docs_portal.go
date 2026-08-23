@@ -14,9 +14,12 @@ import (
 	"go-server/internal/repository"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
-const docsTokenTTL = 365 * 24 * time.Hour
+const docsAccessTokenTTL = middleware.DocsAccessTTL
+const docsRefreshTokenTTL = middleware.DocsRefreshTTL
 
 // Должен совпадать со slug в apps/docs/src/pages.ts (кроме канбана /board).
 var allowedDocSlugs = map[string]struct{}{
@@ -40,6 +43,16 @@ func NewDocsPortalHandler(repo *repository.DocsPortalRepository, secret string) 
 
 type docsRegisterBody struct {
 	DisplayName string `json:"display_name"`
+	Password    string `json:"password"`
+}
+
+type docsLoginBody struct {
+	DisplayName string `json:"display_name"`
+	Password    string `json:"password"`
+}
+
+type docsVisitBody struct {
+	Path string `json:"path"`
 }
 
 type docsCommentBody struct {
@@ -87,6 +100,146 @@ var allowedTaskTags = map[string]struct{}{
 }
 
 const maxTaskDescriptionRunes = 4000
+const docsPasswordMin = 8
+const docsPasswordMax = 72
+
+func validateDocsDisplayName(raw string) (string, error) {
+	name := strings.TrimSpace(raw)
+	n := utf8.RuneCountInString(name)
+	if n < 2 || n > 40 {
+		return "", errors.New("имя: от 2 до 40 символов")
+	}
+	return name, nil
+}
+
+func validateDocsPassword(pw string) error {
+	n := utf8.RuneCountInString(pw)
+	if n < docsPasswordMin || n > docsPasswordMax {
+		return errors.New("пароль: от 8 до 72 символов")
+	}
+	return nil
+}
+
+func visitorHasPassword(v *repository.DocsVisitor) bool {
+	return v != nil && strings.TrimSpace(v.PasswordHash) != ""
+}
+
+func visitorJSON(v *repository.DocsVisitor) map[string]any {
+	return map[string]any{
+		"id":           v.ID,
+		"display_name": v.DisplayName,
+		"created_at":   v.CreatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
+func normalizeDocsPath(raw string) (string, bool) {
+	p := strings.TrimSpace(raw)
+	if p == "" {
+		return "", false
+	}
+	if i := strings.IndexByte(p, '#'); i >= 0 {
+		p = p[:i]
+	}
+	if p == "" || !strings.HasPrefix(p, "/") || strings.HasPrefix(p, "//") || strings.Contains(p, "..") || strings.Contains(p, "://") {
+		return "", false
+	}
+	if strings.ContainsAny(p, " \n\r\t") || len(p) > 200 {
+		return "", false
+	}
+	return p, true
+}
+
+func isUniqueViolation(err error) bool {
+	var pqErr *pq.Error
+	return errors.As(err, &pqErr) && pqErr.Code == "23505"
+}
+
+func (h *DocsPortalHandler) requireAccount(w http.ResponseWriter, r *http.Request) *repository.DocsVisitor {
+	claims := middleware.DocsClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return nil
+	}
+	visitor, err := h.repo.GetVisitor(claims.VisitorID)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return nil
+	}
+	if !visitorHasPassword(visitor) {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return nil
+	}
+	return visitor
+}
+
+func (h *DocsPortalHandler) writeSession(w http.ResponseWriter, status int, visitor *repository.DocsVisitor) {
+	access, refresh, err := h.issueDocsTokenPair(visitor.ID, visitor.DisplayName)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	middleware.SetDocsAuthCookies(w, access, refresh)
+	writeJSON(w, status, map[string]any{
+		"visitor": visitorJSON(visitor),
+	})
+}
+
+func (h *DocsPortalHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	middleware.ClearDocsAuthCookies(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *DocsPortalHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	raw := middleware.DocsRefreshTokenFromRequest(r)
+	if raw == "" {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := jwt.Parse(raw, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(h.secret), nil
+	})
+	if err != nil || !token.Valid {
+		middleware.ClearDocsAuthCookies(w)
+		http.Error(w, "недействительный токен", http.StatusUnauthorized)
+		return
+	}
+
+	mapClaims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		middleware.ClearDocsAuthCookies(w)
+		http.Error(w, "недействительный токен", http.StatusUnauthorized)
+		return
+	}
+	if typ, _ := mapClaims["typ"].(string); typ != "docs_refresh" {
+		middleware.ClearDocsAuthCookies(w)
+		http.Error(w, "недействительный токен", http.StatusUnauthorized)
+		return
+	}
+
+	visitorID, ok := middleware.VisitorIDFromMapClaims(mapClaims)
+	if !ok {
+		middleware.ClearDocsAuthCookies(w)
+		http.Error(w, "недействительный токен", http.StatusUnauthorized)
+		return
+	}
+
+	visitor, err := h.repo.GetVisitor(visitorID)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if !visitorHasPassword(visitor) {
+		middleware.ClearDocsAuthCookies(w)
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	h.writeSession(w, http.StatusOK, visitor)
+}
 
 func (h *DocsPortalHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req docsRegisterBody
@@ -95,34 +248,195 @@ func (h *DocsPortalHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := strings.TrimSpace(req.DisplayName)
-	if utf8.RuneCountInString(name) < 2 || utf8.RuneCountInString(name) > 40 {
-		http.Error(w, "имя: от 2 до 40 символов", http.StatusBadRequest)
+	name, err := validateDocsDisplayName(req.DisplayName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validateDocsPassword(req.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	visitor, err := h.repo.GetOrCreateVisitor(name)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
 
-	token, err := h.signToken(visitor.ID, visitor.DisplayName)
+	existing, err := h.repo.GetVisitorByName(name)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
+	if existing != nil {
+		if visitorHasPassword(existing) {
+			http.Error(w, "это имя уже занято", http.StatusConflict)
+			return
+		}
+		if err := h.repo.SetVisitorPassword(existing.ID, string(hash)); err != nil {
+			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+			return
+		}
+		existing.PasswordHash = string(hash)
+		h.writeSession(w, http.StatusCreated, existing)
+		return
+	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{
-		"token": token,
-		"visitor": map[string]any{
-			"id":           visitor.ID,
-			"display_name": visitor.DisplayName,
-		},
+	visitor, err := h.repo.CreateVisitorWithPassword(name, string(hash))
+	if err != nil {
+		if isUniqueViolation(err) {
+			http.Error(w, "это имя уже занято", http.StatusConflict)
+			return
+		}
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	h.writeSession(w, http.StatusCreated, visitor)
+}
+
+func (h *DocsPortalHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req docsLoginBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+
+	name, err := validateDocsDisplayName(req.DisplayName)
+	if err != nil {
+		http.Error(w, "неверное имя или пароль", http.StatusUnauthorized)
+		return
+	}
+
+	visitor, err := h.repo.GetVisitorByName(name)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if !visitorHasPassword(visitor) {
+		http.Error(w, "неверное имя или пароль", http.StatusUnauthorized)
+		return
+	}
+	if bcrypt.CompareHashAndPassword([]byte(visitor.PasswordHash), []byte(req.Password)) != nil {
+		http.Error(w, "неверное имя или пароль", http.StatusUnauthorized)
+		return
+	}
+
+	h.writeSession(w, http.StatusOK, visitor)
+}
+
+func (h *DocsPortalHandler) Me(w http.ResponseWriter, r *http.Request) {
+	visitor := h.requireAccount(w, r)
+	if visitor == nil {
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"visitor": visitorJSON(visitor)})
+}
+
+func (h *DocsPortalHandler) RecordVisit(w http.ResponseWriter, r *http.Request) {
+	visitor := h.requireAccount(w, r)
+	if visitor == nil {
+		return
+	}
+
+	var req docsVisitBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	path, ok := normalizeDocsPath(req.Path)
+	if !ok {
+		http.Error(w, "некорректный путь", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.RecordVisit(visitor.ID, path); err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func adminVisitorJSON(v repository.DocsVisitorAdmin) map[string]any {
+	out := map[string]any{
+		"id":           v.ID,
+		"display_name": v.DisplayName,
+		"created_at":   v.CreatedAt.UTC().Format(time.RFC3339),
+		"last_path":    v.LastPath,
+		"visit_count":  v.VisitCount,
+		"has_password": v.HasPassword,
+	}
+	if v.LastSeenAt != nil {
+		out["last_seen_at"] = v.LastSeenAt.UTC().Format(time.RFC3339)
+	} else {
+		out["last_seen_at"] = nil
+	}
+	return out
+}
+
+func (h *DocsPortalHandler) AdminStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.repo.GetPortalStats()
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, stats)
+}
+
+func (h *DocsPortalHandler) AdminListVisitors(w http.ResponseWriter, r *http.Request) {
+	items, err := h.repo.ListVisitorsAdmin()
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	out := make([]map[string]any, 0, len(items))
+	for _, v := range items {
+		out = append(out, adminVisitorJSON(v))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"visitors": out})
+}
+
+func (h *DocsPortalHandler) AdminListVisits(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "неверный id", http.StatusBadRequest)
+		return
+	}
+	visitor, err := h.repo.GetVisitor(id)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if visitor == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	items, err := h.repo.ListVisitsAdmin(id, limit)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	out := make([]map[string]any, 0, len(items))
+	for _, v := range items {
+		out = append(out, map[string]any{
+			"id":         v.ID,
+			"path":       v.Path,
+			"created_at": v.CreatedAt.UTC().Format(time.RFC3339),
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"visitor": visitorJSON(visitor),
+		"visits":  out,
 	})
 }
 
 func (h *DocsPortalHandler) ListComments(w http.ResponseWriter, r *http.Request) {
+	if h.requireAccount(w, r) == nil {
+		return
+	}
+
 	slug := strings.TrimSpace(r.URL.Query().Get("page"))
 	if !isAllowedDocSlug(slug) {
 		http.Error(w, "неизвестная страница", http.StatusBadRequest)
@@ -144,9 +458,8 @@ func (h *DocsPortalHandler) ListComments(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *DocsPortalHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.DocsClaimsFromContext(r)
-	if claims == nil {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+	visitor := h.requireAccount(w, r)
+	if visitor == nil {
 		return
 	}
 
@@ -168,7 +481,7 @@ func (h *DocsPortalHandler) CreateComment(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	comment, err := h.repo.CreateComment(slug, claims.VisitorID, body)
+	comment, err := h.repo.CreateComment(slug, visitor.ID, body)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -180,9 +493,8 @@ func (h *DocsPortalHandler) CreateComment(w http.ResponseWriter, r *http.Request
 }
 
 func (h *DocsPortalHandler) UpdateComment(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.DocsClaimsFromContext(r)
-	if claims == nil {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+	visitor := h.requireAccount(w, r)
+	if visitor == nil {
 		return
 	}
 
@@ -204,7 +516,7 @@ func (h *DocsPortalHandler) UpdateComment(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	comment, err := h.repo.UpdateComment(id, claims.VisitorID, body)
+	comment, err := h.repo.UpdateComment(id, visitor.ID, body)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "не найдено или нет прав", http.StatusForbidden)
@@ -220,9 +532,8 @@ func (h *DocsPortalHandler) UpdateComment(w http.ResponseWriter, r *http.Request
 }
 
 func (h *DocsPortalHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.DocsClaimsFromContext(r)
-	if claims == nil {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+	visitor := h.requireAccount(w, r)
+	if visitor == nil {
 		return
 	}
 
@@ -232,7 +543,7 @@ func (h *DocsPortalHandler) DeleteComment(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := h.repo.DeleteComment(id, claims.VisitorID); err != nil {
+	if err := h.repo.DeleteComment(id, visitor.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "не найдено или нет прав", http.StatusForbidden)
 			return
@@ -245,6 +556,10 @@ func (h *DocsPortalHandler) DeleteComment(w http.ResponseWriter, r *http.Request
 }
 
 func (h *DocsPortalHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
+	if h.requireAccount(w, r) == nil {
+		return
+	}
+
 	items, err := h.repo.ListTasks()
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
@@ -259,9 +574,8 @@ func (h *DocsPortalHandler) ListTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DocsPortalHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.DocsClaimsFromContext(r)
-	if claims == nil {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+	visitor := h.requireAccount(w, r)
+	if visitor == nil {
 		return
 	}
 
@@ -298,7 +612,7 @@ func (h *DocsPortalHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.repo.CreateTask(claims.VisitorID, title, priority, description, tags)
+	task, err := h.repo.CreateTask(visitor.ID, title, priority, description, tags)
 	if err != nil {
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -308,9 +622,7 @@ func (h *DocsPortalHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.DocsClaimsFromContext(r)
-	if claims == nil {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+	if h.requireAccount(w, r) == nil {
 		return
 	}
 
@@ -387,9 +699,7 @@ func (h *DocsPortalHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DocsPortalHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
-	claims := middleware.DocsClaimsFromContext(r)
-	if claims == nil {
-		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+	if h.requireAccount(w, r) == nil {
 		return
 	}
 
@@ -462,14 +772,30 @@ func normalizeTaskTags(in []string) ([]string, error) {
 	return out, nil
 }
 
-func (h *DocsPortalHandler) signToken(visitorID int64, displayName string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+func (h *DocsPortalHandler) issueDocsTokenPair(visitorID int64, displayName string) (access, refresh string, err error) {
+	now := time.Now()
+	accessTok := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":  visitorID,
-		"typ":  "docs",
+		"typ":  "docs_access",
 		"name": displayName,
-		"exp":  time.Now().Add(docsTokenTTL).Unix(),
+		"iat":  now.Unix(),
+		"exp":  now.Add(docsAccessTokenTTL).Unix(),
 	})
-	return token.SignedString([]byte(h.secret))
+	access, err = accessTok.SignedString([]byte(h.secret))
+	if err != nil {
+		return "", "", err
+	}
+	refreshTok := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": visitorID,
+		"typ": "docs_refresh",
+		"iat": now.Unix(),
+		"exp": now.Add(docsRefreshTokenTTL).Unix(),
+	})
+	refresh, err = refreshTok.SignedString([]byte(h.secret))
+	if err != nil {
+		return "", "", err
+	}
+	return access, refresh, nil
 }
 
 func isAllowedDocSlug(slug string) bool {
