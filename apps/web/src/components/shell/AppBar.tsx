@@ -9,7 +9,7 @@ interface RootAppBarProps {
   info: ClinicInfo | null;
 }
 
-export function ProfileHeaderButton() {
+export function ProfileHeaderButton({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { data: profile } = useMobileProfile();
@@ -28,7 +28,7 @@ export function ProfileHeaderButton() {
   return (
     <button
       type="button"
-      className={styles.profileBtn}
+      className={`${styles.profileBtn} ${compact ? styles.profileBtnCompact : ''}`}
       onClick={goProfile}
       aria-label={isAuthenticated ? 'Личный кабинет' : 'Войти'}
     >

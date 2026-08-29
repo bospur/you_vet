@@ -1,20 +1,22 @@
+import { localGet, localRemove, localSet } from '../lib/webStorage';
+
 const ACCESS_KEY = 'access_token';
 const REFRESH_KEY = 'refresh_token';
 
 export async function getAccessToken(): Promise<string | null> {
-  return localStorage.getItem(ACCESS_KEY);
+  return localGet(ACCESS_KEY);
 }
 
 export async function getRefreshToken(): Promise<string | null> {
-  return localStorage.getItem(REFRESH_KEY);
+  return localGet(REFRESH_KEY);
 }
 
 export async function setTokens(access: string, refresh: string): Promise<void> {
-  localStorage.setItem(ACCESS_KEY, access);
-  localStorage.setItem(REFRESH_KEY, refresh);
+  localSet(ACCESS_KEY, access);
+  localSet(REFRESH_KEY, refresh);
 }
 
 export async function clearTokens(): Promise<void> {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
+  localRemove(ACCESS_KEY);
+  localRemove(REFRESH_KEY);
 }

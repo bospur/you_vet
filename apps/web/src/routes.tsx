@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/shell/AppShell';
 import { GroomingGuard } from './components/GroomingGuard';
@@ -5,10 +6,6 @@ import { ClinicLayout } from './layouts/ClinicLayout';
 import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import BookingHubScreen from './screens/booking/BookingHubScreen';
-import LoginScreen from './screens/auth/LoginScreen';
-import VerifyScreen from './screens/auth/VerifyScreen';
-import LinkTelegramScreen from './screens/auth/LinkTelegramScreen';
-import VkCallbackScreen from './screens/auth/VkCallbackScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 import MoreScreen from './screens/MoreScreen';
 import AnimalsScreen from './screens/content/AnimalsScreen';
@@ -23,42 +20,49 @@ import GroomingScheduleScreen from './screens/content/GroomingScheduleScreen';
 import QuestionScreen from './screens/content/QuestionScreen';
 import ProfileScreen from './screens/profile/ProfileScreen';
 
+const LoginScreen = lazy(() => import('./screens/auth/LoginScreen'));
+const VerifyScreen = lazy(() => import('./screens/auth/VerifyScreen'));
+const LinkTelegramScreen = lazy(() => import('./screens/auth/LinkTelegramScreen'));
+const VkCallbackScreen = lazy(() => import('./screens/auth/VkCallbackScreen'));
+
 export function AppRoutes() {
   return (
-    <Routes>
-      <Route element={<ClinicLayout />}>
-        <Route path="/splash" element={<SplashScreen />} />
-        <Route path="/" element={<AppShell />}>
-          <Route index element={<HomeScreen />} />
-          <Route path="animals" element={<AnimalsScreen />} />
-          <Route path="animals/:animalSlug/articles" element={<ArticlesScreen />} />
-          <Route path="articles/:articleSlug" element={<ArticleScreen />} />
-          <Route path="doctors" element={<DoctorsScreen />} />
-          <Route path="doctors/:doctorId" element={<DoctorScreen />} />
-          <Route path="schedule" element={<ScheduleScreen />} />
-          <Route
-            path="grooming"
-            element={
-              <GroomingGuard>
-                <GroomingScreen />
-              </GroomingGuard>
-            }
-          />
-          <Route path="grooming/breeds" element={<GroomingBreedsScreen />} />
-          <Route path="grooming/schedule" element={<GroomingScheduleScreen />} />
-          <Route path="question" element={<QuestionScreen />} />
-          <Route path="more" element={<MoreScreen />} />
-          <Route path="profile" element={<ProfileScreen />} />
-          <Route path="booking" element={<BookingHubScreen />} />
-          <Route path="booking/new" element={<PlaceholderScreen title="Выбор услуги" />} />
-          <Route path="booking/requests" element={<PlaceholderScreen title="Мои заявки" />} />
-          <Route path="auth/login" element={<LoginScreen />} />
-          <Route path="auth/vk-callback" element={<VkCallbackScreen />} />
-          <Route path="auth/verify" element={<VerifyScreen />} />
-          <Route path="auth/link-telegram" element={<LinkTelegramScreen />} />
+    <Suspense fallback={null}>
+      <Routes>
+        <Route element={<ClinicLayout />}>
+          <Route path="/splash" element={<SplashScreen />} />
+          <Route path="/" element={<AppShell />}>
+            <Route index element={<HomeScreen />} />
+            <Route path="animals" element={<AnimalsScreen />} />
+            <Route path="animals/:animalSlug/articles" element={<ArticlesScreen />} />
+            <Route path="articles/:articleSlug" element={<ArticleScreen />} />
+            <Route path="doctors" element={<DoctorsScreen />} />
+            <Route path="doctors/:doctorId" element={<DoctorScreen />} />
+            <Route path="schedule" element={<ScheduleScreen />} />
+            <Route
+              path="grooming"
+              element={
+                <GroomingGuard>
+                  <GroomingScreen />
+                </GroomingGuard>
+              }
+            />
+            <Route path="grooming/breeds" element={<GroomingBreedsScreen />} />
+            <Route path="grooming/schedule" element={<GroomingScheduleScreen />} />
+            <Route path="question" element={<QuestionScreen />} />
+            <Route path="more" element={<MoreScreen />} />
+            <Route path="profile" element={<ProfileScreen />} />
+            <Route path="booking" element={<BookingHubScreen />} />
+            <Route path="booking/new" element={<PlaceholderScreen title="Выбор услуги" />} />
+            <Route path="booking/requests" element={<PlaceholderScreen title="Мои заявки" />} />
+            <Route path="auth/login" element={<LoginScreen />} />
+            <Route path="auth/vk-callback" element={<VkCallbackScreen />} />
+            <Route path="auth/verify" element={<VerifyScreen />} />
+            <Route path="auth/link-telegram" element={<LinkTelegramScreen />} />
+          </Route>
         </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/splash" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/splash" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

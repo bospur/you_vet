@@ -2,8 +2,8 @@ import { Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import type { ClinicInfo } from '@you-vet/types';
 import { InstallBanner } from '../InstallBanner';
 import { RootAppBar } from './AppBar';
-import { SideNav } from './SideNav';
 import { TabBar } from './TabBar';
+import { TopBar } from './TopBar';
 import styles from './AppShell.module.css';
 
 export type ClinicOutletContext = ClinicInfo | null;
@@ -20,7 +20,7 @@ export function AppShell() {
 
   return (
     <div className={styles.root}>
-      <SideNav info={info ?? null} />
+      <TopBar info={info ?? null} />
       <div className={styles.column}>
         {isTabRoot && <RootAppBar info={info ?? null} />}
         <InstallBanner />

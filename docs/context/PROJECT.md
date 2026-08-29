@@ -1,6 +1,6 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-08-29 (PWA `apps/web`, сторы frozen)
+> Последнее обновление: 2026-08-29 вечер (PWA на web.bospur.ru)
 
 ## Что это
 
@@ -15,7 +15,7 @@ SaaS для ветклиник: **Telegram Mini App** (клиенты) + **ве�
 | Admin | https://admin.bospur.ru |
 | API | https://api.bospur.ru |
 | Docs portal | https://docs.bospur.ru |
-| Web / PWA | https://web.bospur.ru (после выкладки) |
+| Web / PWA | https://web.bospur.ru |
 | VPS | Ubuntu, `213.176.65.71`; SSH `vps` / `deploy` (только пользователь) |
 
 ## Монорепо
@@ -44,7 +44,7 @@ packages/types/  @you-vet/types
 | Этап | Статус |
 |---|---|
 | M0 backend `/api/mobile/v1` | ✅ prod |
-| `apps/web` PWA + десктоп-шелл | 🟡 в коде, ждёт DNS/nginx/`deploy-web` |
+| `apps/web` PWA + десктоп-шелл | ✅ prod; UX десктопа — макеты Figma, вёрстка след. сессия |
 | Capacitor Android/iOS / RuStore | ⏸ **frozen** |
 
 API: `/api/mobile/v1` · `appId` native: `ru.snzbeachvolleyball25.vetpraktika` (не менять)
@@ -52,7 +52,7 @@ API: `/api/mobile/v1` · `appId` native: `ru.snzbeachvolleyball25.vetpraktika` (
 ## Git
 
 - `dev` — деплой по push (`deploy-server` / `deploy-admin` / `deploy-app` / `deploy-docs` / **`deploy-web`**)
-- `apps/mobile` не деплоится на `web.bospur.ru`
+- Рабочая ветка сессии: **`work-web`**
 
 ## Ключевые документы
 

@@ -12,7 +12,11 @@
   --vet-text-hint: #8e8e93;
   --vet-icon-color: var(--vet-green-label);
   --vet-surface-card: var(--vet-green-surface);
-  --vet-accent: #2e7d32;
+  --vet-accent: #2e7d33;
+  --vet-hero-bg: #edf5eb;
+  --vet-desk-bg: #f7faf5;
+  --vet-card-border: #8cc78f;
+  --vet-clinic-card: #f0f7f0;
   --vet-accent-soft: rgba(76, 175, 80, 0.08);
   --vet-accent-soft-md: rgba(76, 175, 80, 0.12);
   --vet-accent-soft-chip: rgba(76, 175, 80, 0.1);
@@ -37,7 +41,7 @@
   --vet-tab-height: 56px;
   --vet-app-bar-height: 52px;
   --vet-sidebar-width: 240px;
-  --vet-content-max: 1100px;
+  --vet-content-max: 1344px;
 }
 
 :root[data-theme='dark'] {
@@ -59,6 +63,10 @@
   --vet-green-surface: var(--vet-surface-card);
 
   --vet-accent: #81c784;
+  --vet-hero-bg: #1e2a1e;
+  --vet-desk-bg: #121212;
+  --vet-card-border: rgba(129, 199, 132, 0.35);
+  --vet-clinic-card: #2c2c2e;
   --vet-accent-soft: rgba(255, 255, 255, 0.08);
   --vet-accent-soft-md: rgba(255, 255, 255, 0.1);
   --vet-accent-soft-chip: #2c2c2e;

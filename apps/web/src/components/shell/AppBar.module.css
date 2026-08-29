@@ -105,6 +105,13 @@
   font-weight: 700;
 }
 
+.profileBtnCompact,
+.profileBtnCompact .profileAvatar,
+.profileBtnCompact .profileFallback {
+  width: 36px;
+  height: 36px;
+}
+
 .loginIcon {
   width: 20px;
   height: 20px;
