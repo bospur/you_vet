@@ -1,55 +1,89 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { isVkConfigured, startVkLogin } from '../../auth/vkLogin';
-import { authRequestCode, parseAuthError } from '../../api/auth';
+import {
+  authRequestCode,
+  fetchAuthOptions,
+  parseAuthError,
+  type AuthChannel,
+  type AuthOptions,
+} from '../../api/auth';
 import { phone } from '../../utils/phone';
 import styles from './LoginScreen.module.css';
+
+const DEFAULT_OPTIONS: AuthOptions = { telegram: true, email: false, whatsapp: false };
 
 export default function LoginScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('return') ?? '/';
 
+  const [options, setOptions] = useState<AuthOptions>(DEFAULT_OPTIONS);
+  const [channel, setChannel] = useState<AuthChannel>('telegram');
   const [phoneInput, setPhoneInput] = useState('+7');
-  const [loadingVk, setLoadingVk] = useState(false);
-  const [loadingPhone, setLoadingPhone] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleVk = async () => {
-    setError(null);
-    setLoadingVk(true);
-    try {
-      await startVkLogin(returnUrl);
-    } catch (err) {
-      setError(parseAuthError(err));
-    } finally {
-      setLoadingVk(false);
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    fetchAuthOptions()
+      .then((opts) => {
+        if (cancelled) return;
+        setOptions(opts);
+        if (opts.email) setChannel('email');
+        else if (opts.telegram) setChannel('telegram');
+        else if (opts.whatsapp) setChannel('whatsapp');
+      })
+      .catch(() => {
+        /* оставляем telegram */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handlePhoneRequest = async () => {
+  const handleRequest = async () => {
     setError(null);
-    const normalized = phone.normalize(phoneInput);
-    if (!phone.isValidRF(normalized)) {
-      setError('Укажите номер в формате +79XXXXXXXXX');
-      return;
-    }
-    setLoadingPhone(true);
+    setLoading(true);
     try {
-      await authRequestCode(normalized);
-      const qs = new URLSearchParams({ phone: normalized, return: returnUrl });
+      if (channel === 'email') {
+        const email = emailInput.trim();
+        if (!email.includes('@')) {
+          setError('Укажите корректный email');
+          return;
+        }
+        await authRequestCode({ channel: 'email', email });
+        const qs = new URLSearchParams({ channel: 'email', email, return: returnUrl });
+        navigate(`/auth/verify?${qs.toString()}`);
+        return;
+      }
+
+      const normalized = phone.normalize(phoneInput);
+      if (!phone.isValidRF(normalized)) {
+        setError('Укажите номер в формате +79XXXXXXXXX');
+        return;
+      }
+      await authRequestCode({ channel, phone: normalized });
+      const qs = new URLSearchParams({ channel, phone: normalized, return: returnUrl });
       navigate(`/auth/verify?${qs.toString()}`);
     } catch (err) {
       const msg = parseAuthError(err);
-      if (axiosIsPhoneNotLinked(err)) {
+      if (channel === 'telegram' && axiosIsPhoneNotLinked(err)) {
         navigate(`/auth/link-telegram?return=${encodeURIComponent(returnUrl)}`);
         return;
       }
       setError(msg);
     } finally {
-      setLoadingPhone(false);
+      setLoading(false);
     }
   };
+
+  const submitLabel =
+    channel === 'email'
+      ? 'Получить код на почту'
+      : channel === 'whatsapp'
+        ? 'Получить код в WhatsApp'
+        : 'Получить код в Telegram';
 
   return (
     <div className={styles.page}>
@@ -62,54 +96,108 @@ export default function LoginScreen() {
       </div>
 
       <div className={styles.card}>
-        {isVkConfigured() && (
+        <div className={styles.channels} role="tablist" aria-label="Способ входа">
+          {options.email && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={channel === 'email'}
+              className={channel === 'email' ? styles.channelActive : styles.channel}
+              onClick={() => {
+                setChannel('email');
+                setError(null);
+              }}
+            >
+              Почта
+            </button>
+          )}
           <button
             type="button"
-            className={styles.vkBtn}
-            onClick={handleVk}
-            disabled={loadingVk || loadingPhone}
+            role="tab"
+            aria-selected={channel === 'telegram'}
+            className={channel === 'telegram' ? styles.channelActive : styles.channel}
+            onClick={() => {
+              setChannel('telegram');
+              setError(null);
+            }}
           >
-            {loadingVk ? 'Подключаем VK…' : 'Продолжить через VK ID'}
+            Telegram
           </button>
-        )}
-
-        <div className={styles.divider}>
-          <span>или</span>
+          {options.whatsapp && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={channel === 'whatsapp'}
+              className={channel === 'whatsapp' ? styles.channelActive : styles.channel}
+              onClick={() => {
+                setChannel('whatsapp');
+                setError(null);
+              }}
+            >
+              WhatsApp
+            </button>
+          )}
         </div>
 
-        <label className={styles.label} htmlFor="login-phone">
-          Номер телефона
-        </label>
-        <input
-          id="login-phone"
-          className={styles.input}
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+79XXXXXXXXX"
-          value={phoneInput}
-          onChange={(e) => setPhoneInput(e.target.value)}
-        />
-        <p className={styles.fieldHint}>Код придёт в Telegram от бота клиники</p>
+        {channel === 'email' ? (
+          <>
+            <label className={styles.label} htmlFor="login-email">
+              Email
+            </label>
+            <input
+              id="login-email"
+              className={styles.input}
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+            />
+            <p className={styles.fieldHint}>Код придёт на эту почту</p>
+          </>
+        ) : (
+          <>
+            <label className={styles.label} htmlFor="login-phone">
+              Номер телефона
+            </label>
+            <input
+              id="login-phone"
+              className={styles.input}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+79XXXXXXXXX"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+            />
+            <p className={styles.fieldHint}>
+              {channel === 'whatsapp'
+                ? 'Код придёт в WhatsApp на этот номер'
+                : 'Код придёт в Telegram от бота клиники — если номер уже привязан'}
+            </p>
+          </>
+        )}
 
         <button
           type="button"
           className={styles.primaryBtn}
-          onClick={handlePhoneRequest}
-          disabled={loadingVk || loadingPhone}
+          onClick={() => void handleRequest()}
+          disabled={loading}
         >
-          {loadingPhone ? 'Отправляем код…' : 'Получить код'}
+          {loading ? 'Отправляем код…' : submitLabel}
         </button>
 
-        <button
-          type="button"
-          className={styles.linkBtn}
-          onClick={() =>
-            navigate(`/auth/link-telegram?return=${encodeURIComponent(returnUrl)}`)
-          }
-        >
-          Как привязать номер в боте?
-        </button>
+        {channel === 'telegram' && (
+          <button
+            type="button"
+            className={styles.linkBtn}
+            onClick={() =>
+              navigate(`/auth/link-telegram?return=${encodeURIComponent(returnUrl)}`)
+            }
+          >
+            Как привязать номер в боте?
+          </button>
+        )}
 
         {error && <p className={styles.error}>{error}</p>}
       </div>

@@ -9,9 +9,11 @@ import (
 	"go-server/internal/bot"
 	"go-server/internal/db"
 	"go-server/internal/handler"
+	"go-server/internal/mailer"
 	"go-server/internal/middleware"
 	"go-server/internal/repository"
 	"go-server/internal/vkid"
+	"go-server/internal/whatsapp"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -125,8 +127,16 @@ func main() {
 	if vkClient == nil {
 		log.Println("VK ID: VK_APP_ID/VK_APP_SECRET не заданы — вход через VK отключён")
 	}
+	smtpMail := mailer.NewSMTPFromEnv()
+	if smtpMail == nil {
+		log.Println("SMTP: SMTP_HOST/SMTP_FROM не заданы — вход по email отключён")
+	}
+	waAPI := whatsapp.NewGreenAPIFromEnv()
+	if waAPI == nil {
+		log.Println("WhatsApp: GREEN_API_URL/ID/TOKEN не заданы — вход через WhatsApp отключён")
+	}
 
-	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, vkClient, clinicID, mobileJWTSecret, uploadsDir)
+	mobileAuthHandler := handler.NewMobileAuthHandler(mobileAuthRepo, tgBot, smtpMail, waAPI, vkClient, clinicID, mobileJWTSecret, uploadsDir)
 	statsHandler := handler.NewStatsHandler(telegramUserRepo, mobileAuthRepo)
 	docsPortalRepo := repository.NewDocsPortalRepository(database)
 	docsPortalHandler := handler.NewDocsPortalHandler(docsPortalRepo, jwtSecret)
@@ -157,6 +167,7 @@ func main() {
 		return middleware.IPRateLimit(60, time.Minute, middleware.MobileAuth(mobileJWTSecret, h))
 	}
 
+	http.HandleFunc("GET /api/mobile/v1/auth/options", mobilePublic(mobileAuthHandler.AuthOptions))
 	http.HandleFunc("POST /api/mobile/v1/auth/request", middleware.LoginRateLimit(10, 15*time.Minute, mobileAuthHandler.RequestCode))
 	http.HandleFunc("POST /api/mobile/v1/auth/verify", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.VerifyCode))
 	http.HandleFunc("POST /api/mobile/v1/auth/refresh", middleware.LoginRateLimit(30, 15*time.Minute, mobileAuthHandler.Refresh))

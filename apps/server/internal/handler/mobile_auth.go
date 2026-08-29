@@ -8,12 +8,16 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"net/mail"
 	"os"
+	"strings"
 	"time"
 
+	"go-server/internal/mailer"
 	"go-server/internal/phone"
 	"go-server/internal/repository"
 	"go-server/internal/vkid"
+	"go-server/internal/whatsapp"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -33,6 +37,8 @@ type AuthCodeSender interface {
 type MobileAuthHandler struct {
 	repo       *repository.MobileAuthRepository
 	sender     AuthCodeSender
+	mail       *mailer.SMTP
+	wa         *whatsapp.GreenAPI
 	vk         *vkid.Client
 	clinicID   int
 	secret     string
@@ -42,23 +48,30 @@ type MobileAuthHandler struct {
 func NewMobileAuthHandler(
 	repo *repository.MobileAuthRepository,
 	sender AuthCodeSender,
+	mail *mailer.SMTP,
+	wa *whatsapp.GreenAPI,
 	vk *vkid.Client,
 	clinicID int,
 	secret string,
 	uploadsDir string,
 ) *MobileAuthHandler {
 	return &MobileAuthHandler{
-		repo: repo, sender: sender, vk: vk, clinicID: clinicID, secret: secret, uploadsDir: uploadsDir,
+		repo: repo, sender: sender, mail: mail, wa: wa, vk: vk,
+		clinicID: clinicID, secret: secret, uploadsDir: uploadsDir,
 	}
 }
 
 type authRequestBody struct {
-	Phone string `json:"phone"`
+	Channel string `json:"channel"`
+	Phone   string `json:"phone"`
+	Email   string `json:"email"`
 }
 
 type authVerifyBody struct {
-	Phone string `json:"phone"`
-	Code  string `json:"code"`
+	Channel string `json:"channel"`
+	Phone   string `json:"phone"`
+	Email   string `json:"email"`
+	Code    string `json:"code"`
 }
 
 type authRefreshBody struct {
@@ -78,6 +91,77 @@ type tokenResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
+func normalizeAuthChannel(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "", "telegram", "phone":
+		return "telegram"
+	case "email":
+		return "email"
+	case "whatsapp":
+		return "whatsapp"
+	default:
+		return ""
+	}
+}
+
+func normalizeEmail(raw string) (string, bool) {
+	s := strings.ToLower(strings.TrimSpace(raw))
+	if s == "" || len(s) > 254 {
+		return "", false
+	}
+	addr, err := mail.ParseAddress(s)
+	if err != nil || addr.Address == "" {
+		return "", false
+	}
+	return strings.ToLower(addr.Address), true
+}
+
+var errRateLimited = errSentinel("rate_limited")
+
+type errSentinel string
+
+func (e errSentinel) Error() string { return string(e) }
+
+// AuthOptions — GET /api/mobile/v1/auth/options
+func (h *MobileAuthHandler) AuthOptions(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]bool{
+		"telegram": true,
+		"email":    h.mail.Enabled(),
+		"whatsapp": h.wa.Enabled(),
+	})
+}
+
+func (h *MobileAuthHandler) issueAndStoreOTP(channel, login, phoneValue string) (string, error) {
+	since := time.Now().Add(-15 * time.Minute)
+	count, err := h.repo.CountRecentAuthRequests(h.clinicID, channel, login, since)
+	if err != nil {
+		return "", err
+	}
+	if count >= maxCodesPer15Min {
+		return "", errRateLimited
+	}
+	code, err := generateOTP(6)
+	if err != nil {
+		return "", err
+	}
+	hash := hashAuthCode(code)
+	expires := time.Now().Add(authCodeTTL)
+	if err := h.repo.SaveAuthCode(h.clinicID, channel, login, phoneValue, hash, expires); err != nil {
+		return "", err
+	}
+	go h.repo.PurgeExpiredCodes(time.Now().Add(-24 * time.Hour))
+	return code, nil
+}
+
+func (h *MobileAuthHandler) writeOTPStoreError(w http.ResponseWriter, err error) {
+	if err == errRateLimited {
+		writeAPIError(w, http.StatusTooManyRequests, "RATE_LIMIT", "слишком много запросов кода, попробуйте позже")
+		return
+	}
+	log.Printf("mobile auth otp store: %v", err)
+	writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
+}
+
 // RequestCode — POST /api/mobile/v1/auth/request
 func (h *MobileAuthHandler) RequestCode(w http.ResponseWriter, r *http.Request) {
 	var body authRequestBody
@@ -86,7 +170,24 @@ func (h *MobileAuthHandler) RequestCode(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	normalized := phone.Normalize(body.Phone)
+	channel := normalizeAuthChannel(body.Channel)
+	if channel == "" {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_CHANNEL", "неизвестный канал")
+		return
+	}
+
+	switch channel {
+	case "email":
+		h.requestEmailCode(w, body.Email)
+	case "whatsapp":
+		h.requestWhatsAppCode(w, body.Phone)
+	default:
+		h.requestTelegramCode(w, body.Phone)
+	}
+}
+
+func (h *MobileAuthHandler) requestTelegramCode(w http.ResponseWriter, rawPhone string) {
+	normalized := phone.Normalize(rawPhone)
 	if !phone.IsValidRF(normalized) {
 		writeAPIError(w, http.StatusBadRequest, "INVALID_PHONE", "укажите номер в формате +79XXXXXXXXX")
 		return
@@ -103,40 +204,69 @@ func (h *MobileAuthHandler) RequestCode(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	since := time.Now().Add(-15 * time.Minute)
-	count, err := h.repo.CountRecentAuthRequests(h.clinicID, normalized, since)
+	code, err := h.issueAndStoreOTP("telegram", normalized, normalized)
 	if err != nil {
-		log.Printf("mobile auth count codes: %v", err)
-		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
-		return
-	}
-	if count >= maxCodesPer15Min {
-		writeAPIError(w, http.StatusTooManyRequests, "RATE_LIMIT", "слишком много запросов кода, попробуйте позже")
-		return
-	}
-
-	code, err := generateOTP(6)
-	if err != nil {
-		log.Printf("mobile auth generate OTP: %v", err)
-		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
-		return
-	}
-
-	hash := hashAuthCode(code)
-	expires := time.Now().Add(authCodeTTL)
-	if err := h.repo.SaveAuthCode(h.clinicID, normalized, hash, expires); err != nil {
-		log.Printf("mobile auth save code: %v", err)
-		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
+		h.writeOTPStoreError(w, err)
 		return
 	}
 
 	if err := h.sender.SendAuthCode(user.TelegramUserID.Int64, code); err != nil {
-		log.Printf("mobile auth send code: %v", err)
+		log.Printf("mobile auth send telegram: %v", err)
 		writeAPIError(w, http.StatusInternalServerError, "SEND_FAILED", "не удалось отправить код в Telegram")
 		return
 	}
 
-	go h.repo.PurgeExpiredCodes(time.Now().Add(-24 * time.Hour))
+	writeJSON(w, http.StatusOK, map[string]int{"expires_in": int(authCodeTTL.Seconds())})
+}
+
+func (h *MobileAuthHandler) requestEmailCode(w http.ResponseWriter, rawEmail string) {
+	if !h.mail.Enabled() {
+		writeAPIError(w, http.StatusServiceUnavailable, "EMAIL_NOT_CONFIGURED", "вход по почте пока не настроен")
+		return
+	}
+	email, ok := normalizeEmail(rawEmail)
+	if !ok {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_EMAIL", "укажите корректный email")
+		return
+	}
+
+	code, err := h.issueAndStoreOTP("email", email, "")
+	if err != nil {
+		h.writeOTPStoreError(w, err)
+		return
+	}
+
+	if err := h.mail.SendAuthCode(email, code); err != nil {
+		log.Printf("mobile auth send email: %v", err)
+		writeAPIError(w, http.StatusInternalServerError, "SEND_FAILED", "не удалось отправить код на почту")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]int{"expires_in": int(authCodeTTL.Seconds())})
+}
+
+func (h *MobileAuthHandler) requestWhatsAppCode(w http.ResponseWriter, rawPhone string) {
+	if !h.wa.Enabled() {
+		writeAPIError(w, http.StatusServiceUnavailable, "WHATSAPP_NOT_CONFIGURED", "вход через WhatsApp пока не настроен")
+		return
+	}
+	normalized := phone.Normalize(rawPhone)
+	if !phone.IsValidRF(normalized) {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_PHONE", "укажите номер в формате +79XXXXXXXXX")
+		return
+	}
+
+	code, err := h.issueAndStoreOTP("whatsapp", normalized, normalized)
+	if err != nil {
+		h.writeOTPStoreError(w, err)
+		return
+	}
+
+	if err := h.wa.SendAuthCode(normalized, code); err != nil {
+		log.Printf("mobile auth send whatsapp: %v", err)
+		writeAPIError(w, http.StatusInternalServerError, "SEND_FAILED", "не удалось отправить код в WhatsApp")
+		return
+	}
 
 	writeJSON(w, http.StatusOK, map[string]int{"expires_in": int(authCodeTTL.Seconds())})
 }
@@ -149,22 +279,67 @@ func (h *MobileAuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	normalized := phone.Normalize(body.Phone)
+	channel := normalizeAuthChannel(body.Channel)
+	if channel == "" {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_CHANNEL", "неизвестный канал")
+		return
+	}
+
 	code := trimDigits(body.Code)
-	if !phone.IsValidRF(normalized) || len(code) != 6 {
-		writeAPIError(w, http.StatusBadRequest, "INVALID_INPUT", "неверный телефон или код")
+	if len(code) != 6 {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_INPUT", "неверный код")
 		return
 	}
 
-	user, err := h.repo.GetByPhone(h.clinicID, normalized)
-	if err != nil || user == nil || !user.TelegramUserID.Valid {
-		writeAPIError(w, http.StatusUnauthorized, "INVALID_CODE", "неверный или истёкший код")
-		return
+	var (
+		user *repository.MobileUser
+		err  error
+	)
+
+	switch channel {
+	case "email":
+		email, ok := normalizeEmail(body.Email)
+		if !ok {
+			writeAPIError(w, http.StatusBadRequest, "INVALID_EMAIL", "укажите корректный email")
+			return
+		}
+		if err := h.assertValidCode(channel, email, code); err != nil {
+			writeAPIError(w, http.StatusUnauthorized, "INVALID_CODE", "неверный или истёкший код")
+			return
+		}
+		local := strings.Split(email, "@")[0]
+		user, err = h.repo.UpsertEmailUser(h.clinicID, email, local)
+	case "whatsapp":
+		normalized := phone.Normalize(body.Phone)
+		if !phone.IsValidRF(normalized) {
+			writeAPIError(w, http.StatusBadRequest, "INVALID_PHONE", "укажите номер в формате +79XXXXXXXXX")
+			return
+		}
+		if err := h.assertValidCode(channel, normalized, code); err != nil {
+			writeAPIError(w, http.StatusUnauthorized, "INVALID_CODE", "неверный или истёкший код")
+			return
+		}
+		user, err = h.repo.UpsertPhoneUser(h.clinicID, normalized)
+	default:
+		normalized := phone.Normalize(body.Phone)
+		if !phone.IsValidRF(normalized) {
+			writeAPIError(w, http.StatusBadRequest, "INVALID_PHONE", "укажите номер в формате +79XXXXXXXXX")
+			return
+		}
+		user, err = h.repo.GetByPhone(h.clinicID, normalized)
+		if err != nil || user == nil || !user.TelegramUserID.Valid {
+			writeAPIError(w, http.StatusUnauthorized, "INVALID_CODE", "неверный или истёкший код")
+			return
+		}
+		if err := h.assertValidCode(channel, normalized, code); err != nil {
+			writeAPIError(w, http.StatusUnauthorized, "INVALID_CODE", "неверный или истёкший код")
+			return
+		}
 	}
 
-	storedHash, err := h.repo.LatestValidCodeHash(h.clinicID, normalized, time.Now())
-	if err != nil || storedHash == "" || storedHash != hashAuthCode(code) {
-		writeAPIError(w, http.StatusUnauthorized, "INVALID_CODE", "неверный или истёкший код")
+	if err != nil || user == nil {
+		log.Printf("mobile auth verify user: %v", err)
+		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
 		return
 	}
 
@@ -176,6 +351,17 @@ func (h *MobileAuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, tokens)
+}
+
+func (h *MobileAuthHandler) assertValidCode(channel, login, code string) error {
+	storedHash, err := h.repo.LatestValidCodeHash(h.clinicID, channel, login, time.Now())
+	if err != nil || storedHash == "" || storedHash != hashAuthCode(code) {
+		if err != nil {
+			return err
+		}
+		return errSentinel("invalid_code")
+	}
+	return nil
 }
 
 // Refresh — POST /api/mobile/v1/auth/refresh
@@ -291,6 +477,9 @@ func (h *MobileAuthHandler) issueTokenPair(user *repository.MobileUser) (tokenRe
 	}
 	if user.Phone != "" {
 		accessClaims["phone"] = user.Phone
+	}
+	if user.Email != "" {
+		accessClaims["email"] = user.Email
 	}
 	if user.VkUserID.Valid && user.VkUserID.Int64 > 0 {
 		accessClaims["vk_id"] = user.VkUserID.Int64

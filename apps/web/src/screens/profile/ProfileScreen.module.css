@@ -109,6 +109,18 @@
   cursor: pointer;
 }
 
+.logoutBtn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 12px;
+  background: var(--vet-bg);
+  color: #c62828;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .info {
   border: 1px solid var(--vet-accent-border);
   border-radius: 12px;

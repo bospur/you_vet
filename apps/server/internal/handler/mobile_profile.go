@@ -19,6 +19,7 @@ type mobileProfileResponse struct {
 	ID             int64   `json:"id"`
 	DisplayName    string  `json:"display_name"`
 	Phone          string  `json:"phone"`
+	Email          string  `json:"email,omitempty"`
 	PhotoURL       string  `json:"photo_url"`
 	TelegramUserID *int64  `json:"telegram_user_id,omitempty"`
 	VkUserID       *int64  `json:"vk_user_id,omitempty"`
@@ -30,6 +31,7 @@ func mobileUserToProfile(u *repository.MobileUser) mobileProfileResponse {
 	p := mobileProfileResponse{
 		ID:        u.ID,
 		Phone:     u.Phone,
+		Email:     u.Email,
 		PhotoURL:  u.PhotoURL,
 		CreatedAt: u.CreatedAt.Format(time.RFC3339),
 	}

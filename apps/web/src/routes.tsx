@@ -7,7 +7,6 @@ import { ClinicLayout } from './layouts/ClinicLayout';
 import HomeScreen from './screens/HomeScreen';
 import BookingHubScreen from './screens/booking/BookingHubScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
-import MoreScreen from './screens/MoreScreen';
 import AnimalsScreen from './screens/content/AnimalsScreen';
 import ArticlesScreen from './screens/content/ArticlesScreen';
 import ArticleScreen from './screens/content/ArticleScreen';
@@ -23,7 +22,6 @@ import ProfileScreen from './screens/profile/ProfileScreen';
 const LoginScreen = lazy(() => import('./screens/auth/LoginScreen'));
 const VerifyScreen = lazy(() => import('./screens/auth/VerifyScreen'));
 const LinkTelegramScreen = lazy(() => import('./screens/auth/LinkTelegramScreen'));
-const VkCallbackScreen = lazy(() => import('./screens/auth/VkCallbackScreen'));
 
 export function AppRoutes() {
   return (
@@ -49,13 +47,11 @@ export function AppRoutes() {
             <Route path="grooming/breeds" element={<GroomingBreedsScreen />} />
             <Route path="grooming/schedule" element={<GroomingScheduleScreen />} />
             <Route path="question" element={<QuestionScreen />} />
-            <Route path="more" element={<MoreScreen />} />
             <Route path="profile" element={<ProfileScreen />} />
             <Route path="booking" element={<BookingHubScreen />} />
             <Route path="booking/new" element={<PlaceholderScreen title="Выбор услуги" />} />
             <Route path="booking/requests" element={<PlaceholderScreen title="Мои заявки" />} />
             <Route path="auth/login" element={<LoginScreen />} />
-            <Route path="auth/vk-callback" element={<VkCallbackScreen />} />
             <Route path="auth/verify" element={<VerifyScreen />} />
             <Route path="auth/link-telegram" element={<LinkTelegramScreen />} />
           </Route>
