@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { fetchClinicInfo } from '../api/clinic';
 import splashBg from '../assets/splash-bg.png';
 import { hideNativeSplash } from '../lib/nativeSplash';
+import { sessionSet } from '../lib/webStorage';
 import styles from './SplashScreen.module.css';
 
 const MIN_SPLASH_MS = 800;
@@ -31,7 +32,7 @@ export default function SplashScreen() {
 
       const elapsed = Date.now() - started;
       const delay = Math.max(0, MIN_SPLASH_MS - elapsed);
-      sessionStorage.setItem('boot_v1', '1');
+      sessionSet('boot_v1', '1');
       window.setTimeout(() => navigate('/', { replace: true }), delay);
     };
 

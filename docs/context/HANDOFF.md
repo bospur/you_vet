@@ -2,48 +2,56 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-08-29 (PWA `apps/web` → web.bospur.ru)
+## Сессия 2026-08-29 вечер (PWA в prod + макеты десктопа)
 
-Ветка: текущая рабочая (не коммитили, пока пользователь не попросил).
+Ветка: **`work-web`**, дерево **чистое**. HEAD совпадает с локальным `origin/dev` (`806038f`, в т.ч. PR #87 + `40dd28c` `feat(web): Партировка мобилки в веб для pwa`). Пользователь пушил — **CI/deploy-web ок**.
 
-Смена плана: **сторы Android/iOS frozen**. Клиент вне Telegram — веб и PWA, пакет **`apps/web`** (`@you-vet/web`). `apps/mobile` (Capacitor) не трогаем как канал публикации.
+### Prod
 
-Mini App на `app.bospur.ru` без изменений.
+| Проверка | Результат |
+|---|---|
+| https://web.bospur.ru | ✅ nginx + Let's Encrypt (до 2026-11-27), каталог `/var/www/you-vet-web`, owner `deploy` |
+| `deploy-web.yml` | ✅ отработал |
+| CORS `.env` на VPS | ✅ `…,https://docs.bospur.ru,https://web.bospur.ru` + `docker compose up -d` |
+| Десктоп UI | 🟡 живой, но «как админка» (левый сайдбар) |
+| VK на web | 🟡 кабинет + Secret `VITE_VK_APP_ID` — уточнить в след. сессии |
 
-### Сделано
+Mini App `app.bospur.ru` не трогали. `apps/mobile` (Capacitor) **frozen**.
 
-- Новый SPA `apps/web`: копия клиентского UI без Capacitor; PWA (`vite-plugin-pwa`), баннер установки, десктоп-сайдбар ≥900px, сетки.
-- API CORS: `https://web.bospur.ru` + `localhost:5177`.
-- CI: `deploy-web.yml` (push `dev` → `/var/www/you-vet-web`), `ci.yml` собирает `@you-vet/web`.
-- Nginx **не** в `apps/server/nginx/` — сниппет для VPS в [deployment.md](../md/general/deployment.md).
+### Десктоп — Figma (личная команда, не MIURA.ONE)
 
-### Prod ещё нет
+Файл: [Ветпрактика — десктоп PWA](https://www.figma.com/design/sMWwSXhSPFammPut7NqIcN)  
+`fileKey`: `sMWwSXhSPFammPut7NqIcN` · план `team::1030468518190190703` («Иван Семёнов's team», Starter Full).
 
-Нужны: DNS `web.bospur.ru`, nginx+cert на VPS, `CORS_ORIGINS` если задан в `.env`, GitHub Secret `VITE_VK_APP_ID`, кабинет VK (origin + `/auth/vk-callback`), merge/push `dev`.
+| Кадр | Идея |
+|---|---|
+| **A** `1:2` | Телефон на столе: sage-фон, колонка ~390px, таббар |
+| **B** `1:3` | Сайт клиники: верхняя шапка, hero, 3 плитки, без сайдбара |
+
+Выбор A / B / смесь **не сделан**. В след. сессии — выбрать и верстать в `apps/web` (можно без новых read в Figma MCP).
+
+**Квота MCP:** запись (`use_figma`, `create_new_file`) не лимитируется; чтение на Starter ~**20/мес**. Не класть файл в команду **MIURA.ONE**.
 
 ### Не делать с агента без явной просьбы
 
 - SSH / команды на VPS.
 - Коммитить / push.
-- Оживлять RuStore / cap sync.
+- Писать макеты в рабочий Figma MIURA.ONE.
 
 ### Следующий шаг
 
-1. На VPS: DNS, каталог `/var/www/you-vet-web`, nginx из deployment.md, certbot.
-2. Push `dev` → `deploy-web` + `deploy-server` (CORS).
-3. Проверить https://web.bospur.ru (телефон, десктоп, «установить»).
-4. Дальше по продукту: booking (C1) уже в вебе, не в APK.
+1. Выбрать каркас десктопа (A / B / смесь) → править шелл в `apps/web` (≥900px), убрать ощущение админки.
+2. Push `dev` → `deploy-web`; установленное PWA подтянет JS после закрытия/повторного открытия окна.
+3. VK web origin/redirect; booking (C1) в PWA; C1 smoke Mini App.
 
 ### Ссылки
 
-- PWA: https://web.bospur.ru (после выкладки)
-- Портал: https://docs.bospur.ru · `/mobile` · `/board?task=<id>`
+- PWA: https://web.bospur.ru
+- Figma: https://www.figma.com/design/sMWwSXhSPFammPut7NqIcN
 - [deployment.md](../md/general/deployment.md) · [overview.md](../md/mobile/overview.md)
 
 ---
 
-## Сессия 2026-08-21 вечер (канбан: ссылка на задачу `?task=`)
+## Ранее 2026-08-29 (появление `apps/web`)
 
-Ветка: **`work-doc-portal`**. Канбан `?task=` — в коде `37d5c7b`; в `dev`/prod после merge.
-
-Следующий шаг тогда: merge `work-doc-portal` → `dev` (`deploy-docs` + `deploy-server` **025+026**).
+Сторы frozen. Клиент вне Telegram — `@you-vet/web`, не Capacitor. Nginx-сниппет только в deployment.md (не в `apps/server/nginx/`).

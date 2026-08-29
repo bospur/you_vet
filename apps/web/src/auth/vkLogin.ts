@@ -1,5 +1,6 @@
 import * as VKID from '@vkid/sdk';
 import { authVk } from '../api/auth';
+import { sessionGet, sessionRemove, sessionSet } from '../lib/webStorage';
 import { generateCodeVerifier, generateState } from './pkce';
 import { setTokens } from './tokenStorage';
 
@@ -34,8 +35,8 @@ export async function startVkLogin(returnUrl = '/'): Promise<void> {
   const codeVerifier = generateCodeVerifier();
   const state = generateState();
 
-  sessionStorage.setItem(VK_VERIFIER_KEY, codeVerifier);
-  sessionStorage.setItem(VK_RETURN_KEY, returnUrl);
+  sessionSet(VK_VERIFIER_KEY, codeVerifier);
+  sessionSet(VK_RETURN_KEY, returnUrl);
 
   VKID.Config.init({
     app: appId,
@@ -62,12 +63,12 @@ export async function completeVkLogin(searchParams: URLSearchParams): Promise<st
     throw new Error('VK не вернул код авторизации');
   }
 
-  const codeVerifier = sessionStorage.getItem(VK_VERIFIER_KEY);
+  const codeVerifier = sessionGet(VK_VERIFIER_KEY);
   if (!codeVerifier) {
     throw new Error('Сессия VK истекла — попробуйте войти снова');
   }
 
-  const returnUrl = sessionStorage.getItem(VK_RETURN_KEY) ?? '/';
+  const returnUrl = sessionGet(VK_RETURN_KEY) ?? '/';
   const redirectUri = getVkRedirectUri();
 
   const tokens = await authVk({
@@ -77,8 +78,8 @@ export async function completeVkLogin(searchParams: URLSearchParams): Promise<st
     redirect_uri: redirectUri,
   });
 
-  sessionStorage.removeItem(VK_VERIFIER_KEY);
-  sessionStorage.removeItem(VK_RETURN_KEY);
+  sessionRemove(VK_VERIFIER_KEY);
+  sessionRemove(VK_RETURN_KEY);
 
   await setTokens(tokens.access_token, tokens.refresh_token);
   return returnUrl;

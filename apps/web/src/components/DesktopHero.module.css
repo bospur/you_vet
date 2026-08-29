@@ -1,0 +1,65 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 36px;
+  margin-bottom: 28px;
+  border-radius: 24px;
+  background: var(--vet-hero-bg);
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--vet-accent);
+}
+
+.sub {
+  margin: 0;
+  max-width: 52em;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--vet-text-body);
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cta {
+  margin-top: 4px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 14px;
+  background: var(--vet-accent);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cta:hover {
+  filter: brightness(1.05);
+}
+
+.ctaSkeleton {
+  display: block;
+  width: 204px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--vet-skeleton);
+}
+
+@media (max-width: 1099px) {
+  .hero {
+    padding: 24px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+}

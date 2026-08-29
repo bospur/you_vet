@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ClinicInfo } from '@you-vet/types';
 import { API_URL } from '../api/client';
+import { sessionGet, sessionSet } from '../lib/webStorage';
 import styles from './ClinicPromoBanner.module.css';
 
 const BANNER_DISMISSED_KEY = 'banner_dismissed_v1';
@@ -11,7 +12,7 @@ interface ClinicPromoBannerProps {
 
 export function ClinicPromoBanner({ clinic }: ClinicPromoBannerProps) {
   const [closed, setClosed] = useState(
-    () => sessionStorage.getItem(BANNER_DISMISSED_KEY) === '1',
+    () => sessionGet(BANNER_DISMISSED_KEY) === '1',
   );
 
   const bannerEnabled = clinic?.banner_enabled ?? false;
@@ -21,7 +22,7 @@ export function ClinicPromoBanner({ clinic }: ClinicPromoBannerProps) {
   if (!showBanner) return null;
 
   const handleClose = () => {
-    sessionStorage.setItem(BANNER_DISMISSED_KEY, '1');
+    sessionSet(BANNER_DISMISSED_KEY, '1');
     setClosed(true);
   };
 

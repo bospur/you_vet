@@ -7,6 +7,7 @@ import { fetchClinicInfo } from '../api/clinic';
 import { useAuth } from '../auth/AuthContext';
 import { AuthGuestBanner } from '../components/AuthGuestBanner';
 import { ClinicPromoBanner } from '../components/ClinicPromoBanner';
+import { DesktopHero } from '../components/DesktopHero';
 import { FeaturedArticles } from '../components/FeaturedArticles';
 import { HomeClinicBlock } from '../components/HomeClinicBlock';
 import {
@@ -127,12 +128,18 @@ export default function HomeScreen() {
           <AuthGuestBanner />
         </div>
       )}
-      <div className={styles.desktopTop}>
+      <div className={styles.desktopHero}>
+        <DesktopHero
+          clinic={clinic}
+          bookingAvailable={bookingAvailable}
+          bookingLoading={bookingLoading}
+          isAuthenticated={isAuthenticated}
+        />
+      </div>
+      <div className={styles.mobileClinic}>
         <HomeClinicBlock clinic={clinic} />
-        <TodayAtClinic />
       </div>
 
-      <h3 className={styles.sectionTitle}>Полезное</h3>
       <div className={styles.grid}>
         {navCards.map((card) =>
           card.skeleton ? (
@@ -151,6 +158,8 @@ export default function HomeScreen() {
           ),
         )}
       </div>
+
+      <TodayAtClinic />
 
       <FeaturedArticles />
       <ClinicPromoBanner clinic={clinic} />

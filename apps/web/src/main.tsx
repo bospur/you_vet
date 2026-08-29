@@ -5,7 +5,11 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import './styles/global.css';
 
-registerSW({ immediate: true });
+try {
+  registerSW({ immediate: true });
+} catch {
+  /* iOS / private mode: SW optional */
+}
 
 try {
   if (localStorage.getItem('vet_theme') === 'dark') {

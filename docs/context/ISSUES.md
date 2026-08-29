@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-08-29 (PWA `apps/web`, сторы frozen)
+> Последнее обновление: 2026-08-29 вечер (PWA prod, десктоп-макеты)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -96,7 +96,8 @@
 | DOC-11 | 🟡 | Комменты: пропали правка/удаление | **fixed в коде** — GetOrCreateVisitor + DELETE; deploy server+docs |
 | DOC-12 | ⚪ | Канбан: теги, описание, фильтр, шторка, адаптив | **in code** — миграция **026**, deploy server+docs |
 | DOC-13 | ⚪ | Канбан: шаринг карточки `/board?task=<id>` | **in code** — `37d5c7b`; deploy docs |
-| WEB-01 | 🟡 | Выкладка PWA `web.bospur.ru` | **in code** — DNS, nginx на VPS, CORS `.env`, VK, `deploy-web` |
+| WEB-01 | 🟡 | Выкладка PWA `web.bospur.ru` | **fixed 2026-08-29** — nginx+cert, CORS, `deploy-web` |
+| WEB-02 | ⚪ | Десктоп UI «как админка» | **in progress** — Figma A/B, вёрстка не начата |
 
 ## Mobile (PRD-06)
 
@@ -132,7 +133,7 @@
 
 ## Следующие шаги
 
-1. Выкладка https://web.bospur.ru (DNS, nginx, CORS, VK, `deploy-web`)
-2. Merge `work-doc-portal` → `dev` если канбан ещё не в prod (**025+026**, `?task=`)
+1. Десктоп PWA: выбрать Figma A/B → `apps/web`
+2. VK origin/redirect для `web.bospur.ru`
 3. Booking (C1) в PWA
 4. **ADM-02** · C1 smoke Mini App

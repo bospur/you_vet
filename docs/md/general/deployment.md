@@ -184,7 +184,7 @@ sudo certbot certonly --webroot -w /var/www/certbot -d <subdomain>
 Nginx проксирует `api.bospur.ru` → `localhost:8080`. PostgreSQL снаружи недоступен.
 Uploads: volume `uploads_data` → `/app/uploads`.
 
-Конфиги vhost в репо (шаблоны, на VPS копируются вручную): `apps/server/nginx/` (`default.conf` = API, `docs.conf`), `apps/admin/nginx/admin.conf`. На VPS также `app.bospur.ru`. **web.bospur.ru** в репо нет — конфиг только на сервере (сниппет ниже).
+Конфиги vhost в репо (шаблоны, на VPS копируются вручную): `apps/server/nginx/` (`default.conf` = API, `docs.conf`), `apps/admin/nginx/admin.conf`, `apps/web/nginx/web.conf`. На VPS также `app.bospur.ru`.
 
 ### web.bospur.ru: первый запуск
 
@@ -198,63 +198,28 @@ sudo mkdir -p /var/www/you-vet-web
 sudo chown deploy:deploy /var/www/you-vet-web
 ```
 
-3. Nginx — создать `/etc/nginx/sites-available/web.bospur.ru` (сначала только HTTP для certbot, потом добавить ssl-блок):
-
-```nginx
-server {
-    listen 80;
-    server_name web.bospur.ru;
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    location / {
-        return 301 https://$host$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl;
-    server_name web.bospur.ru;
-
-    ssl_certificate     /etc/letsencrypt/live/web.bospur.ru/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/web.bospur.ru/privkey.pem;
-
-    root /var/www/you-vet-web;
-    index index.html;
-
-    location = /sw.js {
-        add_header Cache-Control "no-cache";
-        try_files $uri =404;
-    }
-
-    location = /manifest.webmanifest {
-        add_header Cache-Control "no-cache";
-        try_files $uri =404;
-    }
-
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
+3. Nginx — скопировать шаблон `apps/web/nginx/web.conf` в `/etc/nginx/sites-available/web.bospur.ru` (сначала только HTTP-блок, если сертификата ещё нет):
 
 ```bash
 sudo ln -sf /etc/nginx/sites-available/web.bospur.ru /etc/nginx/sites-enabled/
 ```
 
-4. Сертификат (DNS должен резолвиться, HTTP :80 открыт). Для первого certbot ssl-блок можно временно закомментировать, либо `certonly --webroot`:
+4. Сертификат (DNS должен резолвиться, HTTP :80 открыт). С мая 2026 Let’s Encrypt **classic тоже выдаёт YE1/YE2** (Generation Y) — это норма, старый `R10`/`R11` больше не получить. Apple должна ходить к ISRG Root X1/X2 по cross-sign.
+
+Certbot из apt на Ubuntu 24.04 — 2.9; `--preferred-profile` есть с 4.x. Snap на минимальном VPS часто нет. Не делать `ln -sf /snap/bin/certbot /usr/bin/certbot`, если snap не установлен.
 
 ```bash
-sudo certbot certonly --webroot -w /var/www/certbot -d web.bospur.ru
-sudo nginx -t && sudo systemctl reload nginx
+apt-get install --reinstall -y certbot python3-venv
+python3 -m venv /opt/certbot
+/opt/certbot/bin/pip install -U pip 'certbot>=4.0'
+
+# более короткая цепочка (без лишнего X1 в handshake) — лучше для Safari
+/opt/certbot/bin/certbot certonly --webroot -w /var/www/certbot -d web.bospur.ru \
+  --force-renewal --preferred-chain "ISRG Root X2"
+nginx -t && systemctl reload nginx
 ```
+
+Проверка цепочки (не только issuer листа): `echo | openssl s_client -connect 127.0.0.1:443 -servername web.bospur.ru -showcerts 2>/dev/null | grep -E 's:CN=|i:.*CN='`. Лист будет `YE1`/`YE2`; дальше должны быть `Root YE` и `ISRG Root X2`.
 
 5. CORS на API: в коде дефолт уже включает `https://web.bospur.ru`, но если в `.env` задан `CORS_ORIGINS` — он **перекрывает** список. Добавь origin в `.env` и перезапусти контейнер после `deploy-server` / вручную.
 

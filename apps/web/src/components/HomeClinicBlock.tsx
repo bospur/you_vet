@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ClinicInfo } from '@you-vet/types';
+import { sessionGet, sessionSet } from '../lib/webStorage';
 import styles from './HomeClinicBlock.module.css';
 
 const EXPANDED_KEY = 'home_clinic_expanded_v1';
@@ -16,7 +17,7 @@ interface HomeClinicBlockProps {
 
 export function HomeClinicBlock({ clinic }: HomeClinicBlockProps) {
   const [expanded, setExpanded] = useState(
-    () => sessionStorage.getItem(EXPANDED_KEY) === '1',
+    () => sessionGet(EXPANDED_KEY) === '1',
   );
 
   const description = clinic?.description?.trim();
@@ -29,7 +30,7 @@ export function HomeClinicBlock({ clinic }: HomeClinicBlockProps) {
   const toggle = () => {
     setExpanded((open) => {
       const next = !open;
-      sessionStorage.setItem(EXPANDED_KEY, next ? '1' : '0');
+      sessionSet(EXPANDED_KEY, next ? '1' : '0');
       return next;
     });
   };
