@@ -249,7 +249,8 @@ export function ClinicInfoScreen() {
                 {logoMutation.isPending ? 'Загрузка…' : 'Загрузить логотип'}
               </Button>
               <Typography variant="caption" display="block" color="text.secondary" mt={1}>
-                JPG, PNG, WebP · до 5 МБ · {MINI_APP_LOGO_SIZE}×{MINI_APP_LOGO_SIZE} px в шапке Mini App
+                JPG, PNG, WebP · до 5 МБ. Шапка Mini App / PWA и иконка вкладки браузера.
+                Иконка на домашнем экране PWA задаётся при установке и из админки не меняется.
               </Typography>
             </Paper>
 
