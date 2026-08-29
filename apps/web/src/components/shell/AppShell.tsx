@@ -23,9 +23,9 @@ export function AppShell() {
       <TopBar info={info ?? null} />
       <div className={styles.column}>
         {isTabRoot && <RootAppBar info={info ?? null} />}
-        <InstallBanner />
         <main className={hideTabBar ? styles.mainNoTab : styles.main}>
           <div className={styles.content}>
+            <InstallBanner />
             <Outlet context={info} />
           </div>
         </main>

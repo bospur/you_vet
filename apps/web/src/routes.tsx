@@ -2,8 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/shell/AppShell';
 import { GroomingGuard } from './components/GroomingGuard';
+import { Preloader } from './components/Preloader';
 import { ClinicLayout } from './layouts/ClinicLayout';
-import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import BookingHubScreen from './screens/booking/BookingHubScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
@@ -27,10 +27,9 @@ const VkCallbackScreen = lazy(() => import('./screens/auth/VkCallbackScreen'));
 
 export function AppRoutes() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<Preloader full />}>
       <Routes>
         <Route element={<ClinicLayout />}>
-          <Route path="/splash" element={<SplashScreen />} />
           <Route path="/" element={<AppShell />}>
             <Route index element={<HomeScreen />} />
             <Route path="animals" element={<AnimalsScreen />} />
@@ -61,7 +60,7 @@ export function AppRoutes() {
             <Route path="auth/link-telegram" element={<LinkTelegramScreen />} />
           </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/splash" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );

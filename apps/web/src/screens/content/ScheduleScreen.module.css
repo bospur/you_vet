@@ -111,6 +111,14 @@
   margin: 0;
 }
 
+@media (min-width: 900px) {
+  .grid {
+    flex-wrap: wrap;
+    overflow: visible;
+    margin: 0;
+  }
+}
+
 .back {
   cursor: pointer;
   font-size: 16px;

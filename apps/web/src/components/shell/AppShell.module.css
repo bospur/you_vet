@@ -37,18 +37,27 @@
 
   .main,
   .mainNoTab {
-    padding-bottom: 32px;
+    padding: 28px 48px 40px;
   }
 
   .content {
+    --vet-page-padding: 0px;
     max-width: var(--vet-content-max);
     margin: 0 auto;
-    padding: 32px 48px 0;
+    padding: 32px 40px 40px;
+    background: var(--vet-bg);
+    border-radius: 24px;
+    min-height: calc(100% - 8px);
   }
 }
 
 @media (min-width: 900px) and (max-width: 1099px) {
+  .main,
+  .mainNoTab {
+    padding: 20px 24px 32px;
+  }
+
   .content {
-    padding: 24px 24px 0;
+    padding: 24px;
   }
 }

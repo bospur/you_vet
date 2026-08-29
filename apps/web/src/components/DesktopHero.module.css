@@ -9,6 +9,13 @@
   background: var(--vet-hero-bg);
 }
 
+.kicker {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vet-text-secondary);
+}
+
 .title {
   margin: 0;
   font-size: 28px;

@@ -10,6 +10,7 @@ import { ClinicPromoBanner } from '../components/ClinicPromoBanner';
 import { DesktopHero } from '../components/DesktopHero';
 import { FeaturedArticles } from '../components/FeaturedArticles';
 import { HomeClinicBlock } from '../components/HomeClinicBlock';
+import { Preloader } from '../components/Preloader';
 import {
   IconBooking,
   IconDoctors,
@@ -118,7 +119,7 @@ export default function HomeScreen() {
   ]);
 
   if (isLoading && !clinic) {
-    return <div className={styles.loading}>Загрузка…</div>;
+    return <Preloader />;
   }
 
   return (

@@ -31,6 +31,7 @@ export function DesktopHero({
 
   return (
     <section className={styles.hero}>
+      {clinic?.name ? <p className={styles.kicker}>{clinic.name}</p> : null}
       <h1 className={styles.title}>Забота о питомце — без очереди в Telegram</h1>
       <p className={styles.sub}>{subtitle}</p>
       {bookingLoading ? (

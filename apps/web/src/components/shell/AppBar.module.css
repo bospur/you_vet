@@ -122,6 +122,21 @@
   .rootBar {
     display: none;
   }
+
+  .bar:not(.rootBar) {
+    position: static;
+    min-height: 0;
+    padding: 0 0 24px;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  .nestedTitle {
+    text-align: left;
+    font-size: 28px;
+    font-weight: 700;
+    white-space: normal;
+  }
 }
 
 @media (max-width: 365px) {

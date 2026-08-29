@@ -18,7 +18,7 @@ export default function MoreScreen() {
       {isAuthenticated ? (
         <section className={styles.section}>
           <p className={styles.hint}>
-            Профиль и настройки — в правом верхнем углу на главной.
+            Профиль — кружок справа в шапке.
           </p>
           <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
             Выйти из аккаунта
@@ -27,8 +27,8 @@ export default function MoreScreen() {
       ) : (
         <section className={styles.section}>
           <p className={styles.hint}>
-            Нажмите иконку входа в правом верхнем углу, чтобы авторизоваться и
-            открыть запись на приём и вопросы врачу.
+            Войдите через кнопку справа в шапке, чтобы записаться на приём и
+            задать вопрос врачу.
           </p>
         </section>
       )}
