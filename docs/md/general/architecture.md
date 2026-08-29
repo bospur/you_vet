@@ -1,6 +1,6 @@
 # Архитектура системы
 
-> Обновлено: 21 августа 2026. Prod-домены: `*.bospur.ru`.
+> Обновлено: 29 августа 2026. Prod-домены: `*.bospur.ru`. PWA: `web.bospur.ru`.
 
 ## Схема взаимодействия
 
@@ -16,8 +16,12 @@ Telegram
    └── Админ-панель (apps/admin) ← https://admin.bospur.ru
           └── /api/admin/*  (httpOnly cookie + /api/admin/me)
 
-Android «Ветпрактика» (apps/mobile, Capacitor)
-   └── /api/mobile/v1/*  (mobile JWT; OTP в Telegram / VK ID)
+Браузер (клиент)
+   └── PWA «Ветпрактика» (apps/web) ← https://web.bospur.ru
+          └── /api/mobile/v1/*  (mobile JWT; OTP в Telegram / VK ID)
+
+Android / iOS «Ветпрактика» (apps/mobile, Capacitor) — **frozen**, сторы не публикуем
+   └── тот же /api/mobile/v1/*
 
 Документация команды
    └── https://docs.bospur.ru  (React SPA, apps/docs)
@@ -28,6 +32,7 @@ Nginx (Ubuntu, системный; не Docker)
    ├── admin.bospur.ru → /var/www/vp-bot-admin
    ├── app.bospur.ru   → /var/www/vp-bot-app
    ├── docs.bospur.ru  → /var/www/you-vet-docs
+   ├── web.bospur.ru   → /var/www/you-vet-web
    └── api.bospur.ru   → 127.0.0.1:8080  (Docker Go)
                                            │
                                            ├── Go HTTP (GHCR-образ)
@@ -43,7 +48,8 @@ TLS: Let's Encrypt, отдельные сертификаты на каждый 
 | `apps/server` | Go API + Telegram-бот + миграции |
 | `apps/admin` | React 19 + MUI v7, mobile-first `< sm` |
 | `apps/app` | Telegram Mini App (React 18) |
-| `apps/mobile` | Capacitor, «Ветпрактика», RuStore (ещё не опубликован) |
+| `apps/mobile` | Capacitor «Ветпрактика» — **frozen** (сторы) |
+| `apps/web` | PWA / сайт «Ветпрактика», `web.bospur.ru` |
 | `apps/docs` | Портал документации |
 | `packages/types` | `@you-vet/types` |
 

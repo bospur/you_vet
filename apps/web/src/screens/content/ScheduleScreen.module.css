@@ -1,0 +1,126 @@
+.wrapper {
+  padding: var(--vet-page-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  margin: 0 calc(-1 * var(--vet-page-padding));
+  padding-left: var(--vet-page-padding);
+  padding-right: var(--vet-page-padding);
+  scrollbar-width: none;
+}
+
+.grid::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--vet-tab-bar-border);
+  background: var(--vet-bg);
+  cursor: pointer;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.chipActive {
+  border-color: var(--vet-accent);
+  background: var(--vet-accent-soft-chip);
+}
+
+.chipDay {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vet-text-hint);
+  text-transform: capitalize;
+}
+
+.chipActive .chipDay {
+  color: var(--vet-accent);
+}
+
+.chipDate {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--vet-text-body);
+}
+
+.slotsCard {
+  background: var(--vet-accent-soft-subtle);
+  border: 1px solid var(--vet-accent-border-light);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slotsHeader {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  text-transform: capitalize;
+}
+
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--vet-bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.slotName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vet-text-body);
+}
+
+.slotTime {
+  font-size: 14px;
+  color: var(--vet-text-hint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.empty {
+  font-size: 15px;
+  color: var(--vet-text-hint);
+  text-align: center;
+  padding: 32px 0;
+  margin: 0;
+}
+
+.back {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 14px;
+  padding: 12px 20px;
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+}

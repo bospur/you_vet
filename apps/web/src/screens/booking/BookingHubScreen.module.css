@@ -1,0 +1,64 @@
+.pageTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--vet-text-body);
+}
+
+.wrap {
+  padding: var(--vet-page-padding);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 12px;
+  background: var(--vet-bg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.rowTitle {
+  display: block;
+  font-weight: 600;
+  color: var(--vet-text-body);
+}
+
+.rowSub {
+  display: block;
+  font-size: 13px;
+  color: var(--vet-text-hint);
+  margin-top: 2px;
+}
+
+.hint {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--vet-text-hint);
+  line-height: 1.5;
+}
+
+.authOk {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--vet-surface-card);
+  font-size: 14px;
+  color: var(--vet-text-secondary);
+  line-height: 1.45;
+}
+
+@media (min-width: 900px) {
+  .wrap {
+    max-width: 640px;
+  }
+}

@@ -1,0 +1,37 @@
+.wrap {
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--vet-spinner-track);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  width: 40%;
+  border-radius: 2px;
+  background: var(--vet-accent);
+  animation: progress-slide 1.2s ease-in-out infinite;
+}
+
+.label {
+  display: block;
+  margin-top: 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--vet-text-hint);
+}
+
+@keyframes progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}

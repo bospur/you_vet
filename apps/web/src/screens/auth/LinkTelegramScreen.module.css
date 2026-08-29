@@ -1,0 +1,45 @@
+.wrap {
+  padding: var(--vet-page-padding);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.steps {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--vet-text-body);
+  line-height: 1.6;
+}
+
+.steps li {
+  margin-bottom: 8px;
+}
+
+.primaryBtn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--vet-accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.secondaryBtn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 10px;
+  background: var(--vet-bg);
+  color: var(--vet-accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}

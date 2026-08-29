@@ -1,0 +1,53 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px var(--vet-page-padding);
+  background: var(--vet-accent-soft-md);
+  border-bottom: 1px solid var(--vet-accent-border);
+}
+
+.text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--vet-text-body);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.install,
+.dismiss {
+  border: none;
+  background: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.install {
+  background: var(--vet-accent);
+  color: #fff;
+}
+
+.dismiss {
+  color: var(--vet-text-hint);
+}
+
+@media (min-width: 900px) {
+  .banner {
+    border-radius: 12px;
+    margin: 12px 16px 0;
+    border: 1px solid var(--vet-accent-border);
+  }
+}

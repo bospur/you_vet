@@ -1,0 +1,123 @@
+.hero {
+  background: var(--vet-surface-card);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--vet-green-title);
+  line-height: 1.25;
+}
+
+.address {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--vet-text-secondary);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px 0 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vet-accent);
+}
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.panelOpen {
+  grid-template-rows: 1fr;
+}
+
+.panelInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.description {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--vet-text-body);
+  white-space: pre-wrap;
+}
+
+.contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.phoneLink {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--vet-accent-soft-md);
+  color: var(--vet-accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.contactLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vet-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
+@media (max-width: 365px) {
+  .hero {
+    padding: 12px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .address,
+  .description {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  .hero {
+    padding: 10px;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+}

@@ -1,0 +1,47 @@
+.wrap {
+  padding: var(--vet-page-padding);
+  padding-bottom: calc(var(--vet-page-padding) + var(--vet-safe-bottom));
+}
+
+.pageTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--vet-text-body);
+}
+
+.section {
+  padding: 16px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 12px;
+  background: var(--vet-bg);
+}
+
+.hint {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--vet-text-hint);
+  line-height: 1.5;
+}
+
+.section .hint:last-child {
+  margin-bottom: 0;
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 10px;
+  background: var(--vet-bg);
+  color: #c62828;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .wrap {
+    max-width: 640px;
+  }
+}

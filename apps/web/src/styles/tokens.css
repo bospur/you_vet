@@ -1,0 +1,81 @@
+:root {
+  --vet-green-title: #288f33;
+  --vet-green-label: #338b4e;
+  --vet-green-address: rgba(32, 85, 58, 0.76);
+  --vet-green-surface: rgba(24, 176, 37, 0.07);
+
+  --vet-bg: #ffffff;
+  --vet-bg-secondary: #f5f5f5;
+  --vet-text-primary: var(--vet-green-label);
+  --vet-text-secondary: var(--vet-green-address);
+  --vet-text-body: #1a1a1a;
+  --vet-text-hint: #8e8e93;
+  --vet-icon-color: var(--vet-green-label);
+  --vet-surface-card: var(--vet-green-surface);
+  --vet-accent: #2e7d32;
+  --vet-accent-soft: rgba(76, 175, 80, 0.08);
+  --vet-accent-soft-md: rgba(76, 175, 80, 0.12);
+  --vet-accent-soft-chip: rgba(76, 175, 80, 0.1);
+  --vet-accent-soft-subtle: rgba(76, 175, 80, 0.06);
+  --vet-accent-border-light: rgba(76, 175, 80, 0.2);
+  --vet-accent-border: rgba(76, 175, 80, 0.35);
+  --vet-muted-bg: rgba(0, 0, 0, 0.03);
+  --vet-spinner-track: rgba(51, 139, 78, 0.2);
+  --vet-skeleton: rgba(51, 139, 78, 0.12);
+
+  --tgui--text_color: var(--vet-text-body);
+  --tgui--hint_color: var(--vet-text-hint);
+  --tgui--bg_color: var(--vet-bg);
+  --tgui--divider_color: var(--vet-tab-bar-border);
+  --tgui--link_color: var(--vet-accent);
+  --tgui--secondary_bg_color: var(--vet-bg-secondary);
+  --vet-tab-bar-bg: #ffffff;
+  --vet-tab-bar-border: rgba(0, 0, 0, 0.08);
+  --vet-safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --vet-page-padding: 16px;
+  --vet-tab-height: 56px;
+  --vet-app-bar-height: 52px;
+  --vet-sidebar-width: 240px;
+  --vet-content-max: 1100px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --vet-bg: #121212;
+  --vet-bg-secondary: #1e1e1e;
+  --vet-text-primary: #ffffff;
+  --vet-text-secondary: #aaaaaa;
+  --vet-text-body: #ffffff;
+  --vet-text-hint: #8e8e93;
+  --vet-icon-color: #ffffff;
+  --vet-surface-card: #2c2c2e;
+  --vet-surface-chip: #2c2c2e;
+
+  --vet-green-title: var(--vet-text-primary);
+  --vet-green-label: var(--vet-text-primary);
+  --vet-green-address: var(--vet-text-secondary);
+  --vet-green-surface: var(--vet-surface-card);
+
+  --vet-accent: #81c784;
+  --vet-accent-soft: rgba(255, 255, 255, 0.08);
+  --vet-accent-soft-md: rgba(255, 255, 255, 0.1);
+  --vet-accent-soft-chip: #2c2c2e;
+  --vet-accent-soft-subtle: rgba(255, 255, 255, 0.06);
+  --vet-accent-border-light: rgba(255, 255, 255, 0.2);
+  --vet-accent-border: rgba(255, 255, 255, 0.35);
+  --vet-muted-bg: rgba(255, 255, 255, 0.06);
+  --vet-spinner-track: rgba(255, 255, 255, 0.25);
+  --vet-skeleton: rgba(255, 255, 255, 0.12);
+
+  --vet-tab-bar-bg: #1e1e1e;
+  --vet-tab-bar-border: rgba(255, 255, 255, 0.1);
+
+  --tgui--text_color: var(--vet-text-body);
+  --tgui--hint_color: var(--vet-text-hint);
+  --tgui--bg_color: var(--vet-bg);
+  --tgui--divider_color: var(--vet-tab-bar-border);
+  --tgui--link_color: var(--vet-accent);
+  --tgui--secondary_bg_color: var(--vet-bg-secondary);
+}

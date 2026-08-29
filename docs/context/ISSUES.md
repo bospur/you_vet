@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-08-21 вечер (передача, канбан `?task=`)
+> Последнее обновление: 2026-08-29 (PWA `apps/web`, сторы frozen)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -96,6 +96,7 @@
 | DOC-11 | 🟡 | Комменты: пропали правка/удаление | **fixed в коде** — GetOrCreateVisitor + DELETE; deploy server+docs |
 | DOC-12 | ⚪ | Канбан: теги, описание, фильтр, шторка, адаптив | **in code** — миграция **026**, deploy server+docs |
 | DOC-13 | ⚪ | Канбан: шаринг карточки `/board?task=<id>` | **in code** — `37d5c7b`; deploy docs |
+| WEB-01 | 🟡 | Выкладка PWA `web.bospur.ru` | **in code** — DNS, nginx на VPS, CORS `.env`, VK, `deploy-web` |
 
 ## Mobile (PRD-06)
 
@@ -105,8 +106,8 @@
 | MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed** — APK на телефоне |
 | MOB-03 | 🟡 | Auth UI (login / verify / link-telegram) | **fixed 2026-06-10** — TG smoke ✅; `setTokens` в VerifyScreen |
 | MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed** — smoke ✅ на APK |
-| MOB-05 | ⚪ | Booking flow в mobile | backlog **sprint 5** (следующий) |
-| MOB-06 | ⚪ | RuStore release (M3) | backlog |
+| MOB-05 | ⚪ | Booking flow в клиенте | backlog — делать в **`apps/web`**, не APK |
+| MOB-06 | ⚪ | RuStore release (M3) | **frozen** |
 | MOB-07 | 🟡 | APK без `cap sync` → старый UI | **doc** — `npm run build` → `cap sync` |
 | MOB-08 | 🟡 | VK app ID / кабинет | **fixed** |
 | MOB-09 | 🟡 | CORS / API из APK WebView | **fixed** — `CapacitorHttp` |
@@ -127,11 +128,11 @@
 | MOB-24 | ⚪ | Фото врачей разной высоты | **fixed 2026-06-10** — aspect-ratio + shadow |
 | MOB-25 | 🟡 | «Вы вошли как VK 12345» на записи | **fixed 2026-06-10** — профиль API + server VK name |
 | MOB-26 | ⚪ | CI: `useMemo` conditional в HomeScreen | **fixed 2026-06-10** |
-| MOB-27 | ⚪ | iOS: Capacitor platform | **in progress** — `ios/` есть; `pod install` ждёт Xcode |
+| MOB-27 | ⚪ | iOS: Capacitor platform | **frozen** |
 
 ## Следующие шаги
 
-1. Merge `work-doc-portal` → `dev` (портал + server **025+026**, `?task=`)
-2. **Mobile sprint 5** — booking
-3. BotFather + VK на `app.bospur.ru`; пересборка APK
+1. Выкладка https://web.bospur.ru (DNS, nginx, CORS, VK, `deploy-web`)
+2. Merge `work-doc-portal` → `dev` если канбан ещё не в prod (**025+026**, `?task=`)
+3. Booking (C1) в PWA
 4. **ADM-02** · C1 smoke Mini App

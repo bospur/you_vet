@@ -30,6 +30,7 @@ jobs:
     env:
       VITE_API_URL: https://api.example.com
       VITE_CLINIC_SLUG: default
+      VITE_VK_APP_ID: '1'
     steps:
       - uses: actions/checkout@v4
 
@@ -52,6 +53,9 @@ jobs:
 
       - name: Build mobile
         run: npm run build --workspace=@you-vet/mobile
+
+      - name: Build web PWA
+        run: npm run build --workspace=@you-vet/web
 
       - name: Build docs portal
         env:

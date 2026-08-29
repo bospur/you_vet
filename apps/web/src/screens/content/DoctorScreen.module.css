@@ -1,0 +1,97 @@
+.wrapper {
+  padding: var(--vet-page-padding);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--vet-text-body);
+  text-align: center;
+  margin: 8px 0 12px;
+}
+
+.field {
+  width: 100%;
+  background: var(--vet-accent-soft-subtle);
+  border: 1px solid var(--vet-accent-border-light);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--vet-text-hint);
+}
+
+.value {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--vet-text-body);
+}
+
+.phone {
+  font-size: 15px;
+  color: var(--vet-accent);
+  text-decoration: none;
+}
+
+.scheduleSection {
+  width: 100%;
+  background: var(--vet-accent-soft-subtle);
+  border: 1px solid var(--vet-accent-border-light);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.scheduleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.scheduleDate {
+  font-size: 15px;
+  color: var(--vet-text-body);
+}
+
+.scheduleTime {
+  font-size: 14px;
+  color: var(--vet-text-hint);
+  font-variant-numeric: tabular-nums;
+}
+
+.back {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 14px;
+  padding: 12px 20px;
+  text-align: center;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--vet-text-hint);
+  padding: 24px 0;
+}
