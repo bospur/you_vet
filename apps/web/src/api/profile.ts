@@ -6,6 +6,7 @@ export interface MobileProfile {
   id: number;
   display_name: string;
   phone: string;
+  email?: string;
   photo_url: string;
   telegram_user_id?: number;
   vk_user_id?: number;

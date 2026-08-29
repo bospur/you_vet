@@ -13,6 +13,7 @@ type MobileUser struct {
 	ID             int64
 	ClinicID       int
 	Phone          string
+	Email          string
 	TelegramUserID sql.NullInt64
 	VkUserID       sql.NullInt64
 	DisplayName    sql.NullString
@@ -42,10 +43,10 @@ func NewMobileAuthRepository(db *sql.DB) *MobileAuthRepository {
 
 func scanMobileUser(row interface{ Scan(dest ...any) error }) (*MobileUser, error) {
 	var u MobileUser
-	var phone sql.NullString
+	var phone, email sql.NullString
 	err := row.Scan(
 		&u.ID, &u.ClinicID, &phone, &u.TelegramUserID,
-		&u.VkUserID, &u.DisplayName, &u.PhotoURL, &u.LinkedAt, &u.CreatedAt,
+		&u.VkUserID, &u.DisplayName, &email, &u.PhotoURL, &u.LinkedAt, &u.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -53,11 +54,14 @@ func scanMobileUser(row interface{ Scan(dest ...any) error }) (*MobileUser, erro
 	if phone.Valid {
 		u.Phone = phone.String
 	}
+	if email.Valid {
+		u.Email = email.String
+	}
 	return &u, nil
 }
 
 const mobileUserSelect = `
-	SELECT id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, photo_url, linked_at, created_at
+	SELECT id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
 	FROM mobile_users
 `
 
@@ -115,8 +119,50 @@ func (r *MobileAuthRepository) UpsertVKUser(clinicID int, vkUserID int64, displa
 			display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), mobile_users.display_name),
 			phone = COALESCE(NULLIF(EXCLUDED.phone, ''), mobile_users.phone),
 			linked_at = NOW()
-		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, photo_url, linked_at, created_at
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
 	`, clinicID, vkUserID, displayName, phone)
+	return scanMobileUser(row)
+}
+
+// GetByEmail возвращает mobile user или nil.
+func (r *MobileAuthRepository) GetByEmail(clinicID int, email string) (*MobileUser, error) {
+	row := r.db.QueryRow(mobileUserSelect+` WHERE clinic_id = $1 AND email = $2`, clinicID, email)
+	u, err := scanMobileUser(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	return u, err
+}
+
+// UpsertEmailUser создаёт пользователя по email (вход без Telegram).
+func (r *MobileAuthRepository) UpsertEmailUser(clinicID int, email, displayName string) (*MobileUser, error) {
+	if email == "" {
+		return nil, errors.New("email required")
+	}
+	row := r.db.QueryRow(`
+		INSERT INTO mobile_users (clinic_id, email, display_name, linked_at)
+		VALUES ($1, $2, NULLIF($3, ''), NOW())
+		ON CONFLICT (clinic_id, email)
+		DO UPDATE SET
+			display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), mobile_users.display_name),
+			linked_at = COALESCE(mobile_users.linked_at, NOW())
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
+	`, clinicID, email, displayName)
+	return scanMobileUser(row)
+}
+
+// UpsertPhoneUser создаёт пользователя по телефону (WhatsApp, без Telegram).
+func (r *MobileAuthRepository) UpsertPhoneUser(clinicID int, phone string) (*MobileUser, error) {
+	if phone == "" {
+		return nil, errors.New("phone required")
+	}
+	row := r.db.QueryRow(`
+		INSERT INTO mobile_users (clinic_id, phone, linked_at)
+		VALUES ($1, $2, NOW())
+		ON CONFLICT (clinic_id, phone)
+		DO UPDATE SET linked_at = COALESCE(mobile_users.linked_at, NOW())
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
+	`, clinicID, phone)
 	return scanMobileUser(row)
 }
 
@@ -249,34 +295,38 @@ func (r *MobileAuthRepository) ListByClinicID(clinicID int, limit int) ([]Mobile
 	return list, rows.Err()
 }
 
-// SaveAuthCode сохраняет хеш OTP.
-func (r *MobileAuthRepository) SaveAuthCode(clinicID int, phone, codeHash string, expiresAt time.Time) error {
+// SaveAuthCode сохраняет хеш OTP. login — телефон или email; phone заполняется для telegram/whatsapp.
+func (r *MobileAuthRepository) SaveAuthCode(clinicID int, channel, login, phone, codeHash string, expiresAt time.Time) error {
+	var phoneArg any
+	if phone != "" {
+		phoneArg = phone
+	}
 	_, err := r.db.Exec(`
-		INSERT INTO auth_codes (clinic_id, phone, code_hash, expires_at)
-		VALUES ($1, $2, $3, $4)
-	`, clinicID, phone, codeHash, expiresAt)
+		INSERT INTO auth_codes (clinic_id, phone, channel, login, code_hash, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, clinicID, phoneArg, channel, login, codeHash, expiresAt)
 	return err
 }
 
 // CountRecentAuthRequests считает запросы кода за окно (антиспам).
-func (r *MobileAuthRepository) CountRecentAuthRequests(clinicID int, phone string, since time.Time) (int, error) {
+func (r *MobileAuthRepository) CountRecentAuthRequests(clinicID int, channel, login string, since time.Time) (int, error) {
 	var n int
 	err := r.db.QueryRow(`
 		SELECT COUNT(*) FROM auth_codes
-		WHERE clinic_id = $1 AND phone = $2 AND created_at >= $3
-	`, clinicID, phone, since).Scan(&n)
+		WHERE clinic_id = $1 AND channel = $2 AND login = $3 AND created_at >= $4
+	`, clinicID, channel, login, since).Scan(&n)
 	return n, err
 }
 
-// LatestValidCodeHash возвращает последний неистёкший хеш для телефона.
-func (r *MobileAuthRepository) LatestValidCodeHash(clinicID int, phone string, now time.Time) (string, error) {
+// LatestValidCodeHash возвращает последний неистёкший хеш для канала и логина.
+func (r *MobileAuthRepository) LatestValidCodeHash(clinicID int, channel, login string, now time.Time) (string, error) {
 	var hash string
 	err := r.db.QueryRow(`
 		SELECT code_hash FROM auth_codes
-		WHERE clinic_id = $1 AND phone = $2 AND expires_at > $3
+		WHERE clinic_id = $1 AND channel = $2 AND login = $3 AND expires_at > $4
 		ORDER BY created_at DESC
 		LIMIT 1
-	`, clinicID, phone, now).Scan(&hash)
+	`, clinicID, channel, login, now).Scan(&hash)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
 	}

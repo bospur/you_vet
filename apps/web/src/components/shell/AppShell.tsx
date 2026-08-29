@@ -8,7 +8,7 @@ import styles from './AppShell.module.css';
 
 export type ClinicOutletContext = ClinicInfo | null;
 
-const TAB_ROOTS = new Set(['/', '/booking', '/animals', '/more']);
+const TAB_ROOTS = new Set(['/', '/booking', '/animals']);
 
 export function AppShell() {
   const location = useLocation();

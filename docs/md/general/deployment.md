@@ -65,6 +65,8 @@
 | `VK_APP_SECRET` | **Защищённый ключ** VK (не сервисный ключ) |
 | `VK_REDIRECT_URI` | `https://oauth.vk.com/blank.html` (как в mobile `.env.local`) |
 | `JWT_MOBILE_SECRET` | Опционально; иначе fallback `JWT_SECRET` |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | OTP на email (`587` STARTTLS). Без них вход по почте скрыт |
+| `GREEN_API_URL` / `GREEN_API_ID` / `GREEN_API_TOKEN` | OTP в WhatsApp через [Green-API](https://green-api.com) (работает в РФ). Без них кнопка скрыта |
 | `CORS_ORIGINS` | Через запятую: `https://admin.bospur.ru,https://app.bospur.ru,https://docs.bospur.ru,https://web.bospur.ru` |
 
 ## CI/CD

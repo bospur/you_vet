@@ -6,8 +6,6 @@ interface ImportMetaEnv {
   readonly VITE_CLINIC_SLUG: string;
   readonly VITE_BOT_USERNAME: string;
   readonly VITE_MOBILE_API_PREFIX: string;
-  readonly VITE_VK_APP_ID?: string;
-  readonly VITE_VK_REDIRECT_URI?: string;
 }
 
 interface ImportMeta {

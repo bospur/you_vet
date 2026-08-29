@@ -2,6 +2,7 @@ export interface MobileUserProfile {
   id: number;
   name: string | null;
   phone: string | null;
+  email: string | null;
   vkId: number | null;
   telegramUserId: number | null;
 }
@@ -19,6 +20,7 @@ export function parseMobileAccessToken(token: string): MobileUserProfile | null 
       id: Number(payload.sub),
       name: typeof payload.name === 'string' && payload.name.trim() ? payload.name.trim() : null,
       phone: typeof payload.phone === 'string' && payload.phone.trim() ? payload.phone.trim() : null,
+      email: typeof payload.email === 'string' && payload.email.trim() ? payload.email.trim() : null,
       vkId: payload.vk_id != null ? Number(payload.vk_id) : null,
       telegramUserId: payload.tg_id != null ? Number(payload.tg_id) : null,
     };
@@ -47,6 +49,7 @@ export function maskPhone(phone: string): string {
 export function displayUserName(user: MobileUserProfile): string {
   if (user.name && !isPlaceholderName(user.name)) return user.name;
   if (user.phone) return maskPhone(user.phone);
+  if (user.email) return user.email;
   return 'Пользователь';
 }
 
@@ -61,12 +64,15 @@ export function displayNameFromSources(
   }
   const phone = user.phone?.trim() || profile?.phone?.trim();
   if (phone) return maskPhone(phone);
+  if (user.email) return user.email;
   return 'Пользователь';
 }
 
 export function authMethodLabel(user: MobileUserProfile): string {
-  if (user.vkId && user.phone) return 'VK ID и телефон';
+  if (user.telegramUserId) return 'Телефон + Telegram';
+  if (user.email && user.phone) return 'Почта и телефон';
+  if (user.email) return 'Почта';
+  if (user.phone) return 'Телефон';
   if (user.vkId) return 'VK ID';
-  if (user.phone || user.telegramUserId) return 'Телефон + Telegram';
   return 'Вход выполнен';
 }

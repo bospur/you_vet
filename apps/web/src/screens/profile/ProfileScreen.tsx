@@ -22,7 +22,7 @@ import styles from './ProfileScreen.module.css';
 function ProfileContent({ profile }: { profile: MobileProfile }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { refreshAuthState } = useAuth();
+  const { refreshAuthState, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState(profile.display_name);
@@ -170,6 +170,12 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
               <span>{maskPhone(profile.phone)}</span>
             </div>
           )}
+          {profile.email && (
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Почта</span>
+              <span>{profile.email}</span>
+            </div>
+          )}
           <div className={styles.infoRow}>
             <span className={styles.infoLabel}>Способ входа</span>
             <span>
@@ -177,6 +183,7 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
                 id: profile.id,
                 name: profile.display_name || null,
                 phone: profile.phone || null,
+                email: profile.email || null,
                 vkId: profile.vk_user_id ?? null,
                 telegramUserId: profile.telegram_user_id ?? null,
               })}
@@ -203,6 +210,18 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
             </div>
           )}
         </section>
+
+        <button
+          type="button"
+          className={styles.logoutBtn}
+          onClick={async () => {
+            await logout();
+            queryClient.removeQueries({ queryKey: ['mobile-profile'] });
+            navigate('/', { replace: true });
+          }}
+        >
+          Выйти из аккаунта
+        </button>
       </div>
     </>
   );
