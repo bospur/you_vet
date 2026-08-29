@@ -1,0 +1,78 @@
+.wrapper {
+  padding: var(--vet-page-padding);
+  padding-bottom: 24px;
+}
+
+.search {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 12px;
+  font-size: 16px;
+  margin-bottom: 12px;
+  background: var(--vet-bg);
+}
+
+.card {
+  background: var(--vet-accent-soft-subtle);
+  border: 1px solid var(--vet-accent-border-light);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.breedName {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vet-text-body);
+}
+
+.price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  white-space: nowrap;
+}
+
+.cardMeta {
+  margin-top: 6px;
+}
+
+.duration {
+  font-size: 13px;
+  color: var(--vet-text-hint);
+}
+
+.description {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--vet-text-secondary);
+  line-height: 1.45;
+}
+
+.empty {
+  text-align: center;
+  color: var(--vet-text-hint);
+  padding: 24px 0;
+}
+
+.back {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 14px;
+  padding: 12px 20px;
+  text-align: center;
+  width: 100%;
+  margin-top: 12px;
+}

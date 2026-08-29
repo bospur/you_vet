@@ -1,0 +1,54 @@
+name: Deploy web
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'apps/web/**'
+      - 'packages/types/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web
+        run: npm run build --workspace=@you-vet/web
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_CLINIC_SLUG: ${{ secrets.VITE_CLINIC_SLUG }}
+          VITE_VK_APP_ID: ${{ secrets.VITE_VK_APP_ID }}
+          VITE_BOT_USERNAME: VPract_bot
+
+      - name: Ensure web root on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: mkdir -p /var/www/you-vet-web
+
+      - name: Deploy dist to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: apps/web/dist/*
+          target: /var/www/you-vet-web/
+          strip_components: 3

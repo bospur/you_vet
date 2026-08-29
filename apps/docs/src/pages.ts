@@ -60,8 +60,8 @@ export const docPages: DocPageConfig[] = [
   },
   {
     slug: 'mobile',
-    title: 'Mobile — тех. обзор',
-    description: 'Capacitor, API M0, auth, архитектура, roadmap разработки',
+    title: 'Клиентское приложение',
+    description: 'PWA web.bospur.ru; Capacitor/сторы заморожены',
     section: 'team',
     icon: '⚙️',
     markdown: mobileMd,

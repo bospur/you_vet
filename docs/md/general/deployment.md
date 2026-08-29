@@ -20,6 +20,7 @@
 | `admin.bospur.ru` | Веб-панель | Nginx → `/var/www/vp-bot-admin` |
 | `app.bospur.ru` | Telegram Mini App | Nginx → `/var/www/vp-bot-app` |
 | `docs.bospur.ru` | Портал документации (React, `apps/docs`) | Nginx → `/var/www/you-vet-docs` |
+| `web.bospur.ru` | PWA «Ветпрактика» (`apps/web`) | Nginx → `/var/www/you-vet-web` |
 
 ## Пути на сервере
 
@@ -29,6 +30,7 @@
 | `/var/www/vp-bot-admin` | Статика админ-панели |
 | `/var/www/vp-bot-app` | Статика Mini App |
 | `/var/www/you-vet-docs` | Сборка портала (`apps/docs/dist`) |
+| `/var/www/you-vet-web` | Сборка PWA (`apps/web/dist`) |
 | `/etc/nginx/sites-available/` | Nginx конфиги |
 | `/etc/letsencrypt/live/` | SSL сертификаты |
 
@@ -63,7 +65,7 @@
 | `VK_APP_SECRET` | **Защищённый ключ** VK (не сервисный ключ) |
 | `VK_REDIRECT_URI` | `https://oauth.vk.com/blank.html` (как в mobile `.env.local`) |
 | `JWT_MOBILE_SECRET` | Опционально; иначе fallback `JWT_SECRET` |
-| `CORS_ORIGINS` | Через запятую: `https://admin.bospur.ru,https://app.bospur.ru,https://docs.bospur.ru` |
+| `CORS_ORIGINS` | Через запятую: `https://admin.bospur.ru,https://app.bospur.ru,https://docs.bospur.ru,https://web.bospur.ru` |
 
 ## CI/CD
 
@@ -104,6 +106,18 @@ VPS **не собирает** образ локально и **не делает
 
 `docs/html/` и `docs/context/` на сайт **не** попадают. Контент страниц — `docs/md/**` + `apps/docs/src/pages.ts`.
 
+### Web PWA — `deploy-web.yml`
+
+Триггер: push в `dev` при изменениях `apps/web/**`, `packages/types/**`; плюс **Run workflow** вручную (`workflow_dispatch`).
+
+1. `npm ci` → сборка `@you-vet/web` (`VITE_API_URL`, `VITE_CLINIC_SLUG`, `VITE_VK_APP_ID` из GitHub Secrets)
+2. SSH: `mkdir -p /var/www/you-vet-web`
+3. `scp apps/web/dist/*` → `/var/www/you-vet-web/` (`index.html`, `sw.js`, `manifest.webmanifest`, `assets/`)
+
+Те же secrets, что у admin/app (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VITE_API_URL`, `VITE_CLINIC_SLUG`). Дополнительно: **`VITE_VK_APP_ID`**.
+
+Nginx и сертификат CI не трогает — только статика. `apps/mobile` этим workflow не деплоится.
+
 > Если docs отдаёт admin или чужой SSL — см. [docs-portal-restore.md](./docs-portal-restore.md). На `:443` должен быть nginx, не xray/VPN.
 
 ### GitHub Secrets
@@ -115,6 +129,7 @@ VPS **не собирает** образ локально и **не делает
 | `VPS_SSH_KEY` | Приватный SSH ключ |
 | `VITE_API_URL` | `https://api.bospur.ru` |
 | `VITE_CLINIC_SLUG` | slug клиники (напр. `default`) |
+| `VITE_VK_APP_ID` | ID Web-приложения VK ID (для PWA на `web.bospur.ru`) |
 
 ## Ручной деплой
 
@@ -169,7 +184,83 @@ sudo certbot certonly --webroot -w /var/www/certbot -d <subdomain>
 Nginx проксирует `api.bospur.ru` → `localhost:8080`. PostgreSQL снаружи недоступен.
 Uploads: volume `uploads_data` → `/app/uploads`.
 
-Конфиги vhost в репо: `apps/server/nginx/` (`default.conf` = API, `docs.conf`), `apps/admin/nginx/admin.conf`. На VPS также `app.bospur.ru`.
+Конфиги vhost в репо (шаблоны, на VPS копируются вручную): `apps/server/nginx/` (`default.conf` = API, `docs.conf`), `apps/admin/nginx/admin.conf`. На VPS также `app.bospur.ru`. **web.bospur.ru** в репо нет — конфиг только на сервере (сниппет ниже).
+
+### web.bospur.ru: первый запуск
+
+Агент на VPS не заходит. Nginx и certbot — в своём терминале / уже открытой SSH-сессии.
+
+1. DNS: A-запись `web.bospur.ru` → `213.176.65.71`.
+2. Каталог:
+
+```bash
+sudo mkdir -p /var/www/you-vet-web
+sudo chown deploy:deploy /var/www/you-vet-web
+```
+
+3. Nginx — создать `/etc/nginx/sites-available/web.bospur.ru` (сначала только HTTP для certbot, потом добавить ssl-блок):
+
+```nginx
+server {
+    listen 80;
+    server_name web.bospur.ru;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name web.bospur.ru;
+
+    ssl_certificate     /etc/letsencrypt/live/web.bospur.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/web.bospur.ru/privkey.pem;
+
+    root /var/www/you-vet-web;
+    index index.html;
+
+    location = /sw.js {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
+    location = /manifest.webmanifest {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+```bash
+sudo ln -sf /etc/nginx/sites-available/web.bospur.ru /etc/nginx/sites-enabled/
+```
+
+4. Сертификат (DNS должен резолвиться, HTTP :80 открыт). Для первого certbot ssl-блок можно временно закомментировать, либо `certonly --webroot`:
+
+```bash
+sudo certbot certonly --webroot -w /var/www/certbot -d web.bospur.ru
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+5. CORS на API: в коде дефолт уже включает `https://web.bospur.ru`, но если в `.env` задан `CORS_ORIGINS` — он **перекрывает** список. Добавь origin в `.env` и перезапусти контейнер после `deploy-server` / вручную.
+
+6. Кабинет VK ID (тип Web): trusted origin `https://web.bospur.ru`, redirect `https://web.bospur.ru/auth/vk-callback`. GitHub Secret `VITE_VK_APP_ID`.
+
+7. Статика — после push в `dev` (workflow `deploy-web`).
 
 ### Смена домена (2026-08-21)
 

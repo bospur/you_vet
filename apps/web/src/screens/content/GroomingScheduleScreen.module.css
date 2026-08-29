@@ -1,0 +1,61 @@
+.wrapper {
+  padding: var(--vet-page-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty {
+  font-size: 15px;
+  color: var(--vet-text-hint);
+  text-align: center;
+  padding: 24px 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+
+.rowActive {
+  background: var(--vet-accent-soft-chip);
+}
+
+.rowOff {
+  background: var(--vet-muted-bg);
+}
+
+.dayName {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--vet-text-body);
+}
+
+.hours {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.closed {
+  font-size: 14px;
+  color: var(--vet-text-hint);
+}
+
+.back {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  background: var(--vet-accent-soft-md);
+  border: 1px solid var(--vet-accent-border);
+  border-radius: 14px;
+  padding: 12px 20px;
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+}

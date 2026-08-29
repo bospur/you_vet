@@ -1,0 +1,47 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+  background: var(--vet-bg);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: calc(var(--vet-tab-height) + var(--vet-safe-bottom));
+}
+
+.mainNoTab {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--vet-safe-bottom);
+}
+
+.content {
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .root {
+    flex-direction: row;
+  }
+
+  .main,
+  .mainNoTab {
+    padding-bottom: 24px;
+  }
+
+  .content {
+    max-width: var(--vet-content-max);
+    margin: 0 auto;
+  }
+}
