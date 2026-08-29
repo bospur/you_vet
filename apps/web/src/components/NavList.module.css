@@ -81,4 +81,20 @@
   .wrapper {
     max-width: 720px;
   }
+
+  .header {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--vet-text-body);
+    margin-bottom: 16px;
+  }
+
+  .item {
+    background: var(--vet-bg);
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 0 0 1px var(--vet-tab-bar-border);
+  }
 }

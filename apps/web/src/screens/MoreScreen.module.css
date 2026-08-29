@@ -44,4 +44,14 @@
   .wrap {
     max-width: 640px;
   }
+
+  .pageTitle {
+    font-size: 28px;
+  }
+
+  .section {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 0 0 1px var(--vet-tab-bar-border);
+  }
 }
