@@ -3,10 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"go-server/internal/middleware"
 	"go-server/internal/repository"
@@ -17,12 +22,13 @@ type ChatNotifier interface {
 }
 
 type ChatHandler struct {
-	chatRepo *repository.ChatRepository
-	notifier ChatNotifier
+	chatRepo   *repository.ChatRepository
+	notifier   ChatNotifier
+	uploadsDir string
 }
 
-func NewChatHandler(chatRepo *repository.ChatRepository, notifier ChatNotifier) *ChatHandler {
-	return &ChatHandler{chatRepo: chatRepo, notifier: notifier}
+func NewChatHandler(chatRepo *repository.ChatRepository, notifier ChatNotifier, uploadsDir string) *ChatHandler {
+	return &ChatHandler{chatRepo: chatRepo, notifier: notifier, uploadsDir: uploadsDir}
 }
 
 func chatClaims(w http.ResponseWriter, r *http.Request) *middleware.MobileClaims {
@@ -59,8 +65,19 @@ func (h *ChatHandler) OpenConsult(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "тред создаёт клиент", http.StatusForbidden)
 		return
 	}
-	room, created, err := h.chatRepo.GetOrCreateConsult(claims.ClinicID, claims.MobileUserID)
+	var body struct {
+		DoctorID *int `json:"doctor_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil && !errors.Is(err, io.EOF) {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	room, created, err := h.chatRepo.GetOrCreateConsult(claims.ClinicID, claims.MobileUserID, body.DoctorID)
 	if err != nil {
+		if errors.Is(err, repository.ErrChatDoctor) {
+			http.Error(w, "врач не найден", http.StatusNotFound)
+			return
+		}
 		log.Printf("chat consult: %v", err)
 		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
@@ -115,12 +132,11 @@ type chatPostBody struct {
 }
 
 func (h *ChatHandler) postToRoom(w http.ResponseWriter, r *http.Request, room *repository.ChatRoom, claims *middleware.MobileClaims) {
-	var body chatPostBody
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+	text, imageURL, ok := h.readChatPost(w, r, claims.MobileUserID)
+	if !ok {
 		return
 	}
-	msg, err := h.chatRepo.PostMessage(room, claims.MobileUserID, claims.AppRole, body.Body)
+	msg, err := h.chatRepo.PostMessage(room, claims.MobileUserID, claims.AppRole, text, imageURL)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrChatEmpty):
@@ -143,12 +159,61 @@ func (h *ChatHandler) postToRoom(w http.ResponseWriter, r *http.Request, room *r
 			clientTg = h.chatRepo.TelegramID(*room.CreatedBy)
 		}
 		preview := strings.TrimSpace(msg.Body)
+		if preview == "" && msg.ImageURL != "" {
+			preview = "Фото"
+		} else if msg.ImageURL != "" {
+			preview = "Фото: " + preview
+		}
 		if len([]rune(preview)) > 200 {
 			preview = string([]rune(preview)[:200]) + "…"
 		}
 		go h.notifier.NotifyChatMessage(claims.ClinicID, room.Kind, preview, msg.AuthorName, clientTg, fromStaff)
 	}
 	writeJSON(w, http.StatusCreated, msg)
+}
+
+func (h *ChatHandler) readChatPost(w http.ResponseWriter, r *http.Request, userID int64) (body, imageURL string, ok bool) {
+	ct := r.Header.Get("Content-Type")
+	if strings.HasPrefix(ct, "multipart/form-data") {
+		if err := r.ParseMultipartForm(5 << 20); err != nil {
+			http.Error(w, "файл слишком большой (макс 5 МБ)", http.StatusBadRequest)
+			return "", "", false
+		}
+		body = r.FormValue("body")
+		file, header, err := r.FormFile("photo")
+		if err != nil {
+			if errors.Is(err, http.ErrMissingFile) {
+				return body, "", true
+			}
+			http.Error(w, "не удалось прочитать файл", http.StatusBadRequest)
+			return "", "", false
+		}
+		defer file.Close()
+		data, ext, err := ReadAndValidateImage(file, header.Filename)
+		if err != nil {
+			msg, status := imageUploadError(err)
+			http.Error(w, msg, status)
+			return "", "", false
+		}
+		if h.uploadsDir == "" {
+			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+			return "", "", false
+		}
+		filename := fmt.Sprintf("chat_%d_%d%s", userID, time.Now().UnixMilli(), ext)
+		if err := os.WriteFile(filepath.Join(h.uploadsDir, filename), data, 0644); err != nil {
+			log.Printf("chat photo write: %v", err)
+			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+			return "", "", false
+		}
+		return body, "/uploads/" + filename, true
+	}
+
+	var payload chatPostBody
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return "", "", false
+	}
+	return payload.Body, "", true
 }
 
 // PostWall — POST /api/mobile/v1/chats/wall/messages

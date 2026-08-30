@@ -7,15 +7,18 @@ import (
 
 // Doctor — карточка врача
 type Doctor struct {
-	ID          int    `json:"id"`
-	ClinicID    int    `json:"clinic_id"`
-	FullName    string `json:"full_name"`
-	Specialty   string `json:"specialty"`
-	Description string `json:"description"`
-	Contacts    string `json:"contacts"`
-	PhotoURL    string `json:"photo_url"`
-	Status      string `json:"status"`
-	SortOrder   int    `json:"sort_order"`
+	ID            int    `json:"id"`
+	ClinicID      int    `json:"clinic_id"`
+	FullName      string `json:"full_name"`
+	Specialty     string `json:"specialty"`
+	Description   string `json:"description"`
+	Contacts      string `json:"contacts"`
+	PhotoURL      string `json:"photo_url"`
+	Status        string `json:"status"`
+	SortOrder     int    `json:"sort_order"`
+	MobileUserID  *int64 `json:"mobile_user_id,omitempty"`
+	PWALogin      string `json:"pwa_login,omitempty"`
+	HasPWAAccount bool   `json:"has_pwa_account,omitempty"`
 }
 
 // DoctorInput — данные для создания/обновления карточки
@@ -82,7 +85,69 @@ func (r *DoctorRepository) GetAll(clinicID int) ([]Doctor, error) {
 		}
 		doctors = append(doctors, d)
 	}
+	if err := r.fillPWAAccounts(clinicID, doctors); err != nil {
+		return nil, err
+	}
 	return doctors, nil
+}
+
+func (r *DoctorRepository) fillPWAAccounts(clinicID int, doctors []Doctor) error {
+	if len(doctors) == 0 {
+		return nil
+	}
+	rows, err := r.db.Query(`
+		SELECT d.id, d.mobile_user_id, COALESCE(u.staff_login, '')
+		FROM doctors d
+		LEFT JOIN mobile_users u ON u.id = d.mobile_user_id
+		WHERE d.clinic_id = $1
+	`, clinicID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	byID := make(map[int]Doctor, len(doctors))
+	for rows.Next() {
+		var id int
+		var mobileID sql.NullInt64
+		var login string
+		if err := rows.Scan(&id, &mobileID, &login); err != nil {
+			return err
+		}
+		info := Doctor{}
+		if mobileID.Valid {
+			v := mobileID.Int64
+			info.MobileUserID = &v
+			info.PWALogin = login
+			info.HasPWAAccount = login != ""
+		}
+		byID[id] = info
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for i := range doctors {
+		if info, ok := byID[doctors[i].ID]; ok {
+			doctors[i].MobileUserID = info.MobileUserID
+			doctors[i].PWALogin = info.PWALogin
+			doctors[i].HasPWAAccount = info.HasPWAAccount
+		}
+	}
+	return nil
+}
+
+func (r *DoctorRepository) SetMobileUserID(clinicID, doctorID int, userID int64) error {
+	res, err := r.db.Exec(`
+		UPDATE doctors SET mobile_user_id = $3, updated_at = NOW()
+		WHERE id = $1 AND clinic_id = $2
+	`, doctorID, clinicID, userID)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 func (r *DoctorRepository) GetPublished(clinicID int) ([]Doctor, error) {
@@ -118,6 +183,10 @@ func (r *DoctorRepository) GetByIDForClinic(clinicID int, id string) (*Doctor, e
 	}
 	if err != nil {
 		return nil, err
+	}
+	list := []Doctor{d}
+	if err := r.fillPWAAccounts(clinicID, list); err == nil {
+		d = list[0]
 	}
 	return &d, nil
 }

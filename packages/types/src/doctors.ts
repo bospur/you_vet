@@ -10,6 +10,9 @@ export interface Doctor {
   photo_url: string;
   status: DoctorStatus;
   sort_order: number;
+  mobile_user_id?: number;
+  pwa_login?: string;
+  has_pwa_account?: boolean;
 }
 
 export interface DoctorInput {

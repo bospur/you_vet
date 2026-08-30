@@ -44,6 +44,23 @@ export async function deleteDoctor(id: number): Promise<void> {
   await axiosInstance.delete(`/api/admin/doctors/${id}`);
 }
 
+export interface DoctorPWAAccount {
+  login: string;
+  password?: string;
+  login_url: string;
+  mobile_user_id: number;
+  created?: boolean;
+  reset?: boolean;
+}
+
+export async function provisionDoctorPWA(id: number, reset = false): Promise<DoctorPWAAccount> {
+  const { data } = await axiosInstance.post<DoctorPWAAccount>(
+    `/api/admin/doctors/${id}/pwa-account`,
+    { reset },
+  );
+  return data;
+}
+
 // ── Расписание ────────────────────────────────────────────────────────────────
 
 export async function getDoctorSchedule(id: number): Promise<DoctorScheduleSlot[]> {

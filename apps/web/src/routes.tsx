@@ -29,6 +29,7 @@ import ChatsListScreen from './screens/chats/ChatsListScreen';
 import ChatRoomScreen from './screens/chats/ChatRoomScreen';
 
 const LoginScreen = lazy(() => import('./screens/auth/LoginScreen'));
+const StaffLoginScreen = lazy(() => import('./screens/auth/StaffLoginScreen'));
 const VerifyScreen = lazy(() => import('./screens/auth/VerifyScreen'));
 const LinkTelegramScreen = lazy(() => import('./screens/auth/LinkTelegramScreen'));
 
@@ -69,6 +70,7 @@ export function AppRoutes() {
             <Route path="staff/booking" element={<StaffBookingInboxScreen />} />
             <Route path="staff/grooming" element={<StaffGroomingDayScreen />} />
             <Route path="auth/login" element={<LoginScreen />} />
+            <Route path="auth/staff" element={<StaffLoginScreen />} />
             <Route path="auth/verify" element={<VerifyScreen />} />
             <Route path="auth/link-telegram" element={<LinkTelegramScreen />} />
           </Route>

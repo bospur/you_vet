@@ -76,6 +76,35 @@
   font-variant-numeric: tabular-nums;
 }
 
+.writeBtn {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--vet-accent);
+  border: none;
+  border-radius: 14px;
+  padding: 12px 20px;
+  text-align: center;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.writeBtn:disabled {
+  opacity: 0.5;
+}
+
+.writeError {
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #b71c1c;
+  background: #ffebee;
+  box-sizing: border-box;
+}
+
 .back {
   cursor: pointer;
   font-size: 16px;

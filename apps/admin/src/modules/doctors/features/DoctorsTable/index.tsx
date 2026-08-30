@@ -19,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
 import UnpublishedIcon from '@mui/icons-material/Unpublished';
+import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import type { Doctor } from '../../domain/types';
 
 interface DoctorsTableProps {
@@ -27,10 +28,11 @@ interface DoctorsTableProps {
   onEdit: (d: Doctor) => void;
   onDelete: (d: Doctor) => void;
   onPublish: (d: Doctor) => void;
+  onPWAAccount?: (d: Doctor) => void;
   baseUrl: string;
 }
 
-export function DoctorsTable({ data, role, onEdit, onDelete, onPublish, baseUrl }: DoctorsTableProps) {
+export function DoctorsTable({ data, role, onEdit, onDelete, onPublish, onPWAAccount, baseUrl }: DoctorsTableProps) {
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
 
   const actions = (d: Doctor) => (
@@ -39,6 +41,13 @@ export function DoctorsTable({ data, role, onEdit, onDelete, onPublish, baseUrl 
         <Tooltip title={d.status === 'published' ? 'Снять с публикации' : 'Опубликовать'}>
           <IconButton size="small" onClick={() => onPublish(d)}>
             {d.status === 'published' ? <UnpublishedIcon fontSize="small" /> : <PublishIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      )}
+      {role === 'admin' && onPWAAccount && (
+        <Tooltip title={d.has_pwa_account ? `PWA: ${d.pwa_login || 'аккаунт'}` : 'Создать аккаунт в приложении'}>
+          <IconButton size="small" color={d.has_pwa_account ? 'success' : 'default'} onClick={() => onPWAAccount(d)}>
+            <SmartphoneIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
@@ -70,6 +79,9 @@ export function DoctorsTable({ data, role, onEdit, onDelete, onPublish, baseUrl 
             </Avatar>
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
               <Typography fontWeight={600} noWrap>{d.full_name}</Typography>
+              {d.has_pwa_account && (
+                <Typography variant="caption" color="success.main">PWA {d.pwa_login}</Typography>
+              )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                 <Typography variant="body2" color="text.secondary" noWrap>{d.specialty || '—'}</Typography>
                 <Chip
@@ -105,7 +117,14 @@ export function DoctorsTable({ data, role, onEdit, onDelete, onPublish, baseUrl 
                     {d.full_name[0]}
                   </Avatar>
                 </TableCell>
-                <TableCell>{d.full_name}</TableCell>
+                <TableCell>
+                  {d.full_name}
+                  {d.has_pwa_account && (
+                    <Typography variant="caption" display="block" color="success.main">
+                      PWA {d.pwa_login}
+                    </Typography>
+                  )}
+                </TableCell>
                 <TableCell>{d.specialty || '—'}</TableCell>
                 <TableCell>
                   <Chip

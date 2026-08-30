@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-08-30 (email OTP / Aeza SMTP)
+> Последнее обновление: 2026-08-30 (пилот PWA в коде)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -99,7 +99,9 @@
 | WEB-01 | 🟡 | Выкладка PWA `web.bospur.ru` | **fixed 2026-08-29** — nginx+cert, CORS, `deploy-web` |
 | WEB-02 | ⚪ | Десктоп UI «как админка» | **частично** — TopBar+hero, без левого сайдбара |
 | WEB-03 | 🟠 | Email OTP: исходящие 465/587 с VPS закрыты Aeza | **ждём заявку** — ufw inactive, OUTPUT ACCEPT; не SMTP в Ubuntu |
-| WEB-04 | 🟡 | Фикс SMTP (таймаут, порт 465, AUTH LOGIN) | **локально, не в git** — `mailer/smtp.go` |
+| WEB-04 | 🟡 | Фикс SMTP (таймаут, порт 465, AUTH LOGIN) | **в git** `495e9dd` — ждёт deploy server после Aeza |
+| WEB-05 | 🟡 | Пилот PWA: роли, C1, груминг, чаты | **в коде** `13ffcdb` на `work-web` — не в `dev`/prod; миграции **030–032** |
+| WEB-06 | ⚪ | После смены `app_role` в admin JWT старый | **by design** — сотрудник перелогинивается |
 
 ## Mobile (PRD-06)
 
@@ -109,7 +111,7 @@
 | MOB-02 | 🟡 | M1: `apps/mobile` shell, главная, tabs | **fixed** — APK на телефоне |
 | MOB-03 | 🟡 | Auth UI (login / verify / link-telegram) | **fixed 2026-06-10** — TG smoke ✅; `setTokens` в VerifyScreen |
 | MOB-04 | 🟡 | VK ID auth (`/auth/vk`, миграция 020) | **fixed** — smoke ✅ на APK |
-| MOB-05 | ⚪ | Booking flow в клиенте | backlog — делать в **`apps/web`**, не APK |
+| MOB-05 | ⚪ | Booking flow в клиенте | **в коде PWA** (`work-web`); APK не трогаем |
 | MOB-06 | ⚪ | RuStore release (M3) | **frozen** |
 | MOB-07 | 🟡 | APK без `cap sync` → старый UI | **doc** — `npm run build` → `cap sync` |
 | MOB-08 | 🟡 | VK app ID / кабинет | **fixed** |
@@ -135,6 +137,6 @@
 
 ## Следующие шаги
 
-1. Aeza откроет SMTP → `SMTP_PORT=465` + деплой фикса mailer
-2. Booking (C1) в PWA
-3. **ADM-02** · C1 smoke Mini App
+1. PR/merge `work-web` → `dev` → deploy server+web+admin (миграции 030–032)
+2. Aeza откроет SMTP → `SMTP_PORT=465` + recreate `app`
+3. Smoke пилота · **ADM-02** · C1 smoke Mini App

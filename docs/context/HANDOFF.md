@@ -2,38 +2,32 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-08-30 (PWA: сплэш, иконки, «Ещё»/VK, email OTP)
+## Сессия 2026-08-30 (пилот PWA: роли, C1, груминг, чаты)
 
-Ветка: **`work-web`**. `origin/dev` = merge PR **#91** (`664b8ae`, в т.ч. `495e9dd` SMTP-заготовка).  
-Локально **не закоммичено**: `apps/server/internal/mailer/smtp.go` (таймаут 12с + SSL **465** + AUTH LOGIN), `apps/web/src/api/auth.ts` (timeout 20с), `apps/server/.env.example`.
+Ветка: **`work-web`**. Последний коммит: **`13ffcdb`** `wip(web): Роли + чат`.  
+Рабочее дерево чистое. В **`origin/dev` ещё не влито** — prod без пилота.
+
+SMTP-фикс mailer уже в git: **`495e9dd`** (`wip(web): пожключение смтп для атворизации`).
 
 Агент **не** SSH на VPS. Превью Vite **не** поднимать без просьбы.
 
-### Prod (web.bospur.ru)
+### Что сделано в коде (не в prod)
 
-- Сплэш убран → классический прелоадер. PWA после деплоя: закрыть все вкладки / ярлык.
-- Иконки: Capacitor-заглушки → кот клиники (`favicon.png`, `pwa-192/512`, `apple-touch-icon`). Favicon **квадратный файл**, не `logo_url` из админки (узкий 34×72 растягивал кота).
-- Раздел **«Ещё»** снят; выход — в профиле.
-- **VK на вебе снят** (серверный `POST /auth/vk` для mobile оставлен).
-- Вход: Telegram (номер + бот) + **email OTP** + WhatsApp (кнопка только при Green-API).
-- Миграция **029** (`email` на `mobile_users`, `channel`/`login` на `auth_codes`).
+Одна OTP-авторизация, разные оболочки по `mobile_users.app_role`: `client` | `doctor` | `groomer` | `chief_vet`.
 
-### Email OTP — блокер
+- Admin → Обзор → «Приложение»: пригласить персонал (телефон/email + роль), сменить роль. После смены — **выйти и войти** (JWT `app_role`).
+- **C1 в PWA:** услуга → дата/слот → форма → «Мои заявки». Врач/главврач: `/staff/booking` confirm/reject.
+- **Груминг:** клиент `/grooming/book` (слот, `pending`); грумер/главврач `/staff/grooming` (лента на дату).
+- **Чаты:** общий (`clinic_wall`) + тред с врачом (`consult`). Лимиты 10 / 15 сообщений в сутки; 1 открытый тред. Polling 8–10 с. Consult → бот в `staff_chat_id` / личка клиенту.
+- Старый `/question` оставлен (ответ в Telegram).
 
-Исходящие **465 и 587** с VPS `213.176.65.71` **закрыты сетью Aeza** (не ufw: inactive, OUTPUT ACCEPT). POST `/api/mobile/v1/auth/request` `{channel:email}` зависает → в UI «нет связи с сервером».
+Миграции **ещё не на VPS:** `030` app_role, `031` grooming `mobile_user_id`+`status`, `032` chat_*.
 
-- В `.env` на VPS уже SMTP Mail.ru (`vetpraktika@mail.ru`); пароль — **пароль приложения**, не заглушка `пароль_приложения`.
-- Пользователь **отправил заявку в Aeza** открыть исходящие TCP 465/587 на `smtp.mail.ru`.
-- После открытия: дождаться деплоя фикса mailer (сейчас только локально) → `SMTP_PORT=465` → `docker compose up -d --force-recreate app`.
-- Если Aeza откажет — не SMTP, а HTTP API (Unisender/Resend и т.п.) на 443.
+### Email OTP — блокер (без изменений)
 
-`GET /api/mobile/v1/auth/options` → `email: true, telegram: true, whatsapp: false` (SMTP env есть, Green-API нет).
-
-`docker compose pull` с VPS без логина GHCR → `denied`. Новый образ только через CI (`deploy-server`) или `docker login ghcr.io`.
-
-### Десктоп Figma (личное, не MIURA.ONE)
-
-[Ветпрактика — десктоп PWA](https://www.figma.com/design/sMWwSXhSPFammPut7NqIcN) · `sMWwSXhSPFammPut7NqIcN`. Кадры A (`1:2`) / B (`1:3`). Вёрстка TopBar+hero уже в коде; выбор A/B формально не закрыт.
+Исходящие **465 и 587** с VPS закрыты сетью Aeza. Заявка в поддержку уже отправлена.  
+После открытия: deploy server (`495e9dd`+пилот) → `SMTP_PORT=465` → `docker compose up -d --force-recreate app` (только пользователь).  
+Если Aeza откажет — HTTP API на 443, не SMTP.
 
 ### Не делать с агента без явной просьбы
 
@@ -43,17 +37,25 @@
 
 ### Следующий шаг
 
-1. Ответ Aeza по SMTP → порт 465 + задеплоить локальный `mailer/smtp.go`.
-2. Закоммитить uncommitted SMTP-фикс, влить в `dev`.
-3. Booking (C1) в PWA; C1 smoke Mini App.
+1. Push `work-web` → PR в `dev` (или влить) → CI: **server + web + admin**. Миграции 030–032 на deploy-server.
+2. В admin выдать роли пилотным врачу/грумеру; они логинятся OTP заново.
+3. Ответ Aeza → email OTP в prod.
+4. Smoke: клиент запись + груминг + чат; врач inbox; грумер день.
 
 ### Ссылки
 
 - PWA: https://web.bospur.ru
-- [deployment.md](../md/general/deployment.md) (SMTP / Green-API в таблице `.env`)
+- План: `.cursor/plans/pwa_pilot_scope_4c330b5e.plan.md`
+- [deployment.md](../md/general/deployment.md)
+
+---
+
+## Ранее 2026-08-30 (PWA: сплэш, иконки, VK снят, email OTP)
+
+Сплэш убран, иконки кота, «Ещё» снят, VK на вебе снят. Миграция **029** в prod. SMTP с VPS закрыт Aeza.
 
 ---
 
 ## Ранее 2026-08-29 (PWA в prod)
 
-Первый выкат `web.bospur.ru`. Телефон + VPN hairpin на тот же VPS. Десктоп без сайдбара.
+Первый выкат `web.bospur.ru`.

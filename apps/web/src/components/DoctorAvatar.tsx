@@ -35,12 +35,12 @@ export function DoctorAvatar({
 
   const sharedStyle = isSquare
     ? {
-        maxWidth: '100%',
-        maxHeight: '100%',
-        width: 'auto',
-        height: 'auto',
+        position: 'absolute' as const,
+        inset: 0,
+        width: '100%',
+        height: '100%',
         borderRadius,
-        objectFit: 'contain' as const,
+        objectFit: 'cover' as const,
         objectPosition: 'center',
         display: 'block',
       }
@@ -66,17 +66,18 @@ export function DoctorAvatar({
 
   const fallbackStyle = isSquare
     ? {
-        width: '56%',
-        aspectRatio: '1',
-        borderRadius: '50%',
+        position: 'absolute' as const,
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        borderRadius: 0,
         background: bg,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         color: '#fff',
-        fontSize: 32,
+        fontSize,
         fontWeight: 700,
-        flexShrink: 0,
       }
     : {
         ...sharedStyle,

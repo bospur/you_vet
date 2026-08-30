@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,16 +15,19 @@ import (
 
 	"go-server/internal/middleware"
 	"go-server/internal/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // DoctorHandler содержит зависимости для эндпоинтов врачей
 type DoctorHandler struct {
 	doctorRepo *repository.DoctorRepository
+	mobileRepo *repository.MobileAuthRepository
 	uploadsDir string
 }
 
-func NewDoctorHandler(doctorRepo *repository.DoctorRepository, uploadsDir string) *DoctorHandler {
-	return &DoctorHandler{doctorRepo: doctorRepo, uploadsDir: uploadsDir}
+func NewDoctorHandler(doctorRepo *repository.DoctorRepository, mobileRepo *repository.MobileAuthRepository, uploadsDir string) *DoctorHandler {
+	return &DoctorHandler{doctorRepo: doctorRepo, mobileRepo: mobileRepo, uploadsDir: uploadsDir}
 }
 
 // ── Врачи (admin) ─────────────────────────────────────────────────────────────
@@ -106,6 +111,121 @@ func (h *DoctorHandler) UpdateDoctor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, doctor)
+}
+
+type doctorPWAAccountBody struct {
+	Reset bool `json:"reset"`
+}
+
+type doctorPWAAccountResp struct {
+	Login        string `json:"login"`
+	Password     string `json:"password,omitempty"`
+	LoginURL     string `json:"login_url"`
+	MobileUserID int64  `json:"mobile_user_id"`
+	Created      bool   `json:"created"`
+	Reset        bool   `json:"reset"`
+}
+
+const staffPWALoginPath = "/auth/staff"
+
+// ProvisionDoctorPWA — POST /api/admin/doctors/{id}/pwa-account
+func (h *DoctorHandler) ProvisionDoctorPWA(w http.ResponseWriter, r *http.Request) {
+	if h.mobileRepo == nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	claims := middleware.ClaimsFromContext(r)
+	id := r.PathValue("id")
+	doctor, err := h.doctorRepo.GetByIDForClinic(claims.ClinicID, id)
+	if err != nil {
+		log.Printf("pwa account get doctor: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if doctor == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+
+	var body doctorPWAAccountBody
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	if doctor.HasPWAAccount && doctor.MobileUserID != nil && !body.Reset {
+		writeJSON(w, http.StatusOK, doctorPWAAccountResp{
+			Login:        doctor.PWALogin,
+			LoginURL:     staffPWALoginPath,
+			MobileUserID: *doctor.MobileUserID,
+		})
+		return
+	}
+
+	plain, err := generateStaffPassword(10)
+	if err != nil {
+		log.Printf("pwa account password: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(plain), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+
+	if doctor.MobileUserID != nil && body.Reset {
+		if err := h.mobileRepo.SetStaffPassword(claims.ClinicID, *doctor.MobileUserID, string(hash)); err != nil {
+			log.Printf("pwa account reset: %v", err)
+			http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, doctorPWAAccountResp{
+			Login:        doctor.PWALogin,
+			Password:     plain,
+			LoginURL:     staffPWALoginPath,
+			MobileUserID: *doctor.MobileUserID,
+			Reset:        true,
+		})
+		return
+	}
+
+	base := repository.SuggestStaffLogin(doctor.FullName, doctor.ID)
+	login, err := h.mobileRepo.AllocateStaffLogin(claims.ClinicID, base)
+	if err != nil {
+		log.Printf("pwa account login: %v", err)
+		http.Error(w, "не удалось подобрать логин", http.StatusConflict)
+		return
+	}
+	user, err := h.mobileRepo.CreateStaffAccount(claims.ClinicID, doctor.FullName, login, string(hash), repository.AppRoleDoctor)
+	if err != nil {
+		log.Printf("pwa account create: %v", err)
+		http.Error(w, "не удалось создать аккаунт", http.StatusInternalServerError)
+		return
+	}
+	if err := h.doctorRepo.SetMobileUserID(claims.ClinicID, doctor.ID, user.ID); err != nil {
+		log.Printf("pwa account link: %v", err)
+		http.Error(w, "аккаунт создан, но не привязан к карточке", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusCreated, doctorPWAAccountResp{
+		Login:        login,
+		Password:     plain,
+		LoginURL:     staffPWALoginPath,
+		MobileUserID: user.ID,
+		Created:      true,
+	})
+}
+
+func generateStaffPassword(n int) (string, error) {
+	const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+	out := make([]byte, n)
+	max := big.NewInt(int64(len(alphabet)))
+	for i := range out {
+		v, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		out[i] = alphabet[v.Int64()]
+	}
+	return string(out), nil
 }
 
 // UpdateDoctorStatus обрабатывает PATCH /api/admin/doctors/{id}/status (только admin)
