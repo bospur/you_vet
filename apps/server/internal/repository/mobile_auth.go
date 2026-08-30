@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -269,6 +270,12 @@ func (r *MobileAuthRepository) DeleteByClinic(clinicID int, userID int64) error 
 	`, clinicID, userID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(`
+		UPDATE doctors SET mobile_user_id = NULL
+		WHERE clinic_id = $1 AND mobile_user_id = $2
+	`, clinicID, userID); err != nil {
+		return err
+	}
 
 	res, err := tx.Exec(`DELETE FROM mobile_users WHERE id = $1 AND clinic_id = $2`, userID, clinicID)
 	if err != nil {
@@ -419,4 +426,89 @@ func (r *MobileAuthRepository) LatestValidCodeHash(clinicID int, channel, login 
 // PurgeExpiredCodes удаляет старые коды (best-effort).
 func (r *MobileAuthRepository) PurgeExpiredCodes(before time.Time) {
 	_, _ = r.db.Exec(`DELETE FROM auth_codes WHERE expires_at < $1`, before)
+}
+
+func (r *MobileAuthRepository) staffLoginTaken(clinicID int, login string, excludeUserID int64) (bool, error) {
+	var n int
+	err := r.db.QueryRow(`
+		SELECT COUNT(*) FROM mobile_users
+		WHERE clinic_id = $1 AND lower(staff_login) = lower($2) AND id <> $3
+	`, clinicID, login, excludeUserID).Scan(&n)
+	return n > 0, err
+}
+
+func (r *MobileAuthRepository) AllocateStaffLogin(clinicID int, base string) (string, error) {
+	login := base
+	for n := 2; n < 80; n++ {
+		taken, err := r.staffLoginTaken(clinicID, login, 0)
+		if err != nil {
+			return "", err
+		}
+		if !taken {
+			return login, nil
+		}
+		login = base + strconv.Itoa(n)
+	}
+	return "", errors.New("не удалось подобрать логин")
+}
+
+func (r *MobileAuthRepository) CreateStaffAccount(clinicID int, displayName, login, passwordHash, role string) (*MobileUser, error) {
+	role = NormalizeAppRole(role)
+	if !IsStaffAppRole(role) {
+		return nil, errors.New("недопустимая роль")
+	}
+	row := r.db.QueryRow(`
+		INSERT INTO mobile_users (clinic_id, display_name, app_role, staff_login, password_hash, linked_at)
+		VALUES ($1, NULLIF($2, ''), $3, $4, $5, NOW())
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role
+	`, clinicID, displayName, role, login, passwordHash)
+	return scanMobileUser(row)
+}
+
+func (r *MobileAuthRepository) SetStaffPassword(clinicID int, userID int64, passwordHash string) error {
+	res, err := r.db.Exec(`
+		UPDATE mobile_users SET password_hash = $3
+		WHERE id = $1 AND clinic_id = $2
+	`, userID, clinicID, passwordHash)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r *MobileAuthRepository) GetStaffByLogin(clinicID int, login string) (*MobileUser, string, error) {
+	login = strings.TrimSpace(login)
+	if login == "" {
+		return nil, "", sql.ErrNoRows
+	}
+	var hash sql.NullString
+	row := r.db.QueryRow(`
+		SELECT id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role, password_hash
+		FROM mobile_users
+		WHERE clinic_id = $1 AND lower(staff_login) = lower($2)
+	`, clinicID, login)
+	var u MobileUser
+	var phone, email sql.NullString
+	err := row.Scan(
+		&u.ID, &u.ClinicID, &phone, &u.TelegramUserID,
+		&u.VkUserID, &u.DisplayName, &email, &u.PhotoURL, &u.LinkedAt, &u.CreatedAt, &u.AppRole, &hash,
+	)
+	if err != nil {
+		return nil, "", err
+	}
+	if phone.Valid {
+		u.Phone = phone.String
+	}
+	if email.Valid {
+		u.Email = email.String
+	}
+	u.AppRole = NormalizeAppRole(u.AppRole)
+	if !IsStaffAppRole(u.AppRole) || !hash.Valid || hash.String == "" {
+		return nil, "", sql.ErrNoRows
+	}
+	return &u, hash.String, nil
 }

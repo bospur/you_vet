@@ -1,6 +1,6 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-08-30 (PWA auth: TG + email, VK с веба снят)
+> Последнее обновление: 2026-08-30 (пилот PWA: роли + запись + чаты в коде)
 
 ## Что это
 
@@ -35,16 +35,16 @@ packages/types/  @you-vet/types
 
 | Этап | Статус |
 |---|---|
-| B1–B4, C1, Q1 | 🟡 код на `*.bospur.ru`; C1 smoke Mini App; booking в PWA — следующий шаг |
+| B1–B4, C1, Q1 | 🟡 код на `*.bospur.ru`; C1 + груминг + чаты PWA **на `work-web`**, не prod |
 
-Миграции **013–017** (запись), **019–021** (mobile JWT/VK), **022–026** (docs), **029** (email/WhatsApp OTP).
+Миграции **013–017** (запись), **019–021** (mobile JWT/VK), **022–026** (docs), **029** (email OTP), **030–032** (роли PWA, груминг-запись, чаты) — 030–032 только в коде.
 
 ### Клиент вне Telegram — PWA
 
 | Этап | Статус |
 |---|---|
 | M0 backend `/api/mobile/v1` | ✅ prod |
-| `apps/web` PWA + десктоп-шелл | ✅ prod; email OTP 🟡 ждёт SMTP Aeza; VK на вебе снят |
+| `apps/web` PWA + десктоп-шелл | ✅ prod (контент); пилот ролей/записи/чатов 🟡 на `work-web`; email OTP ждёт Aeza |
 | Capacitor Android/iOS / RuStore | ⏸ **frozen** |
 
 API: `/api/mobile/v1` · `appId` native: `ru.snzbeachvolleyball25.vetpraktika` (не менять)

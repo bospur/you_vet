@@ -28,7 +28,7 @@ export default function StaffGroomingDayScreen() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/auth/login?return=/staff/grooming', { replace: true });
+      navigate('/auth/staff?return=/staff/grooming', { replace: true });
       return;
     }
     if (!isGroomer) navigate('/', { replace: true });

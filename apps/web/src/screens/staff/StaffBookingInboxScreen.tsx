@@ -18,7 +18,7 @@ export default function StaffBookingInboxScreen() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/auth/login?return=/staff/booking', { replace: true });
+      navigate('/auth/staff?return=/staff/booking', { replace: true });
       return;
     }
     if (!isMedical) navigate('/', { replace: true });

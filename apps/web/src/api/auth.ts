@@ -36,6 +36,11 @@ export async function authRequestCode(payload: {
   return data;
 }
 
+export async function authStaffLogin(login: string, password: string): Promise<TokenPair> {
+  const { data } = await axios.post<TokenPair>(`${authBaseURL}/staff`, { login, password });
+  return data;
+}
+
 export async function authVerifyCode(payload: {
   channel: AuthChannel;
   phone?: string;

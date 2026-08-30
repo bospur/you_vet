@@ -91,10 +91,10 @@ func main() {
 	animalHandler := handler.NewAnimalHandler(animalRepo)
 	articleHandler := handler.NewArticleHandler(articleRepo)
 	adminHandler := handler.NewAdminHandler(animalRepo, articleRepo, userRepo, jwtSecret)
-	doctorHandler := handler.NewDoctorHandler(doctorRepo, uploadsDir)
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
 	mobileAuthRepo := repository.NewMobileAuthRepository(database)
+	doctorHandler := handler.NewDoctorHandler(doctorRepo, mobileAuthRepo, uploadsDir)
 	chatRepo := repository.NewChatRepository(database)
 
 	clinicID, err := bookingRepo.GetClinicIDBySlug(clinicSlug)
@@ -124,7 +124,7 @@ func main() {
 
 	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
 	questionHandler := handler.NewClientQuestionHandler(questionRepo, mobileAuthRepo, tgBot)
-	chatHandler := handler.NewChatHandler(chatRepo, tgBot)
+	chatHandler := handler.NewChatHandler(chatRepo, tgBot, uploadsDir)
 	vkClient := vkid.NewClientFromEnv()
 	if vkClient == nil {
 		log.Println("VK ID: VK_APP_ID/VK_APP_SECRET не заданы — вход через VK отключён")
@@ -172,6 +172,7 @@ func main() {
 	http.HandleFunc("GET /api/mobile/v1/auth/options", mobilePublic(mobileAuthHandler.AuthOptions))
 	http.HandleFunc("POST /api/mobile/v1/auth/request", middleware.LoginRateLimit(10, 15*time.Minute, mobileAuthHandler.RequestCode))
 	http.HandleFunc("POST /api/mobile/v1/auth/verify", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.VerifyCode))
+	http.HandleFunc("POST /api/mobile/v1/auth/staff", middleware.LoginRateLimit(15, 15*time.Minute, mobileAuthHandler.StaffLogin))
 	http.HandleFunc("POST /api/mobile/v1/auth/refresh", middleware.LoginRateLimit(30, 15*time.Minute, mobileAuthHandler.Refresh))
 	http.HandleFunc("POST /api/mobile/v1/auth/vk", middleware.LoginRateLimit(20, 15*time.Minute, mobileAuthHandler.AuthVK))
 	http.HandleFunc("GET /api/mobile/v1/profile", mobileAuth(mobileAuthHandler.GetProfile))
@@ -292,6 +293,7 @@ func main() {
 	http.HandleFunc("PATCH /api/admin/doctors/{id}/status", adminAuth(doctorHandler.UpdateDoctorStatus))
 	http.HandleFunc("POST /api/admin/doctors/{id}/photo", contentAuth(doctorHandler.UploadDoctorPhoto))
 	http.HandleFunc("DELETE /api/admin/doctors/{id}", contentAuth(doctorHandler.DeleteDoctor))
+	http.HandleFunc("POST /api/admin/doctors/{id}/pwa-account", adminAuth(doctorHandler.ProvisionDoctorPWA))
 
 	// Schedule
 	http.HandleFunc("GET /api/admin/doctors/{id}/schedule", contentAuth(doctorHandler.GetDoctorSchedule))

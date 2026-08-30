@@ -10,6 +10,8 @@ export interface ChatRoom {
   last_at?: string;
   unread: number;
   peer_name?: string;
+  doctor_id?: number;
+  doctor_name?: string;
 }
 
 export interface ChatMessage {
@@ -19,6 +21,7 @@ export interface ChatMessage {
   author_name?: string;
   author_role?: string;
   body: string;
+  image_url?: string;
   hidden: boolean;
   created_at: string;
 }
@@ -35,10 +38,12 @@ async function readJSON<T>(res: Response): Promise<T> {
 export const fetchChatRooms = () =>
   authenticatedFetch(chatsBaseURL).then((r) => readJSON<ChatRoom[]>(r));
 
-export const openConsult = () =>
-  authenticatedFetch(`${chatsBaseURL}/consult`, { method: 'POST' }).then((r) =>
-    readJSON<ChatRoom>(r),
-  );
+export const openConsult = (doctorId?: number) =>
+  authenticatedFetch(`${chatsBaseURL}/consult`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(doctorId ? { doctor_id: doctorId } : {}),
+  }).then((r) => readJSON<ChatRoom>(r));
 
 export const fetchChatMessages = (id: number, afterId?: number) => {
   const q = afterId ? `?after_id=${afterId}` : '';
@@ -47,12 +52,22 @@ export const fetchChatMessages = (id: number, afterId?: number) => {
   );
 };
 
-export const postChatMessage = (id: number, body: string) =>
-  authenticatedFetch(`${chatsBaseURL}/${id}/messages`, {
+export const postChatMessage = (id: number, body: string, photo?: File) => {
+  if (photo) {
+    const form = new FormData();
+    if (body.trim()) form.append('body', body.trim());
+    form.append('photo', photo);
+    return authenticatedFetch(`${chatsBaseURL}/${id}/messages`, {
+      method: 'POST',
+      body: form,
+    }).then((r) => readJSON<ChatMessage>(r));
+  }
+  return authenticatedFetch(`${chatsBaseURL}/${id}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ body }),
   }).then((r) => readJSON<ChatMessage>(r));
+};
 
 export const postWallMessage = (body: string) =>
   authenticatedFetch(`${chatsBaseURL}/wall/messages`, {

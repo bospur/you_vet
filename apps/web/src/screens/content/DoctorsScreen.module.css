@@ -10,8 +10,10 @@
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-width: 0;
   padding: 0;
   border: none;
@@ -19,27 +21,63 @@
   background: var(--vet-bg);
   box-shadow: 0 2px 10px rgba(51, 139, 78, 0.14);
   overflow: hidden;
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
   text-align: left;
+  color: inherit;
 }
 
 :root[data-theme='dark'] .card {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.38);
 }
 
-.card:active {
+.cardMain:active {
   opacity: 0.9;
 }
 
-.photoWrap {
-  display: flex;
+.writeIcon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--vet-accent);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+}
+
+.writeIcon:disabled {
+  opacity: 0.5;
+}
+
+:root[data-theme='dark'] .writeIcon {
+  background: rgba(30, 30, 30, 0.88);
+}
+
+.photoWrap {
+  position: relative;
   aspect-ratio: 1;
   width: 100%;
-  padding: 8px;
+  overflow: hidden;
   background: var(--vet-surface-card);
-  box-sizing: border-box;
 }
 
 .body {
@@ -47,7 +85,8 @@
   flex-direction: column;
   gap: 4px;
   padding: 10px;
-  min-height: 0;
+  flex: 1;
+  min-height: 4.6em;
 }
 
 .name {

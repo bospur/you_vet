@@ -28,7 +28,8 @@ export function SessionExpiredRedirect() {
     if (isLoading || isAuthenticated) return;
     if (!isProtectedPath(location.pathname)) return;
 
-    navigate(`/auth/login?return=${encodeURIComponent(location.pathname)}`, {
+    const loginPath = location.pathname.startsWith('/staff') ? '/auth/staff' : '/auth/login';
+    navigate(`${loginPath}?return=${encodeURIComponent(location.pathname)}`, {
       replace: true,
     });
   }, [isAuthenticated, isLoading, location.pathname, navigate]);

@@ -1,10 +1,15 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { API_URL } from '../../api/client';
+import { openConsult } from '../../api/chats';
 import { fetchDoctors, fetchSchedule } from '../../api/content';
+import { useAuth } from '../../auth/AuthContext';
+import { useAppRole } from '../../auth/useAppRole';
 import { NestedAppBar } from '../../components/shell/AppBar';
 import { DoctorAvatar } from '../../components/DoctorAvatar';
 import { Preloader } from '../../components/Preloader';
+import { getApiErrorMessage } from '../../utils/apiError';
 import styles from './DoctorScreen.module.css';
 
 const DAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -18,6 +23,11 @@ function formatDate(dateStr: string): string {
 export default function DoctorScreen() {
   const { doctorId } = useParams<{ doctorId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { isAuthenticated } = useAuth();
+  const { isStaff } = useAppRole();
+  const [writeError, setWriteError] = useState<string | null>(null);
+  const autoWriteStarted = useRef(false);
 
   const { data: doctors, isLoading: loadingDoctors } = useQuery({
     queryKey: ['doctors'],
@@ -31,6 +41,29 @@ export default function DoctorScreen() {
 
   const doctor = doctors?.find((d) => String(d.id) === doctorId);
   const doctorSchedule = scheduleEntries?.filter((e) => String(e.doctor_id) === doctorId) ?? [];
+
+  const write = useMutation({
+    mutationFn: () => openConsult(doctor?.id),
+    onSuccess: (room) => navigate(`/chats/${room.id}`),
+    onError: (err: unknown) => setWriteError(getApiErrorMessage(err, 'Не удалось открыть чат')),
+  });
+
+  const startChat = () => {
+    if (!doctor) return;
+    if (!isAuthenticated) {
+      navigate(`/auth/login?return=${encodeURIComponent(`/doctors/${doctor.id}?write=1`)}`);
+      return;
+    }
+    setWriteError(null);
+    write.mutate();
+  };
+
+  useEffect(() => {
+    if (autoWriteStarted.current) return;
+    if (!isAuthenticated || isStaff || !doctor || searchParams.get('write') !== '1') return;
+    autoWriteStarted.current = true;
+    write.mutate();
+  }, [isAuthenticated, isStaff, doctor, searchParams, write]);
 
   if (loadingDoctors) return <Preloader />;
   if (!doctor) {
@@ -64,6 +97,20 @@ export default function DoctorScreen() {
             <span className={styles.label}>Специализация</span>
             <span className={styles.value}>{doctor.specialty}</span>
           </div>
+        )}
+
+        {!isStaff && (
+          <>
+            {writeError && <p className={styles.writeError}>{writeError}</p>}
+            <button
+              type="button"
+              className={styles.writeBtn}
+              onClick={startChat}
+              disabled={write.isPending}
+            >
+              {write.isPending ? 'Открываем…' : 'Написать врачу'}
+            </button>
+          </>
         )}
 
         {doctor.description && (

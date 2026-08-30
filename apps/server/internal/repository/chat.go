@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	ChatKindWall    = "clinic_wall"
-	ChatKindConsult = "consult"
-	ChatStatusOpen  = "open"
+	ChatKindWall     = "clinic_wall"
+	ChatKindConsult  = "consult"
+	ChatStatusOpen   = "open"
 	ChatStatusClosed = "closed"
 
 	ChatWallLimitPerDay    = 10
@@ -17,36 +17,40 @@ const (
 )
 
 var (
-	ErrChatForbidden     = errors.New("нет доступа к чату")
-	ErrChatLimit         = errors.New("превышен лимит сообщений")
-	ErrChatClosed        = errors.New("чат закрыт")
-	ErrChatOpenExists    = errors.New("уже есть открытый тред")
-	ErrChatEmpty         = errors.New("пустое сообщение")
+	ErrChatForbidden  = errors.New("нет доступа к чату")
+	ErrChatLimit      = errors.New("превышен лимит сообщений")
+	ErrChatClosed     = errors.New("чат закрыт")
+	ErrChatOpenExists = errors.New("уже есть открытый тред")
+	ErrChatEmpty      = errors.New("пустое сообщение")
+	ErrChatDoctor     = errors.New("врач не найден")
 )
 
 type ChatRoom struct {
-	ID            int64   `json:"id"`
-	ClinicID      int     `json:"clinic_id"`
-	Kind          string  `json:"kind"`
-	CreatedBy     *int64  `json:"created_by_mobile_user_id,omitempty"`
-	AssignedStaff *int64  `json:"assigned_staff_id,omitempty"`
-	Status        string  `json:"status"`
-	CreatedAt     string  `json:"created_at"`
-	LastPreview   string  `json:"last_preview,omitempty"`
-	LastAt        string  `json:"last_at,omitempty"`
-	Unread        int     `json:"unread"`
-	PeerName      string  `json:"peer_name,omitempty"`
+	ID            int64  `json:"id"`
+	ClinicID      int    `json:"clinic_id"`
+	Kind          string `json:"kind"`
+	CreatedBy     *int64 `json:"created_by_mobile_user_id,omitempty"`
+	AssignedStaff *int64 `json:"assigned_staff_id,omitempty"`
+	Status        string `json:"status"`
+	CreatedAt     string `json:"created_at"`
+	LastPreview   string `json:"last_preview,omitempty"`
+	LastAt        string `json:"last_at,omitempty"`
+	Unread        int    `json:"unread"`
+	PeerName      string `json:"peer_name,omitempty"`
+	DoctorID      *int   `json:"doctor_id,omitempty"`
+	DoctorName    string `json:"doctor_name,omitempty"`
 }
 
 type ChatMessage struct {
-	ID        int64  `json:"id"`
-	RoomID    int64  `json:"room_id"`
-	AuthorID  *int64 `json:"author_id,omitempty"`
+	ID         int64  `json:"id"`
+	RoomID     int64  `json:"room_id"`
+	AuthorID   *int64 `json:"author_id,omitempty"`
 	AuthorName string `json:"author_name,omitempty"`
 	AuthorRole string `json:"author_role,omitempty"`
-	Body      string `json:"body"`
-	Hidden    bool   `json:"hidden"`
-	CreatedAt string `json:"created_at"`
+	Body       string `json:"body"`
+	ImageURL   string `json:"image_url,omitempty"`
+	Hidden     bool   `json:"hidden"`
+	CreatedAt  string `json:"created_at"`
 }
 
 type ChatRepository struct {
@@ -59,16 +63,25 @@ func NewChatRepository(db *sql.DB) *ChatRepository {
 
 func scanRoom(row interface{ Scan(dest ...any) error }) (*ChatRoom, error) {
 	var r ChatRoom
-	err := row.Scan(&r.ID, &r.ClinicID, &r.Kind, &r.CreatedBy, &r.AssignedStaff, &r.Status, &r.CreatedAt)
+	var doctorID sql.NullInt64
+	err := row.Scan(&r.ID, &r.ClinicID, &r.Kind, &r.CreatedBy, &r.AssignedStaff, &r.Status, &r.CreatedAt, &doctorID)
 	if err != nil {
 		return nil, err
+	}
+	if doctorID.Valid {
+		id := int(doctorID.Int64)
+		r.DoctorID = &id
 	}
 	return &r, nil
 }
 
 const chatRoomSelect = `
-	SELECT id, clinic_id, kind, created_by_mobile_user_id, assigned_staff_id, status, created_at::text
+	SELECT id, clinic_id, kind, created_by_mobile_user_id, assigned_staff_id, status, created_at::text, doctor_id
 	FROM chat_rooms
+`
+
+const chatRoomReturning = `
+	RETURNING id, clinic_id, kind, created_by_mobile_user_id, assigned_staff_id, status, created_at::text, doctor_id
 `
 
 func (r *ChatRepository) EnsureWall(clinicID int) (*ChatRoom, error) {
@@ -84,8 +97,7 @@ func (r *ChatRepository) EnsureWall(clinicID int) (*ChatRoom, error) {
 		INSERT INTO chat_rooms (clinic_id, kind, status)
 		VALUES ($1, $2, $3)
 		ON CONFLICT DO NOTHING
-		RETURNING id, clinic_id, kind, created_by_mobile_user_id, assigned_staff_id, status, created_at::text
-	`, clinicID, ChatKindWall, ChatStatusOpen)
+	`+chatRoomReturning, clinicID, ChatKindWall, ChatStatusOpen)
 	room, err = scanRoom(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		row = r.db.QueryRow(chatRoomSelect+` WHERE clinic_id = $1 AND kind = $2`, clinicID, ChatKindWall)
@@ -94,12 +106,40 @@ func (r *ChatRepository) EnsureWall(clinicID int) (*ChatRoom, error) {
 	return room, err
 }
 
-func (r *ChatRepository) GetOrCreateConsult(clinicID int, clientID int64) (*ChatRoom, bool, error) {
-	row := r.db.QueryRow(chatRoomSelect+`
-		WHERE clinic_id = $1 AND kind = $2 AND created_by_mobile_user_id = $3 AND status = $4
-	`, clinicID, ChatKindConsult, clientID, ChatStatusOpen)
-	room, err := scanRoom(row)
+func (r *ChatRepository) publishedDoctorName(clinicID, doctorID int) (string, error) {
+	var name string
+	err := r.db.QueryRow(`
+		SELECT full_name FROM doctors
+		WHERE id = $1 AND clinic_id = $2 AND status = 'published'
+	`, doctorID, clinicID).Scan(&name)
+	return name, err
+}
+
+func (r *ChatRepository) GetOrCreateConsult(clinicID int, clientID int64, doctorID *int) (*ChatRoom, bool, error) {
+	if doctorID != nil {
+		if _, err := r.publishedDoctorName(clinicID, *doctorID); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, false, ErrChatDoctor
+			}
+			return nil, false, err
+		}
+	}
+
+	var room *ChatRoom
+	var err error
+	if doctorID != nil {
+		row := r.db.QueryRow(chatRoomSelect+`
+			WHERE clinic_id = $1 AND kind = $2 AND created_by_mobile_user_id = $3 AND status = $4 AND doctor_id = $5
+		`, clinicID, ChatKindConsult, clientID, ChatStatusOpen, *doctorID)
+		room, err = scanRoom(row)
+	} else {
+		row := r.db.QueryRow(chatRoomSelect+`
+			WHERE clinic_id = $1 AND kind = $2 AND created_by_mobile_user_id = $3 AND status = $4 AND doctor_id IS NULL
+		`, clinicID, ChatKindConsult, clientID, ChatStatusOpen)
+		room, err = scanRoom(row)
+	}
 	if err == nil {
+		r.fillRoomMeta(room, clientID)
 		return room, false, nil
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
@@ -112,12 +152,23 @@ func (r *ChatRepository) GetOrCreateConsult(clinicID int, clientID int64) (*Chat
 	}
 	defer tx.Rollback()
 
-	row = tx.QueryRow(`
-		INSERT INTO chat_rooms (clinic_id, kind, created_by_mobile_user_id, status)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, clinic_id, kind, created_by_mobile_user_id, assigned_staff_id, status, created_at::text
-	`, clinicID, ChatKindConsult, clientID, ChatStatusOpen)
-	room, err = scanRoom(row)
+	if doctorID != nil {
+		var staffID sql.NullInt64
+		_ = tx.QueryRow(`
+			SELECT mobile_user_id FROM doctors WHERE id = $1 AND clinic_id = $2
+		`, *doctorID, clinicID).Scan(&staffID)
+		row := tx.QueryRow(`
+			INSERT INTO chat_rooms (clinic_id, kind, created_by_mobile_user_id, status, doctor_id, assigned_staff_id)
+			VALUES ($1, $2, $3, $4, $5, $6)
+		`+chatRoomReturning, clinicID, ChatKindConsult, clientID, ChatStatusOpen, *doctorID, staffID)
+		room, err = scanRoom(row)
+	} else {
+		row := tx.QueryRow(`
+			INSERT INTO chat_rooms (clinic_id, kind, created_by_mobile_user_id, status)
+			VALUES ($1, $2, $3, $4)
+		`+chatRoomReturning, clinicID, ChatKindConsult, clientID, ChatStatusOpen)
+		room, err = scanRoom(row)
+	}
 	if err != nil {
 		return nil, false, err
 	}
@@ -130,6 +181,7 @@ func (r *ChatRepository) GetOrCreateConsult(clinicID int, clientID int64) (*Chat
 	if err := tx.Commit(); err != nil {
 		return nil, false, err
 	}
+	r.fillRoomMeta(room, clientID)
 	return room, true, nil
 }
 
@@ -200,16 +252,18 @@ func (r *ChatRepository) ListRooms(clinicID int, userID int64, role string) ([]C
 }
 
 func (r *ChatRepository) fillRoomMeta(room *ChatRoom, userID int64) {
-	var preview, lastAt, peer sql.NullString
+	var preview, lastAt, peer, imageURL sql.NullString
 	_ = r.db.QueryRow(`
-		SELECT m.body, m.created_at::text
+		SELECT m.body, m.created_at::text, COALESCE(m.image_url, '')
 		FROM chat_messages m
 		WHERE m.room_id = $1 AND m.hidden_at IS NULL
 		ORDER BY m.id DESC
 		LIMIT 1
-	`, room.ID).Scan(&preview, &lastAt)
-	if preview.Valid {
+	`, room.ID).Scan(&preview, &lastAt, &imageURL)
+	if preview.Valid && strings.TrimSpace(preview.String) != "" {
 		room.LastPreview = preview.String
+	} else if imageURL.Valid && imageURL.String != "" {
+		room.LastPreview = "Фото"
 	}
 	if lastAt.Valid {
 		room.LastAt = lastAt.String
@@ -224,7 +278,26 @@ func (r *ChatRepository) fillRoomMeta(room *ChatRoom, userID int64) {
 	`, room.ID, userID).Scan(&unread)
 	room.Unread = unread
 
-	if room.Kind == ChatKindConsult && room.CreatedBy != nil {
+	if room.Kind != ChatKindConsult {
+		return
+	}
+	if room.DoctorID != nil {
+		var dname sql.NullString
+		_ = r.db.QueryRow(`SELECT full_name FROM doctors WHERE id = $1`, *room.DoctorID).Scan(&dname)
+		if dname.Valid {
+			room.DoctorName = dname.String
+		}
+	}
+	isClientViewer := room.CreatedBy != nil && *room.CreatedBy == userID
+	if isClientViewer {
+		if room.DoctorName != "" {
+			room.PeerName = room.DoctorName
+		} else {
+			room.PeerName = "Врач"
+		}
+		return
+	}
+	if room.CreatedBy != nil {
 		_ = r.db.QueryRow(`
 			SELECT COALESCE(NULLIF(display_name, ''), phone, email, 'Клиент')
 			FROM mobile_users WHERE id = $1
@@ -252,6 +325,7 @@ func (r *ChatRepository) ListMessages(roomID int64, afterID int64, limit int) ([
 		       COALESCE(NULLIF(u.display_name, ''), u.phone, u.email, 'Участник'),
 		       COALESCE(u.app_role, 'client'),
 		       CASE WHEN m.hidden_at IS NULL THEN m.body ELSE '' END,
+		       CASE WHEN m.hidden_at IS NULL THEN COALESCE(m.image_url, '') ELSE '' END,
 		       m.hidden_at IS NOT NULL,
 		       m.created_at::text
 		FROM chat_messages m
@@ -278,7 +352,7 @@ func (r *ChatRepository) ListMessages(roomID int64, afterID int64, limit int) ([
 	for rows.Next() {
 		var m ChatMessage
 		var name, role sql.NullString
-		if err := rows.Scan(&m.ID, &m.RoomID, &m.AuthorID, &name, &role, &m.Body, &m.Hidden, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.RoomID, &m.AuthorID, &name, &role, &m.Body, &m.ImageURL, &m.Hidden, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		if name.Valid {
@@ -289,6 +363,7 @@ func (r *ChatRepository) ListMessages(roomID int64, afterID int64, limit int) ([
 		}
 		if m.Hidden {
 			m.Body = ""
+			m.ImageURL = ""
 		}
 		list = append(list, m)
 	}
@@ -312,9 +387,13 @@ func (r *ChatRepository) countClientMessagesToday(clinicID int, userID int64, ki
 	return n, err
 }
 
-func (r *ChatRepository) PostMessage(room *ChatRoom, authorID int64, role, body string) (*ChatMessage, error) {
+func (r *ChatRepository) PostMessage(room *ChatRoom, authorID int64, role, body, imageURL string) (*ChatMessage, error) {
 	body = strings.TrimSpace(body)
-	if len([]rune(body)) < 1 || len([]rune(body)) > 2000 {
+	imageURL = strings.TrimSpace(imageURL)
+	if len([]rune(body)) > 2000 {
+		return nil, ErrChatEmpty
+	}
+	if body == "" && imageURL == "" {
 		return nil, ErrChatEmpty
 	}
 	if room.Status != ChatStatusOpen {
@@ -336,12 +415,12 @@ func (r *ChatRepository) PostMessage(room *ChatRoom, authorID int64, role, body 
 	}
 
 	row := r.db.QueryRow(`
-		INSERT INTO chat_messages (room_id, author_id, body)
-		VALUES ($1, $2, $3)
-		RETURNING id, room_id, author_id, body, created_at::text
-	`, room.ID, authorID, body)
+		INSERT INTO chat_messages (room_id, author_id, body, image_url)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, room_id, author_id, body, image_url, created_at::text
+	`, room.ID, authorID, body, imageURL)
 	var m ChatMessage
-	if err := row.Scan(&m.ID, &m.RoomID, &m.AuthorID, &m.Body, &m.CreatedAt); err != nil {
+	if err := row.Scan(&m.ID, &m.RoomID, &m.AuthorID, &m.Body, &m.ImageURL, &m.CreatedAt); err != nil {
 		return nil, err
 	}
 	m.AuthorRole = NormalizeAppRole(role)
@@ -367,12 +446,23 @@ func (r *ChatRepository) HideMessage(clinicID int, roomID, messageID int64) erro
 }
 
 func (r *ChatRepository) CloseConsult(clinicID int, roomID int64) (*ChatRoom, error) {
-	_, err := r.db.Exec(`
+	res, err := r.db.Exec(`
 		UPDATE chat_rooms SET status = $3
-		WHERE id = $2 AND clinic_id = $1 AND kind = $4
-	`, clinicID, roomID, ChatStatusClosed, ChatKindConsult)
+		WHERE id = $2 AND clinic_id = $1 AND kind = $4 AND status = $5
+	`, clinicID, roomID, ChatStatusClosed, ChatKindConsult, ChatStatusOpen)
 	if err != nil {
 		return nil, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		room, getErr := r.GetRoom(clinicID, roomID)
+		if getErr != nil {
+			return nil, getErr
+		}
+		if room == nil || room.Kind != ChatKindConsult {
+			return nil, sql.ErrNoRows
+		}
+		return room, nil
 	}
 	return r.GetRoom(clinicID, roomID)
 }

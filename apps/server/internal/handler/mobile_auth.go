@@ -20,6 +20,7 @@ import (
 	"go-server/internal/whatsapp"
 
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -362,6 +363,41 @@ func (h *MobileAuthHandler) assertValidCode(channel, login, code string) error {
 		return errSentinel("invalid_code")
 	}
 	return nil
+}
+
+type staffLoginBody struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
+// StaffLogin — POST /api/mobile/v1/auth/staff
+func (h *MobileAuthHandler) StaffLogin(w http.ResponseWriter, r *http.Request) {
+	var body staffLoginBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_BODY", "неверный формат запроса")
+		return
+	}
+	login := strings.TrimSpace(body.Login)
+	if login == "" || body.Password == "" {
+		writeAPIError(w, http.StatusBadRequest, "INVALID_BODY", "укажите логин и пароль")
+		return
+	}
+	user, hash, err := h.repo.GetStaffByLogin(h.clinicID, login)
+	if err != nil || user == nil {
+		writeAPIError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "неверный логин или пароль")
+		return
+	}
+	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(body.Password)) != nil {
+		writeAPIError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "неверный логин или пароль")
+		return
+	}
+	tokens, err := h.issueTokenPair(user)
+	if err != nil {
+		log.Printf("staff login tokens: %v", err)
+		writeAPIError(w, http.StatusInternalServerError, "INTERNAL", "внутренняя ошибка сервера")
+		return
+	}
+	writeJSON(w, http.StatusOK, tokens)
 }
 
 // Refresh — POST /api/mobile/v1/auth/refresh

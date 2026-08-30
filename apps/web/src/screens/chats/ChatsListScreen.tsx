@@ -28,7 +28,7 @@ export default function ChatsListScreen() {
   });
 
   const consult = useMutation({
-    mutationFn: openConsult,
+    mutationFn: () => openConsult(),
     onSuccess: (room) => navigate(`/chats/${room.id}`),
   });
 
@@ -43,6 +43,9 @@ export default function ChatsListScreen() {
       <NestedAppBar title="Чаты" />
       <div className={styles.wrapper}>
         {error && <p className={styles.formError}>{getApiErrorMessage(error, 'Не удалось загрузить чаты')}</p>}
+        {consult.error && (
+          <p className={styles.formError}>{getApiErrorMessage(consult.error, 'Не удалось открыть чат')}</p>
+        )}
         {wall && (
           <button type="button" className={styles.card} onClick={() => navigate(`/chats/${wall.id}`)}>
             <span className={styles.cardTitle}>Общий чат клиники</span>
@@ -58,7 +61,12 @@ export default function ChatsListScreen() {
         {consults.length > 0 && <p className={styles.sectionTitle}>{isMedical ? 'Треды клиентов' : 'Переписка с врачом'}</p>}
         {consults.map((room) => (
           <button key={room.id} type="button" className={styles.card} onClick={() => navigate(`/chats/${room.id}`)}>
-            <span className={styles.cardTitle}>{room.peer_name || 'Главврач'}</span>
+            <span className={styles.cardTitle}>
+              {room.peer_name || room.doctor_name || (isMedical ? 'Клиент' : 'Врач')}
+            </span>
+            {isMedical && room.doctor_name && (
+              <span className={styles.cardMeta}>Тред с врачом: {room.doctor_name}</span>
+            )}
             <span className={styles.cardMeta}>{room.last_preview || 'Нет сообщений'}</span>
             {room.status === 'closed' && <span className={styles.cardHint}>Закрыт</span>}
             {room.unread > 0 && <span className={styles.cardHint}>{room.unread} новых</span>}
