@@ -12,6 +12,7 @@ export interface MobileProfile {
   vk_user_id?: number;
   linked_at?: string;
   created_at: string;
+  app_role?: 'client' | 'doctor' | 'groomer' | 'chief_vet';
 }
 
 export async function fetchProfile(): Promise<MobileProfile> {

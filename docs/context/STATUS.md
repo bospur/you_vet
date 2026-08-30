@@ -1,6 +1,6 @@
 # Текущий статус проекта
 
-> Последнее обновление: 2026-08-29 вечер (PWA prod, макеты десктопа)
+> Последнее обновление: 2026-08-30 (email OTP, Aeza SMTP)
 
 ## Prod
 
@@ -11,7 +11,7 @@
 | Admin | 🟡 | https://admin.bospur.ru |
 | API | ✅ | https://api.bospur.ru · CORS включает `web.bospur.ru` |
 | Docs portal | 🟡 | https://docs.bospur.ru |
-| **Web / PWA** | ✅ | https://web.bospur.ru · десктоп UX 🟡 |
+| **Web / PWA** | ✅ | https://web.bospur.ru · email-вход 🔴 SMTP с VPS заблокирован |
 | **Mobile Android** | ⏸ | **frozen** |
 | **Mobile iOS** | ⏸ | **frozen** |
 
@@ -29,10 +29,9 @@ VPS `213.176.65.71`. nginx 80/443. x-ui выключен.
 
 ## Фокус
 
-1. Десктоп `apps/web`: выбрать Figma A/B и убрать «админку»
-2. VK на `web.bospur.ru`
-3. Booking (C1) в PWA
-4. C1 smoke Mini App · ADM-02
+1. Aeza: исходящие 465/587 на smtp.mail.ru → добить email OTP
+2. Закоммитить/задеплоить фикс `mailer/smtp.go` (465 + таймаут)
+3. Booking (C1) в PWA · C1 smoke Mini App · ADM-02
 
 ## CI
 

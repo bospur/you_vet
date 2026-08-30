@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ClinicInfo } from '@you-vet/types';
 import { fetchClinicInfo } from '../api/clinic';
 import { useAuth } from '../auth/AuthContext';
+import { useAppRole } from '../auth/useAppRole';
 import { AuthGuestBanner } from '../components/AuthGuestBanner';
 import { ClinicPromoBanner } from '../components/ClinicPromoBanner';
 import { DesktopHero } from '../components/DesktopHero';
@@ -25,11 +26,12 @@ import { useBookingAvailable } from '../hooks/useBookingAvailable';
 import { useGroomingAvailable } from '../hooks/useGroomingAvailable';
 import styles from './HomeScreen.module.css';
 
-const AUTH_ONLY_KEYS = new Set(['booking', 'booking-skeleton', 'question']);
+const AUTH_ONLY_KEYS = new Set(['booking', 'booking-skeleton', 'question', 'staff-booking', 'staff-grooming']);
 
 export default function HomeScreen() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isStaff, isMedical, isGroomer } = useAppRole();
   const cachedInfo = useOutletContext<ClinicOutletContext>();
   const { data: info, isLoading } = useQuery({
     queryKey: ['clinic-info'],
@@ -50,9 +52,17 @@ export default function HomeScreen() {
       to: string;
       skeleton?: boolean;
     }> = [
-      ...(isAuthenticated && bookingLoading
+      ...(isAuthenticated && isMedical
+        ? [{
+            key: 'staff-booking',
+            icon: <IconBooking />,
+            label: 'Заявки',
+            sub: 'подтвердить запись',
+            to: '/staff/booking',
+          }]
+        : isAuthenticated && !isStaff && bookingLoading
         ? [{ key: 'booking-skeleton', label: '', sub: '', to: '', skeleton: true }]
-        : isAuthenticated && bookingAvailable
+        : isAuthenticated && !isStaff && bookingAvailable
           ? [{
               key: 'booking',
               icon: <IconBooking />,
@@ -61,13 +71,22 @@ export default function HomeScreen() {
               to: '/booking',
             }]
           : []),
+      ...(isAuthenticated && isGroomer
+        ? [{
+            key: 'staff-grooming',
+            icon: <IconGrooming />,
+            label: 'Груминг',
+            sub: 'записи на день',
+            to: '/staff/grooming',
+          }]
+        : []),
       ...(isAuthenticated
         ? [{
             key: 'question',
             icon: <IconQuestion />,
-            label: 'Задать вопрос',
-            sub: 'ответ в боте',
-            to: '/question',
+            label: isStaff ? 'Чаты' : 'Написать врачу',
+            sub: isStaff ? 'общий и треды' : 'чат с клиникой',
+            to: '/chats',
           }]
         : []),
       {
@@ -116,6 +135,9 @@ export default function HomeScreen() {
     groomingAvailable,
     groomingLoading,
     isAuthenticated,
+    isStaff,
+    isMedical,
+    isGroomer,
   ]);
 
   if (isLoading && !clinic) {

@@ -40,7 +40,7 @@ export default function BookingHubScreen() {
           </p>
         ) : (
           <p className={styles.hint}>
-            Войдите через VK ID или по телефону (код в Telegram), чтобы записаться.
+            Войдите по телефону или email, чтобы записаться.
           </p>
         )}
     </div>

@@ -4,11 +4,10 @@ import { InstallBanner } from '../InstallBanner';
 import { RootAppBar } from './AppBar';
 import { TabBar } from './TabBar';
 import { TopBar } from './TopBar';
+import { TAB_ROOTS } from './nav';
 import styles from './AppShell.module.css';
 
 export type ClinicOutletContext = ClinicInfo | null;
-
-const TAB_ROOTS = new Set(['/', '/booking', '/animals']);
 
 export function AppShell() {
   const location = useLocation();
@@ -16,7 +15,8 @@ export function AppShell() {
   const isTabRoot = TAB_ROOTS.has(location.pathname);
   const hideTabBar =
     location.pathname.startsWith('/auth') ||
-    location.pathname.startsWith('/booking/new');
+    location.pathname.startsWith('/booking/new') ||
+    location.pathname.startsWith('/chats/');
 
   return (
     <div className={styles.root}>

@@ -2,56 +2,58 @@
 
 > Обновляй в конце каждой сессии. AI читает первым.
 
-## Сессия 2026-08-29 вечер (PWA в prod + макеты десктопа)
+## Сессия 2026-08-30 (PWA: сплэш, иконки, «Ещё»/VK, email OTP)
 
-Ветка: **`work-web`**, дерево **чистое**. HEAD совпадает с локальным `origin/dev` (`806038f`, в т.ч. PR #87 + `40dd28c` `feat(web): Партировка мобилки в веб для pwa`). Пользователь пушил — **CI/deploy-web ок**.
+Ветка: **`work-web`**. `origin/dev` = merge PR **#91** (`664b8ae`, в т.ч. `495e9dd` SMTP-заготовка).  
+Локально **не закоммичено**: `apps/server/internal/mailer/smtp.go` (таймаут 12с + SSL **465** + AUTH LOGIN), `apps/web/src/api/auth.ts` (timeout 20с), `apps/server/.env.example`.
 
-### Prod
+Агент **не** SSH на VPS. Превью Vite **не** поднимать без просьбы.
 
-| Проверка | Результат |
-|---|---|
-| https://web.bospur.ru | ✅ nginx + Let's Encrypt (до 2026-11-27), каталог `/var/www/you-vet-web`, owner `deploy` |
-| `deploy-web.yml` | ✅ отработал |
-| CORS `.env` на VPS | ✅ `…,https://docs.bospur.ru,https://web.bospur.ru` + `docker compose up -d` |
-| Десктоп UI | 🟡 живой, но «как админка» (левый сайдбар) |
-| VK на web | 🟡 кабинет + Secret `VITE_VK_APP_ID` — уточнить в след. сессии |
+### Prod (web.bospur.ru)
 
-Mini App `app.bospur.ru` не трогали. `apps/mobile` (Capacitor) **frozen**.
+- Сплэш убран → классический прелоадер. PWA после деплоя: закрыть все вкладки / ярлык.
+- Иконки: Capacitor-заглушки → кот клиники (`favicon.png`, `pwa-192/512`, `apple-touch-icon`). Favicon **квадратный файл**, не `logo_url` из админки (узкий 34×72 растягивал кота).
+- Раздел **«Ещё»** снят; выход — в профиле.
+- **VK на вебе снят** (серверный `POST /auth/vk` для mobile оставлен).
+- Вход: Telegram (номер + бот) + **email OTP** + WhatsApp (кнопка только при Green-API).
+- Миграция **029** (`email` на `mobile_users`, `channel`/`login` на `auth_codes`).
 
-### Десктоп — Figma (личная команда, не MIURA.ONE)
+### Email OTP — блокер
 
-Файл: [Ветпрактика — десктоп PWA](https://www.figma.com/design/sMWwSXhSPFammPut7NqIcN)  
-`fileKey`: `sMWwSXhSPFammPut7NqIcN` · план `team::1030468518190190703` («Иван Семёнов's team», Starter Full).
+Исходящие **465 и 587** с VPS `213.176.65.71` **закрыты сетью Aeza** (не ufw: inactive, OUTPUT ACCEPT). POST `/api/mobile/v1/auth/request` `{channel:email}` зависает → в UI «нет связи с сервером».
 
-| Кадр | Идея |
-|---|---|
-| **A** `1:2` | Телефон на столе: sage-фон, колонка ~390px, таббар |
-| **B** `1:3` | Сайт клиники: верхняя шапка, hero, 3 плитки, без сайдбара |
+- В `.env` на VPS уже SMTP Mail.ru (`vetpraktika@mail.ru`); пароль — **пароль приложения**, не заглушка `пароль_приложения`.
+- Пользователь **отправил заявку в Aeza** открыть исходящие TCP 465/587 на `smtp.mail.ru`.
+- После открытия: дождаться деплоя фикса mailer (сейчас только локально) → `SMTP_PORT=465` → `docker compose up -d --force-recreate app`.
+- Если Aeza откажет — не SMTP, а HTTP API (Unisender/Resend и т.п.) на 443.
 
-Выбор A / B / смесь **не сделан**. В след. сессии — выбрать и верстать в `apps/web` (можно без новых read в Figma MCP).
+`GET /api/mobile/v1/auth/options` → `email: true, telegram: true, whatsapp: false` (SMTP env есть, Green-API нет).
 
-**Квота MCP:** запись (`use_figma`, `create_new_file`) не лимитируется; чтение на Starter ~**20/мес**. Не класть файл в команду **MIURA.ONE**.
+`docker compose pull` с VPS без логина GHCR → `denied`. Новый образ только через CI (`deploy-server`) или `docker login ghcr.io`.
+
+### Десктоп Figma (личное, не MIURA.ONE)
+
+[Ветпрактика — десктоп PWA](https://www.figma.com/design/sMWwSXhSPFammPut7NqIcN) · `sMWwSXhSPFammPut7NqIcN`. Кадры A (`1:2`) / B (`1:3`). Вёрстка TopBar+hero уже в коде; выбор A/B формально не закрыт.
 
 ### Не делать с агента без явной просьбы
 
 - SSH / команды на VPS.
-- Коммитить / push.
-- Писать макеты в рабочий Figma MIURA.ONE.
+- Коммитить / push / поднимать `vite preview`.
+- Макеты в Figma MIURA.ONE.
 
 ### Следующий шаг
 
-1. Выбрать каркас десктопа (A / B / смесь) → править шелл в `apps/web` (≥900px), убрать ощущение админки.
-2. Push `dev` → `deploy-web`; установленное PWA подтянет JS после закрытия/повторного открытия окна.
-3. VK web origin/redirect; booking (C1) в PWA; C1 smoke Mini App.
+1. Ответ Aeza по SMTP → порт 465 + задеплоить локальный `mailer/smtp.go`.
+2. Закоммитить uncommitted SMTP-фикс, влить в `dev`.
+3. Booking (C1) в PWA; C1 smoke Mini App.
 
 ### Ссылки
 
 - PWA: https://web.bospur.ru
-- Figma: https://www.figma.com/design/sMWwSXhSPFammPut7NqIcN
-- [deployment.md](../md/general/deployment.md) · [overview.md](../md/mobile/overview.md)
+- [deployment.md](../md/general/deployment.md) (SMTP / Green-API в таблице `.env`)
 
 ---
 
-## Ранее 2026-08-29 (появление `apps/web`)
+## Ранее 2026-08-29 (PWA в prod)
 
-Сторы frozen. Клиент вне Telegram — `@you-vet/web`, не Capacitor. Nginx-сниппет только в deployment.md (не в `apps/server/nginx/`).
+Первый выкат `web.bospur.ru`. Телефон + VPN hairpin на тот же VPS. Десктоп без сайдбара.

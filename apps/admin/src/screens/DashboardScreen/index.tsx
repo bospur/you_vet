@@ -2,12 +2,18 @@ import { useEffect, useState } from 'react';
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   CircularProgress,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
+  Stack,
   Tab,
   Tabs,
   Table,
@@ -16,6 +22,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
   useMediaQuery,
   useTheme,
@@ -32,6 +39,9 @@ import {
   fetchMobileStatsSummary,
   fetchStatsSummary,
   fetchTelegramAppUsers,
+  inviteMobileStaff,
+  patchMobileAppRole,
+  type MobileAppRole,
   type MobileAppUser,
   type StatsSummary,
   type TelegramAppUser,
@@ -203,6 +213,13 @@ function MiniAppTab() {
   );
 }
 
+const ROLE_LABEL: Record<MobileAppRole, string> = {
+  client: 'Клиент',
+  doctor: 'Врач',
+  groomer: 'Грумер',
+  chief_vet: 'Главврач',
+};
+
 function MobileAppTab() {
   const { notify } = useNotification();
   const theme = useTheme();
@@ -213,6 +230,11 @@ function MobileAppTab() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<MobileAppUser | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRole, setInviteRole] = useState<MobileAppRole>('doctor');
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,12 +280,82 @@ function MobileAppTab() {
     }
   };
 
+  const handleRoleChange = async (id: number, app_role: MobileAppRole) => {
+    try {
+      const updated = await patchMobileAppRole(id, app_role);
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, app_role: updated.app_role ?? app_role } : u)));
+      notify('Роль обновлена', 'success');
+    } catch {
+      notify('Не удалось сменить роль', 'error');
+    }
+  };
+
+  const handleInvite = async () => {
+    if (!invitePhone.trim() && !inviteEmail.trim()) {
+      notify('Укажите телефон или email', 'error');
+      return;
+    }
+    setInviting(true);
+    try {
+      const created = await inviteMobileStaff({
+        phone: invitePhone.trim() || undefined,
+        email: inviteEmail.trim() || undefined,
+        display_name: inviteName.trim() || undefined,
+        app_role: inviteRole,
+      });
+      setUsers((prev) => [created, ...prev.filter((u) => u.id !== created.id)]);
+      setInvitePhone('');
+      setInviteEmail('');
+      setInviteName('');
+      notify('Сотрудник PWA сохранён', 'success');
+    } catch {
+      notify('Не удалось пригласить сотрудника', 'error');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const roleSelect = (u: MobileAppUser) => (
+    <Select
+      size="small"
+      value={u.app_role ?? 'client'}
+      onChange={(e) => void handleRoleChange(u.id, e.target.value as MobileAppRole)}
+      sx={{ minWidth: 130 }}
+    >
+      {(Object.keys(ROLE_LABEL) as MobileAppRole[]).map((role) => (
+        <MenuItem key={role} value={role}>{ROLE_LABEL[role]}</MenuItem>
+      ))}
+    </Select>
+  );
+
   return (
     <>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Пользователи RuStore-приложения «Ветпрактика» (регистрация / вход).
+        Пользователи PWA «Ветпрактика». Роль меняет оболочку: клиент, врач, грумер, главврач.
       </Typography>
       <StatsCards stats={stats} loading={loading} />
+
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 1.5 }}>
+        Персонал PWA
+      </Typography>
+      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+          <TextField size="small" label="Телефон" value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} placeholder="+79…" />
+          <TextField size="small" label="Email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+          <TextField size="small" label="Имя" value={inviteName} onChange={(e) => setInviteName(e.target.value)} />
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel>Роль</InputLabel>
+            <Select value={inviteRole} label="Роль" onChange={(e) => setInviteRole(e.target.value as MobileAppRole)}>
+              <MenuItem value="doctor">Врач</MenuItem>
+              <MenuItem value="groomer">Грумер</MenuItem>
+              <MenuItem value="chief_vet">Главврач</MenuItem>
+            </Select>
+          </FormControl>
+          <Button variant="contained" onClick={() => void handleInvite()} disabled={inviting}>
+            {inviting ? '…' : 'Пригласить'}
+          </Button>
+        </Stack>
+      </Paper>
 
       <Typography variant="h6" fontWeight={600} sx={{ mb: 1.5 }}>
         Список пользователей
@@ -294,6 +386,7 @@ function MobileAppTab() {
                 <Typography variant="body2" color="text.secondary">
                   {maskPhone(u.phone)} · {authLabel(u)}
                 </Typography>
+                <Box sx={{ mt: 1 }}>{roleSelect(u)}</Box>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                   ID {u.id} · {formatDateTime(u.linked_at ?? u.created_at)}
                 </Typography>
@@ -315,7 +408,7 @@ function MobileAppTab() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  {['', 'Имя', 'Телефон', 'Вход', 'Telegram', 'VK', 'Дата', ''].map((h) => (
+                  {['', 'Имя', 'Телефон', 'Роль', 'Вход', 'Telegram', 'VK', 'Дата', ''].map((h) => (
                     <TableCell key={h || 'avatar'} sx={{ fontWeight: 600, bgcolor: 'grey.50' }}>{h}</TableCell>
                   ))}
                 </TableRow>
@@ -333,6 +426,7 @@ function MobileAppTab() {
                     </TableCell>
                     <TableCell>{displayMobileName(u)}</TableCell>
                     <TableCell>{maskPhone(u.phone)}</TableCell>
+                    <TableCell>{roleSelect(u)}</TableCell>
                     <TableCell>{authLabel(u)}</TableCell>
                     <TableCell sx={{ fontFamily: 'monospace', fontSize: 13 }}>
                       {u.telegram_user_id ?? '—'}

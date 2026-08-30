@@ -25,6 +25,7 @@ type mobileProfileResponse struct {
 	VkUserID       *int64  `json:"vk_user_id,omitempty"`
 	LinkedAt       *string `json:"linked_at,omitempty"`
 	CreatedAt      string  `json:"created_at"`
+	AppRole        string  `json:"app_role"`
 }
 
 func mobileUserToProfile(u *repository.MobileUser) mobileProfileResponse {
@@ -34,6 +35,7 @@ func mobileUserToProfile(u *repository.MobileUser) mobileProfileResponse {
 		Email:     u.Email,
 		PhotoURL:  u.PhotoURL,
 		CreatedAt: u.CreatedAt.Format(time.RFC3339),
+		AppRole:   repository.NormalizeAppRole(u.AppRole),
 	}
 	if u.DisplayName.Valid {
 		p.DisplayName = u.DisplayName.String

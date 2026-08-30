@@ -1,6 +1,6 @@
 # YouVet — краткий контекст проекта
 
-> Последнее обновление: 2026-08-29 вечер (PWA на web.bospur.ru)
+> Последнее обновление: 2026-08-30 (PWA auth: TG + email, VK с веба снят)
 
 ## Что это
 
@@ -37,14 +37,14 @@ packages/types/  @you-vet/types
 |---|---|
 | B1–B4, C1, Q1 | 🟡 код на `*.bospur.ru`; C1 smoke Mini App; booking в PWA — следующий шаг |
 
-Миграции **013–017** (запись), **019–021** (mobile JWT/VK), **022–026** (docs-портал / канбан / теги).
+Миграции **013–017** (запись), **019–021** (mobile JWT/VK), **022–026** (docs), **029** (email/WhatsApp OTP).
 
 ### Клиент вне Telegram — PWA
 
 | Этап | Статус |
 |---|---|
 | M0 backend `/api/mobile/v1` | ✅ prod |
-| `apps/web` PWA + десктоп-шелл | ✅ prod; UX десктопа — макеты Figma, вёрстка след. сессия |
+| `apps/web` PWA + десктоп-шелл | ✅ prod; email OTP 🟡 ждёт SMTP Aeza; VK на вебе снят |
 | Capacitor Android/iOS / RuStore | ⏸ **frozen** |
 
 API: `/api/mobile/v1` · `appId` native: `ru.snzbeachvolleyball25.vetpraktika` (не менять)

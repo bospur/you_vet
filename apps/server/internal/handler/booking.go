@@ -891,3 +891,126 @@ func (h *BookingHandler) CancelPublicRequest(w http.ResponseWriter, r *http.Requ
 	}
 	writeJSON(w, http.StatusOK, toPublicRequest(*req))
 }
+
+type staffBookingRequest struct {
+	ID            int     `json:"id"`
+	ServiceTypeID int     `json:"service_type_id"`
+	ServiceName   string  `json:"service_name"`
+	RequestedDate string  `json:"requested_date"`
+	SlotTime      *string `json:"slot_time"`
+	ClientName    string  `json:"client_name"`
+	ClientPhone   string  `json:"client_phone"`
+	PetName       string  `json:"pet_name"`
+	Status        string  `json:"status"`
+	RejectReason  *string `json:"reject_reason"`
+	CreatedAt     string  `json:"created_at"`
+}
+
+func toStaffRequest(req repository.BookingRequest) staffBookingRequest {
+	return staffBookingRequest{
+		ID:            req.ID,
+		ServiceTypeID: req.ServiceTypeID,
+		ServiceName:   req.ServiceName,
+		RequestedDate: req.RequestedDate,
+		SlotTime:      req.SlotTime,
+		ClientName:    req.ClientName,
+		ClientPhone:   req.ClientPhone,
+		PetName:       req.PetName,
+		Status:        req.Status,
+		RejectReason:  req.RejectReason,
+		CreatedAt:     req.CreatedAt,
+	}
+}
+
+// ListStaffRequests — GET /api/mobile/v1/staff/booking/requests
+func (h *BookingHandler) ListStaffRequests(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.MobileClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+	if !repository.IsMedicalStaff(claims.AppRole) {
+		http.Error(w, "недостаточно прав", http.StatusForbidden)
+		return
+	}
+
+	f := repository.BookingRequestFilters{
+		Status: r.URL.Query().Get("status"),
+		From:   r.URL.Query().Get("from"),
+		To:     r.URL.Query().Get("to"),
+	}
+	list, err := h.bookingRepo.ListRequests(claims.ClinicID, f)
+	if err != nil {
+		log.Printf("ошибка staff booking list: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	out := make([]staffBookingRequest, 0, len(list))
+	for _, req := range list {
+		out = append(out, toStaffRequest(req))
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// PatchStaffRequest — PATCH /api/mobile/v1/staff/booking/requests/{id}
+func (h *BookingHandler) PatchStaffRequest(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.MobileClaimsFromContext(r)
+	if claims == nil {
+		http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+	if !repository.IsMedicalStaff(claims.AppRole) {
+		http.Error(w, "недостаточно прав", http.StatusForbidden)
+		return
+	}
+
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "id обязателен", http.StatusBadRequest)
+		return
+	}
+
+	var patch repository.BookingRequestPatch
+	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
+		http.Error(w, "неверный формат запроса", http.StatusBadRequest)
+		return
+	}
+	if patch.Status == nil && patch.StaffNote == nil && patch.RejectReason == nil {
+		http.Error(w, "нет полей для обновления", http.StatusBadRequest)
+		return
+	}
+	if patch.Status != nil {
+		switch *patch.Status {
+		case "confirmed", "rejected", "cancelled":
+		default:
+			http.Error(w, "недопустимый статус", http.StatusBadRequest)
+			return
+		}
+	}
+
+	existing, err := h.bookingRepo.GetRequestByID(claims.ClinicID, id)
+	if err != nil {
+		log.Printf("ошибка чтения заявки staff: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if existing == nil {
+		http.Error(w, "не найдено", http.StatusNotFound)
+		return
+	}
+	prevStatus := existing.Status
+
+	req, err := h.bookingRepo.UpdateRequest(claims.ClinicID, 0, id, patch)
+	if err != nil {
+		if bookingRequestError(w, err) {
+			return
+		}
+		log.Printf("ошибка обновления заявки staff: %v", err)
+		http.Error(w, "внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
+	}
+	if h.notifier != nil {
+		go h.notifier.NotifyBookingRequestUpdated(claims.ClinicID, *req, prevStatus)
+	}
+	writeJSON(w, http.StatusOK, toStaffRequest(*req))
+}
