@@ -9,7 +9,7 @@ import {
 } from '../../api/profile';
 import { useAuth } from '../../auth/AuthContext';
 import { setTokens } from '../../auth/tokenStorage';
-import { authMethodLabel, maskPhone } from '../../auth/mobileUser';
+import { APP_ROLE_LABELS, authMethodLabel, maskPhone, normalizeAppRole } from '../../auth/mobileUser';
 import { NestedAppBar } from '../../components/shell/AppBar';
 import { Preloader } from '../../components/Preloader';
 import { ProgressBar } from '../../components/ProgressBar';
@@ -164,6 +164,10 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
 
         <section className={styles.info}>
           <h3 className={styles.infoTitle}>Данные аккаунта</h3>
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>Роль</span>
+            <span>{APP_ROLE_LABELS[normalizeAppRole(profile.app_role)]}</span>
+          </div>
           {profile.phone && (
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Телефон</span>
@@ -186,6 +190,7 @@ function ProfileContent({ profile }: { profile: MobileProfile }) {
                 email: profile.email || null,
                 vkId: profile.vk_user_id ?? null,
                 telegramUserId: profile.telegram_user_id ?? null,
+                appRole: normalizeAppRole(profile.app_role),
               })}
             </span>
           </div>

@@ -20,17 +20,20 @@ type MobileUser struct {
 	PhotoURL       string
 	LinkedAt       sql.NullTime
 	CreatedAt      time.Time
+	AppRole        string
 }
 
 type MobileUserListItem struct {
 	ID             int64   `json:"id"`
 	DisplayName    string  `json:"display_name"`
 	Phone          string  `json:"phone"`
+	Email          string  `json:"email,omitempty"`
 	TelegramUserID *int64  `json:"telegram_user_id,omitempty"`
 	VkUserID       *int64  `json:"vk_user_id,omitempty"`
 	PhotoURL       string  `json:"photo_url"`
 	LinkedAt       *string `json:"linked_at,omitempty"`
 	CreatedAt      string  `json:"created_at"`
+	AppRole        string  `json:"app_role"`
 }
 
 type MobileAuthRepository struct {
@@ -46,7 +49,7 @@ func scanMobileUser(row interface{ Scan(dest ...any) error }) (*MobileUser, erro
 	var phone, email sql.NullString
 	err := row.Scan(
 		&u.ID, &u.ClinicID, &phone, &u.TelegramUserID,
-		&u.VkUserID, &u.DisplayName, &email, &u.PhotoURL, &u.LinkedAt, &u.CreatedAt,
+		&u.VkUserID, &u.DisplayName, &email, &u.PhotoURL, &u.LinkedAt, &u.CreatedAt, &u.AppRole,
 	)
 	if err != nil {
 		return nil, err
@@ -57,11 +60,12 @@ func scanMobileUser(row interface{ Scan(dest ...any) error }) (*MobileUser, erro
 	if email.Valid {
 		u.Email = email.String
 	}
+	u.AppRole = NormalizeAppRole(u.AppRole)
 	return &u, nil
 }
 
 const mobileUserSelect = `
-	SELECT id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
+	SELECT id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role
 	FROM mobile_users
 `
 
@@ -69,8 +73,10 @@ func mobileUserToListItem(u *MobileUser) MobileUserListItem {
 	item := MobileUserListItem{
 		ID:        u.ID,
 		Phone:     u.Phone,
+		Email:     u.Email,
 		PhotoURL:  u.PhotoURL,
 		CreatedAt: u.CreatedAt.Format(time.RFC3339),
+		AppRole:   NormalizeAppRole(u.AppRole),
 	}
 	if u.DisplayName.Valid {
 		item.DisplayName = u.DisplayName.String
@@ -119,7 +125,7 @@ func (r *MobileAuthRepository) UpsertVKUser(clinicID int, vkUserID int64, displa
 			display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), mobile_users.display_name),
 			phone = COALESCE(NULLIF(EXCLUDED.phone, ''), mobile_users.phone),
 			linked_at = NOW()
-		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role
 	`, clinicID, vkUserID, displayName, phone)
 	return scanMobileUser(row)
 }
@@ -146,7 +152,7 @@ func (r *MobileAuthRepository) UpsertEmailUser(clinicID int, email, displayName 
 		DO UPDATE SET
 			display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), mobile_users.display_name),
 			linked_at = COALESCE(mobile_users.linked_at, NOW())
-		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role
 	`, clinicID, email, displayName)
 	return scanMobileUser(row)
 }
@@ -161,7 +167,7 @@ func (r *MobileAuthRepository) UpsertPhoneUser(clinicID int, phone string) (*Mob
 		VALUES ($1, $2, NOW())
 		ON CONFLICT (clinic_id, phone)
 		DO UPDATE SET linked_at = COALESCE(mobile_users.linked_at, NOW())
-		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role
 	`, clinicID, phone)
 	return scanMobileUser(row)
 }
@@ -257,6 +263,12 @@ func (r *MobileAuthRepository) DeleteByClinic(clinicID int, userID int64) error 
 	`, clinicID, userID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(`
+		UPDATE grooming_appointments SET mobile_user_id = NULL
+		WHERE clinic_id = $1 AND mobile_user_id = $2
+	`, clinicID, userID); err != nil {
+		return err
+	}
 
 	res, err := tx.Exec(`DELETE FROM mobile_users WHERE id = $1 AND clinic_id = $2`, userID, clinicID)
 	if err != nil {
@@ -293,6 +305,77 @@ func (r *MobileAuthRepository) ListByClinicID(clinicID int, limit int) ([]Mobile
 		list = append(list, mobileUserToListItem(u))
 	}
 	return list, rows.Err()
+}
+
+// UpdateAppRole меняет роль PWA.
+func (r *MobileAuthRepository) UpdateAppRole(clinicID int, userID int64, role string) (*MobileUser, error) {
+	role = NormalizeAppRole(role)
+	if !IsValidAppRole(role) {
+		return nil, errors.New("недопустимая роль")
+	}
+	row := r.db.QueryRow(mobileUserSelect+`
+		WHERE id = $1 AND clinic_id = $2
+	`, userID, clinicID)
+	existing, err := scanMobileUser(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, sql.ErrNoRows
+	}
+	if err != nil {
+		return nil, err
+	}
+	_, err = r.db.Exec(`UPDATE mobile_users SET app_role = $3 WHERE id = $1 AND clinic_id = $2`, userID, clinicID, role)
+	if err != nil {
+		return nil, err
+	}
+	existing.AppRole = role
+	return existing, nil
+}
+
+// UpsertStaff создаёт или обновляет mobile-пользователя с ролью персонала.
+func (r *MobileAuthRepository) UpsertStaff(clinicID int, phone, email, displayName, role string) (*MobileUser, error) {
+	role = NormalizeAppRole(role)
+	if !IsStaffAppRole(role) && role != AppRoleClient {
+		return nil, errors.New("недопустимая роль")
+	}
+	if phone == "" && email == "" {
+		return nil, errors.New("нужен телефон или email")
+	}
+
+	var existing *MobileUser
+	var err error
+	if phone != "" {
+		existing, err = r.GetByPhone(clinicID, phone)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil && email != "" {
+		existing, err = r.GetByEmail(clinicID, email)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if existing != nil {
+		_, err = r.db.Exec(`
+			UPDATE mobile_users SET
+				app_role = $3,
+				display_name = COALESCE(NULLIF($4, ''), display_name),
+				phone = COALESCE(NULLIF($5, ''), phone),
+				email = COALESCE(NULLIF($6, ''), email)
+			WHERE id = $1 AND clinic_id = $2
+		`, existing.ID, clinicID, role, displayName, phone, email)
+		if err != nil {
+			return nil, err
+		}
+		return r.GetByID(existing.ID)
+	}
+
+	row := r.db.QueryRow(`
+		INSERT INTO mobile_users (clinic_id, phone, email, display_name, app_role, linked_at)
+		VALUES ($1, NULLIF($2, ''), NULLIF($3, ''), NULLIF($4, ''), $5, NOW())
+		RETURNING id, clinic_id, phone, telegram_user_id, vk_user_id, display_name, email, photo_url, linked_at, created_at, app_role
+	`, clinicID, phone, email, displayName, role)
+	return scanMobileUser(row)
 }
 
 // SaveAuthCode сохраняет хеш OTP. login — телефон или email; phone заполняется для telegram/whatsapp.

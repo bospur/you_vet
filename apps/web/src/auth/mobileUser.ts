@@ -1,3 +1,5 @@
+export type AppRole = 'client' | 'doctor' | 'groomer' | 'chief_vet';
+
 export interface MobileUserProfile {
   id: number;
   name: string | null;
@@ -5,7 +7,32 @@ export interface MobileUserProfile {
   email: string | null;
   vkId: number | null;
   telegramUserId: number | null;
+  appRole: AppRole;
 }
+
+export function normalizeAppRole(role: unknown): AppRole {
+  if (role === 'doctor' || role === 'groomer' || role === 'chief_vet') return role;
+  return 'client';
+}
+
+export function isStaffRole(role: AppRole | undefined): boolean {
+  return role === 'doctor' || role === 'groomer' || role === 'chief_vet';
+}
+
+export function isMedicalStaff(role: AppRole | undefined): boolean {
+  return role === 'doctor' || role === 'chief_vet';
+}
+
+export function isGroomingStaff(role: AppRole | undefined): boolean {
+  return role === 'groomer' || role === 'chief_vet';
+}
+
+export const APP_ROLE_LABELS: Record<AppRole, string> = {
+  client: 'Клиент',
+  doctor: 'Врач',
+  groomer: 'Грумер',
+  chief_vet: 'Главврач',
+};
 
 export function parseMobileAccessToken(token: string): MobileUserProfile | null {
   try {
@@ -23,6 +50,7 @@ export function parseMobileAccessToken(token: string): MobileUserProfile | null 
       email: typeof payload.email === 'string' && payload.email.trim() ? payload.email.trim() : null,
       vkId: payload.vk_id != null ? Number(payload.vk_id) : null,
       telegramUserId: payload.tg_id != null ? Number(payload.tg_id) : null,
+      appRole: normalizeAppRole(payload.app_role),
     };
   } catch {
     return null;

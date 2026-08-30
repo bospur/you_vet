@@ -3,7 +3,9 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 )
 
 // ErrGroomingConflict возвращается при пересечении записей по времени
@@ -75,8 +77,10 @@ type GroomingAppointment struct {
 	Date       string   `json:"date"`
 	PetName    string   `json:"pet_name"`
 	OwnerPhone string   `json:"owner_phone"`
-	StartTime  string   `json:"start_time"`
-	EndTime    string   `json:"end_time"`
+	StartTime    string  `json:"start_time"`
+	EndTime      string  `json:"end_time"`
+	MobileUserID *int64  `json:"mobile_user_id,omitempty"`
+	Status       string  `json:"status"`
 }
 
 // GroomingAppointmentInput — данные для создания записи
@@ -85,7 +89,9 @@ type GroomingAppointmentInput struct {
 	Date       string `json:"date"`
 	PetName    string `json:"pet_name"`
 	OwnerPhone string `json:"owner_phone"`
-	StartTime  string `json:"start_time"`
+	StartTime    string `json:"start_time"`
+	MobileUserID *int64 `json:"mobile_user_id,omitempty"`
+	Status       string `json:"status,omitempty"`
 }
 
 // GroomingRepository — запросы к таблицам груминга
@@ -289,7 +295,8 @@ func (r *GroomingRepository) GetAppointmentsByMonth(clinicID int, month string) 
 			a.id, a.clinic_id, a.breed_id,
 			b.breed, b.service_name, b.duration, b.price_from, b.price_to,
 			a.date::text, a.pet_name, a.owner_phone,
-			a.start_time::text, a.end_time::text
+			a.start_time::text, a.end_time::text,
+			a.mobile_user_id, a.status
 		FROM grooming_appointments a
 		JOIN grooming_breeds b ON b.id = a.breed_id
 		WHERE a.clinic_id = $1
@@ -309,6 +316,7 @@ func (r *GroomingRepository) GetAppointmentsByMonth(clinicID int, month string) 
 			&a.Breed, &a.ServiceName, &a.Duration, &a.PriceFrom, &a.PriceTo,
 			&a.Date, &a.PetName, &a.OwnerPhone,
 			&a.StartTime, &a.EndTime,
+			&a.MobileUserID, &a.Status,
 		); err != nil {
 			return nil, err
 		}
@@ -376,6 +384,7 @@ func (r *GroomingRepository) CreateAppointment(clinicID int, input GroomingAppoi
 		SELECT EXISTS (
 			SELECT 1 FROM grooming_appointments
 			WHERE clinic_id=$1 AND date=$2::date
+			  AND status <> 'cancelled'
 			  AND start_time < $3::time
 			  AND end_time   > $4::time
 		)
@@ -387,18 +396,22 @@ func (r *GroomingRepository) CreateAppointment(clinicID int, input GroomingAppoi
 		return nil, ErrGroomingConflict
 	}
 
-	// Создаём запись
+	status := input.Status
+	if status == "" {
+		status = "confirmed"
+	}
+
 	var a GroomingAppointment
 	err = r.db.QueryRow(`
 		INSERT INTO grooming_appointments
-			(clinic_id, breed_id, date, pet_name, owner_phone, start_time, end_time)
-		VALUES ($1, $2, $3::date, $4, $5, $6::time, $7::time)
+			(clinic_id, breed_id, date, pet_name, owner_phone, start_time, end_time, mobile_user_id, status)
+		VALUES ($1, $2, $3::date, $4, $5, $6::time, $7::time, $8, $9)
 		RETURNING id, clinic_id, breed_id, date::text, pet_name, owner_phone,
-		          start_time::text, end_time::text
+		          start_time::text, end_time::text, mobile_user_id, status
 	`, clinicID, input.BreedID, input.Date, input.PetName, input.OwnerPhone,
-		input.StartTime, endTime).
+		input.StartTime, endTime, input.MobileUserID, status).
 		Scan(&a.ID, &a.ClinicID, &a.BreedID, &a.Date, &a.PetName, &a.OwnerPhone,
-			&a.StartTime, &a.EndTime)
+			&a.StartTime, &a.EndTime, &a.MobileUserID, &a.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -473,4 +486,277 @@ func (r *GroomingRepository) GetTemplateBySlug(clinicSlug string) ([]GroomingTem
 		slots = append(slots, s)
 	}
 	return slots, nil
+}
+
+func (r *GroomingRepository) GetClinicIDBySlug(slug string) (int, error) {
+	var id int
+	err := r.db.QueryRow(`SELECT id FROM clinics WHERE slug = $1`, slug).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, sql.ErrNoRows
+	}
+	return id, err
+}
+
+type GroomingSlot struct {
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+	Available bool   `json:"available"`
+}
+
+type GroomingAvailability struct {
+	Date        string         `json:"date"`
+	TimeFrom    string         `json:"time_from"`
+	TimeTo      string         `json:"time_to"`
+	DurationMin int            `json:"duration_min"`
+	Slots       []GroomingSlot `json:"slots"`
+}
+
+func (r *GroomingRepository) GetAvailability(clinicID int, date string, breedID int) (*GroomingAvailability, error) {
+	var duration int
+	err := r.db.QueryRow(
+		`SELECT duration FROM grooming_breeds WHERE id=$1 AND clinic_id=$2`,
+		breedID, clinicID,
+	).Scan(&duration)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, errors.New("порода не найдена")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var timeFrom, timeTo string
+	err = r.db.QueryRow(`
+		SELECT time_from::text, time_to::text
+		FROM grooming_weekly_template
+		WHERE clinic_id=$1 AND day_of_week = EXTRACT(DOW FROM $2::date)
+	`, clinicID, date).Scan(&timeFrom, &timeTo)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrGroomingNotWorkingDay
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	times := generateGroomingSlotTimes(timeFrom, timeTo, duration)
+	busy, err := r.busyIntervals(clinicID, date)
+	if err != nil {
+		return nil, err
+	}
+
+	today := time.Now().Format("2006-01-02")
+	nowMin := time.Now().Hour()*60 + time.Now().Minute()
+
+	slots := make([]GroomingSlot, 0, len(times))
+	for _, start := range times {
+		end, ok := addMinutes(start, duration)
+		if !ok {
+			continue
+		}
+		available := !overlapsBusy(start, end, busy)
+		if date == today {
+			if startMin, ok := clockToMinutes(start); ok && startMin <= nowMin {
+				available = false
+			}
+		}
+		slots = append(slots, GroomingSlot{StartTime: start, EndTime: end, Available: available})
+	}
+
+	return &GroomingAvailability{
+		Date:        date,
+		TimeFrom:    trimClock(timeFrom),
+		TimeTo:      trimClock(timeTo),
+		DurationMin: duration,
+		Slots:       slots,
+	}, nil
+}
+
+type timeInterval struct{ from, to int }
+
+func (r *GroomingRepository) busyIntervals(clinicID int, date string) ([]timeInterval, error) {
+	rows, err := r.db.Query(`
+		SELECT start_time::text, end_time::text
+		FROM grooming_appointments
+		WHERE clinic_id=$1 AND date=$2::date AND status <> 'cancelled'
+	`, clinicID, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []timeInterval
+	for rows.Next() {
+		var fromS, toS string
+		if err := rows.Scan(&fromS, &toS); err != nil {
+			return nil, err
+		}
+		from, ok1 := clockToMinutes(fromS)
+		to, ok2 := clockToMinutes(toS)
+		if ok1 && ok2 {
+			out = append(out, timeInterval{from: from, to: to})
+		}
+	}
+	return out, rows.Err()
+}
+
+func overlapsBusy(start, end string, busy []timeInterval) bool {
+	s, ok1 := clockToMinutes(start)
+	e, ok2 := clockToMinutes(end)
+	if !ok1 || !ok2 {
+		return true
+	}
+	for _, b := range busy {
+		if s < b.to && e > b.from {
+			return true
+		}
+	}
+	return false
+}
+
+func generateGroomingSlotTimes(from, to string, durationMin int) []string {
+	if durationMin <= 0 {
+		durationMin = 30
+	}
+	start, ok1 := clockToMinutes(from)
+	end, ok2 := clockToMinutes(to)
+	if !ok1 || !ok2 || end <= start {
+		return nil
+	}
+	var times []string
+	for t := start; t+durationMin <= end; t += durationMin {
+		times = append(times, formatGroomingClock(t))
+	}
+	return times
+}
+
+func clockToMinutes(s string) (int, bool) {
+	s = trimClock(s)
+	var h, m int
+	if _, err := fmt.Sscanf(s, "%d:%d", &h, &m); err != nil {
+		return 0, false
+	}
+	if h < 0 || h > 23 || m < 0 || m > 59 {
+		return 0, false
+	}
+	return h*60 + m, true
+}
+
+func formatGroomingClock(totalMin int) string {
+	h := totalMin / 60
+	m := totalMin % 60
+	return fmt.Sprintf("%02d:%02d", h, m)
+}
+
+func addMinutes(start string, duration int) (string, bool) {
+	min, ok := clockToMinutes(start)
+	if !ok {
+		return "", false
+	}
+	return formatGroomingClock(min + duration), true
+}
+
+func trimClock(s string) string {
+	if len(s) >= 5 {
+		return s[:5]
+	}
+	return s
+}
+
+func scanGroomingAppointment(row interface{ Scan(dest ...any) error }) (*GroomingAppointment, error) {
+	var a GroomingAppointment
+	err := row.Scan(
+		&a.ID, &a.ClinicID, &a.BreedID,
+		&a.Breed, &a.ServiceName, &a.Duration, &a.PriceFrom, &a.PriceTo,
+		&a.Date, &a.PetName, &a.OwnerPhone,
+		&a.StartTime, &a.EndTime,
+		&a.MobileUserID, &a.Status,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+const groomingAppointmentSelect = `
+	SELECT
+		a.id, a.clinic_id, a.breed_id,
+		b.breed, b.service_name, b.duration, b.price_from, b.price_to,
+		a.date::text, a.pet_name, a.owner_phone,
+		a.start_time::text, a.end_time::text,
+		a.mobile_user_id, a.status
+	FROM grooming_appointments a
+	JOIN grooming_breeds b ON b.id = a.breed_id
+`
+
+func (r *GroomingRepository) GetAppointmentsByDate(clinicID int, date string) ([]GroomingAppointment, error) {
+	rows, err := r.db.Query(groomingAppointmentSelect+`
+		WHERE a.clinic_id = $1 AND a.date = $2::date
+		ORDER BY a.start_time
+	`, clinicID, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []GroomingAppointment
+	for rows.Next() {
+		a, err := scanGroomingAppointment(rows)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, *a)
+	}
+	return list, rows.Err()
+}
+
+func (r *GroomingRepository) ListAppointmentsByUser(clinicID int, userID int64) ([]GroomingAppointment, error) {
+	rows, err := r.db.Query(groomingAppointmentSelect+`
+		WHERE a.clinic_id = $1 AND a.mobile_user_id = $2
+		ORDER BY a.date DESC, a.start_time DESC
+		LIMIT 100
+	`, clinicID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []GroomingAppointment
+	for rows.Next() {
+		a, err := scanGroomingAppointment(rows)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, *a)
+	}
+	return list, rows.Err()
+}
+
+func (r *GroomingRepository) GetAppointmentByID(clinicID int, id string) (*GroomingAppointment, error) {
+	row := r.db.QueryRow(groomingAppointmentSelect+`
+		WHERE a.clinic_id = $1 AND a.id = $2
+	`, clinicID, id)
+	a, err := scanGroomingAppointment(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	return a, err
+}
+
+func (r *GroomingRepository) UpdateAppointmentStatus(clinicID int, id, status string) (*GroomingAppointment, error) {
+	switch status {
+	case "pending", "confirmed", "cancelled":
+	default:
+		return nil, errors.New("недопустимый статус")
+	}
+	res, err := r.db.Exec(`
+		UPDATE grooming_appointments SET status = $3
+		WHERE clinic_id = $1 AND id = $2
+	`, clinicID, id, status)
+	if err != nil {
+		return nil, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return r.GetAppointmentByID(clinicID, id)
 }

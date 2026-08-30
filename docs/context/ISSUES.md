@@ -1,6 +1,6 @@
 # Известные проблемы и техдолг
 
-> Последнее обновление: 2026-08-29 вечер (PWA prod, десктоп-макеты)
+> Последнее обновление: 2026-08-30 (email OTP / Aeza SMTP)
 
 Легенда: 🔴 P0 · 🟠 P1 · 🟡 P2 · ⚪ P3
 
@@ -97,7 +97,9 @@
 | DOC-12 | ⚪ | Канбан: теги, описание, фильтр, шторка, адаптив | **in code** — миграция **026**, deploy server+docs |
 | DOC-13 | ⚪ | Канбан: шаринг карточки `/board?task=<id>` | **in code** — `37d5c7b`; deploy docs |
 | WEB-01 | 🟡 | Выкладка PWA `web.bospur.ru` | **fixed 2026-08-29** — nginx+cert, CORS, `deploy-web` |
-| WEB-02 | ⚪ | Десктоп UI «как админка» | **in progress** — Figma A/B, вёрстка не начата |
+| WEB-02 | ⚪ | Десктоп UI «как админка» | **частично** — TopBar+hero, без левого сайдбара |
+| WEB-03 | 🟠 | Email OTP: исходящие 465/587 с VPS закрыты Aeza | **ждём заявку** — ufw inactive, OUTPUT ACCEPT; не SMTP в Ubuntu |
+| WEB-04 | 🟡 | Фикс SMTP (таймаут, порт 465, AUTH LOGIN) | **локально, не в git** — `mailer/smtp.go` |
 
 ## Mobile (PRD-06)
 
@@ -133,7 +135,6 @@
 
 ## Следующие шаги
 
-1. Десктоп PWA: выбрать Figma A/B → `apps/web`
-2. VK origin/redirect для `web.bospur.ru`
-3. Booking (C1) в PWA
-4. **ADM-02** · C1 smoke Mini App
+1. Aeza откроет SMTP → `SMTP_PORT=465` + деплой фикса mailer
+2. Booking (C1) в PWA
+3. **ADM-02** · C1 smoke Mini App

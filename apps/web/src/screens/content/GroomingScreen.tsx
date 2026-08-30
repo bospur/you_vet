@@ -11,6 +11,20 @@ export default function GroomingScreen() {
       <NavList
         items={[
           {
+            key: 'book',
+            icon: '📅',
+            title: 'Записаться',
+            subtitle: 'Выбор услуги, даты и слота',
+            onClick: () => navigate('/grooming/book'),
+          },
+          {
+            key: 'mine',
+            icon: '📋',
+            title: 'Мои записи',
+            subtitle: 'Статус заявок на груминг',
+            onClick: () => navigate('/grooming/requests'),
+          },
+          {
             key: 'breeds',
             icon: '🐕',
             title: 'Услуги и породы',

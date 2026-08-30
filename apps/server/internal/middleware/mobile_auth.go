@@ -20,6 +20,7 @@ type MobileClaims struct {
 	Phone          string
 	DisplayName    string
 	ClinicID       int
+	AppRole        string
 }
 
 func MobileClaimsFromContext(r *http.Request) *MobileClaims {
@@ -88,9 +89,36 @@ func MobileAuth(secret string, next http.HandlerFunc) http.HandlerFunc {
 		if v, ok := mapClaims["name"].(string); ok {
 			claims.DisplayName = v
 		}
+		if v, ok := mapClaims["app_role"].(string); ok && v != "" {
+			claims.AppRole = v
+		} else {
+			claims.AppRole = "client"
+		}
 
 		ctx := context.WithValue(r.Context(), MobileClaimsKey, claims)
 		next(w, r.WithContext(ctx))
+	}
+}
+
+// RequireAppRoles допускает только указанные роли PWA (после MobileAuth).
+func RequireAppRoles(roles ...string) func(http.HandlerFunc) http.HandlerFunc {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		allowed[role] = struct{}{}
+	}
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			claims := MobileClaimsFromContext(r)
+			if claims == nil {
+				http.Error(w, "требуется авторизация", http.StatusUnauthorized)
+				return
+			}
+			if _, ok := allowed[claims.AppRole]; !ok {
+				http.Error(w, "недостаточно прав", http.StatusForbidden)
+				return
+			}
+			next(w, r)
+		}
 	}
 }
 

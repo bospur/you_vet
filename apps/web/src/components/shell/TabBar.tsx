@@ -1,11 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { NAV_TABS } from './nav';
+import { useAppRole } from '../../auth/useAppRole';
+import { navTabsForRole } from './nav';
 import styles from './TabBar.module.css';
 
 export function TabBar() {
+  const { role } = useAppRole();
+  const tabs = navTabsForRole(role);
   return (
     <nav className={styles.tabBar} aria-label="Основная навигация">
-      {NAV_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <NavLink
           key={tab.to}
           to={tab.to}

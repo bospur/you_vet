@@ -30,7 +30,9 @@ export async function authRequestCode(payload: {
   phone?: string;
   email?: string;
 }): Promise<{ expires_in: number }> {
-  const { data } = await axios.post<{ expires_in: number }>(`${authBaseURL}/request`, payload);
+  const { data } = await axios.post<{ expires_in: number }>(`${authBaseURL}/request`, payload, {
+    timeout: 20000,
+  });
   return data;
 }
 
@@ -47,7 +49,10 @@ export async function authVerifyCode(payload: {
 export function parseAuthError(err: unknown): string {
   if (axios.isAxiosError(err)) {
     if (!err.response) {
-      if (err.code === 'ERR_NETWORK') {
+      if (err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK') {
+        if (err.code === 'ECONNABORTED') {
+          return 'Сервер не ответил вовремя. Проверьте SMTP (порт 465) или попробуйте позже';
+        }
         return 'Нет связи с сервером. Проверьте интернет или перезапустите приложение';
       }
       return 'Не удалось связаться с сервером';

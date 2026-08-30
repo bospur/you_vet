@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { onSessionExpired } from './sessionEvents';
 
-const PROTECTED_PREFIXES = ['/profile', '/booking', '/question'];
+const PROTECTED_PREFIXES = ['/profile', '/booking', '/question', '/chats', '/staff', '/grooming/book', '/grooming/requests'];
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(

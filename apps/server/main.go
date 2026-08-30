@@ -95,6 +95,7 @@ func main() {
 	groomingHandler := handler.NewGroomingHandler(groomingRepo)
 	clinicInfoHandler := handler.NewClinicInfoHandler(clinicInfoRepo, uploadsDir)
 	mobileAuthRepo := repository.NewMobileAuthRepository(database)
+	chatRepo := repository.NewChatRepository(database)
 
 	clinicID, err := bookingRepo.GetClinicIDBySlug(clinicSlug)
 	if err != nil {
@@ -123,6 +124,7 @@ func main() {
 
 	bookingHandler := handler.NewBookingHandler(bookingRepo, tgBot)
 	questionHandler := handler.NewClientQuestionHandler(questionRepo, mobileAuthRepo, tgBot)
+	chatHandler := handler.NewChatHandler(chatRepo, tgBot)
 	vkClient := vkid.NewClientFromEnv()
 	if vkClient == nil {
 		log.Println("VK ID: VK_APP_ID/VK_APP_SECRET не заданы — вход через VK отключён")
@@ -185,12 +187,28 @@ func main() {
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/schedule", mobilePublic(doctorHandler.GetPublicSchedule))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/grooming/breeds", mobilePublic(groomingHandler.GetPublicBreeds))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/grooming/schedule", mobilePublic(groomingHandler.GetPublicSchedule))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/grooming/availability", mobilePublic(groomingHandler.GetPublicAvailability))
+	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/grooming/appointments", mobileAuth(groomingHandler.ListMyAppointments))
+	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/grooming/appointments", mobileAuth(groomingHandler.CreatePublicAppointment))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/service-types", mobilePublic(bookingHandler.GetPublicServiceTypes))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/availability", mobilePublic(bookingHandler.GetPublicAvailability))
 	http.HandleFunc("GET /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.ListPublicRequests))
 	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/booking/requests", mobileAuth(bookingHandler.CreatePublicRequest))
 	http.HandleFunc("PATCH /api/mobile/v1/clinics/{clinicSlug}/booking/requests/{id}", mobileAuth(bookingHandler.CancelPublicRequest))
 	http.HandleFunc("POST /api/mobile/v1/clinics/{clinicSlug}/questions", mobileAuth(questionHandler.CreateMobileQuestion))
+
+	http.HandleFunc("GET /api/mobile/v1/staff/booking/requests", mobileAuth(bookingHandler.ListStaffRequests))
+	http.HandleFunc("PATCH /api/mobile/v1/staff/booking/requests/{id}", mobileAuth(bookingHandler.PatchStaffRequest))
+	http.HandleFunc("GET /api/mobile/v1/staff/grooming/appointments", mobileAuth(groomingHandler.ListStaffAppointments))
+	http.HandleFunc("PATCH /api/mobile/v1/staff/grooming/appointments/{id}", mobileAuth(groomingHandler.PatchStaffAppointment))
+
+	http.HandleFunc("GET /api/mobile/v1/chats", mobileAuth(chatHandler.ListRooms))
+	http.HandleFunc("POST /api/mobile/v1/chats/consult", mobileAuth(chatHandler.OpenConsult))
+	http.HandleFunc("POST /api/mobile/v1/chats/wall/messages", mobileAuth(chatHandler.PostWall))
+	http.HandleFunc("GET /api/mobile/v1/chats/{id}/messages", mobileAuth(chatHandler.ListMessages))
+	http.HandleFunc("POST /api/mobile/v1/chats/{id}/messages", mobileAuth(chatHandler.PostMessage))
+	http.HandleFunc("POST /api/mobile/v1/chats/{id}/messages/{mid}/hide", mobileAuth(chatHandler.HideMessage))
+	http.HandleFunc("PATCH /api/mobile/v1/chats/{id}", mobileAuth(chatHandler.PatchRoom))
 
 	// ── Docs portal ─────────────────────────────────────────────────────────────
 	docsAuth := func(h http.HandlerFunc) http.HandlerFunc {
@@ -247,6 +265,8 @@ func main() {
 	http.HandleFunc("GET /api/admin/stats/mobile/summary", adminAuth(statsHandler.GetMobileSummary))
 	http.HandleFunc("GET /api/admin/stats/mobile/users", adminAuth(statsHandler.ListMobileUsers))
 	http.HandleFunc("DELETE /api/admin/stats/mobile/users/{id}", adminAuth(statsHandler.DeleteMobileUser))
+	http.HandleFunc("PATCH /api/admin/stats/mobile/users/{id}/role", adminAuth(statsHandler.PatchMobileUserRole))
+	http.HandleFunc("POST /api/admin/stats/mobile/staff", adminAuth(statsHandler.InviteMobileStaff))
 
 	// Users (только admin)
 	http.HandleFunc("GET /api/admin/users", adminAuth(adminHandler.GetAdminUsers))

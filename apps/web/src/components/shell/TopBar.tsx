@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import type { ClinicInfo } from '@you-vet/types';
 import { API_URL } from '../../api/client';
+import { useAppRole } from '../../auth/useAppRole';
 import { ProfileHeaderButton } from './AppBar';
-import { NAV_TABS } from './nav';
+import { navTabsForRole } from './nav';
 import styles from './TopBar.module.css';
 
 interface TopBarProps {
@@ -10,6 +11,8 @@ interface TopBarProps {
 }
 
 export function TopBar({ info }: TopBarProps) {
+  const { role } = useAppRole();
+  const tabs = navTabsForRole(role);
   const phone = info?.phone?.replace(/\s/g, '');
   const logoUrl = info?.logo_url ? `${API_URL}${info.logo_url}` : null;
 
@@ -25,7 +28,7 @@ export function TopBar({ info }: TopBarProps) {
       </NavLink>
 
       <nav className={styles.nav} aria-label="Основная навигация">
-        {NAV_TABS.map((tab) => (
+        {tabs.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}

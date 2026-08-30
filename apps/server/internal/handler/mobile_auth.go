@@ -487,6 +487,7 @@ func (h *MobileAuthHandler) issueTokenPair(user *repository.MobileUser) (tokenRe
 	if user.DisplayName.Valid && user.DisplayName.String != "" {
 		accessClaims["name"] = user.DisplayName.String
 	}
+	accessClaims["app_role"] = repository.NormalizeAppRole(user.AppRole)
 	refreshClaims := jwt.MapClaims{
 		"typ": "refresh",
 		"sub": user.ID,

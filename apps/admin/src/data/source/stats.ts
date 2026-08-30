@@ -21,15 +21,19 @@ export const fetchStatsSummary = () =>
 export const fetchTelegramAppUsers = () =>
   axiosInstance.get<TelegramAppUser[]>('/api/admin/stats/users').then((r) => r.data ?? []);
 
+export type MobileAppRole = 'client' | 'doctor' | 'groomer' | 'chief_vet';
+
 export interface MobileAppUser {
   id: number;
   display_name: string;
   phone: string;
+  email?: string;
   telegram_user_id?: number;
   vk_user_id?: number;
   photo_url: string;
   linked_at?: string;
   created_at: string;
+  app_role?: MobileAppRole;
 }
 
 export const fetchMobileStatsSummary = () =>
@@ -40,3 +44,16 @@ export const fetchMobileAppUsers = () =>
 
 export const deleteMobileAppUser = (id: number) =>
   axiosInstance.delete(`/api/admin/stats/mobile/users/${id}`);
+
+export const patchMobileAppRole = (id: number, app_role: MobileAppRole) =>
+  axiosInstance
+    .patch<MobileAppUser>(`/api/admin/stats/mobile/users/${id}/role`, { app_role })
+    .then((r) => r.data);
+
+export const inviteMobileStaff = (body: {
+  phone?: string;
+  email?: string;
+  display_name?: string;
+  app_role: MobileAppRole;
+}) =>
+  axiosInstance.post<MobileAppUser>('/api/admin/stats/mobile/staff', body).then((r) => r.data);

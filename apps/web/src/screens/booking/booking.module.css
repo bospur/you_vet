@@ -1,0 +1,295 @@
+.wrapper {
+  padding: var(--vet-page-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vet-text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vet-text-hint);
+  background: var(--vet-surface-card);
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.tabActive {
+  color: #fff;
+  background: var(--vet-accent);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vet-accent);
+  margin: 4px 0 0;
+  text-transform: uppercase;
+}
+
+.empty {
+  font-size: 15px;
+  color: var(--vet-text-hint);
+  text-align: center;
+  padding: 24px 0;
+}
+
+.formError {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #b71c1c;
+  background: #ffebee;
+}
+
+.ageWarn {
+  margin: 0;
+  font-size: 13px;
+  color: #b8860b;
+}
+
+.card,
+.dayRow {
+  background: var(--vet-accent-soft);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: none;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+
+.cardStatic {
+  cursor: default;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vet-text-body);
+  flex: 1;
+}
+
+.cardMeta,
+.cardHint,
+.instructions {
+  font-size: 13px;
+  color: var(--vet-text-hint);
+  line-height: 1.4;
+}
+
+.cardHint {
+  color: var(--vet-accent);
+}
+
+.instructions {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--vet-surface-card);
+  border-radius: 10px;
+}
+
+.remaining {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--vet-accent);
+  white-space: nowrap;
+}
+
+.form,
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vet-text-hint);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--vet-text-body);
+  background: var(--vet-bg);
+  border: 1.5px solid var(--vet-accent-border);
+  border-radius: 12px;
+}
+
+.textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.submit {
+  margin-top: 4px;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--vet-accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.5;
+}
+
+.submitHint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--vet-text-hint);
+  text-align: center;
+}
+
+.back {
+  margin-top: 8px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vet-accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.statusBadge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.statusPending { background: rgba(255, 193, 7, 0.2); color: #b8860b; }
+.statusConfirmed { background: rgba(76, 175, 80, 0.2); color: var(--vet-accent); }
+.statusRejected { background: rgba(244, 67, 54, 0.15); color: #c62828; }
+.statusCancelled { background: var(--vet-surface-card); color: var(--vet-text-hint); }
+.statusRescheduled { background: rgba(33, 150, 243, 0.15); color: #1565c0; }
+
+.rejectReason {
+  font-size: 13px;
+  color: #c62828;
+  margin: 0;
+}
+
+.cancelRequestBtn,
+.ghostBtn {
+  margin-top: 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #c62828;
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.35);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.okBtn {
+  margin-top: 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--vet-accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cancelConfirmRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.rowActions button {
+  flex: 1;
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.composer .input {
+  flex: 1;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 240px;
+}
+
+.bubble {
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--vet-surface-card);
+}
+
+.bubbleMine {
+  align-self: flex-end;
+  background: var(--vet-accent-soft);
+}
+
+.bubbleMeta {
+  font-size: 11px;
+  color: var(--vet-text-hint);
+  margin-bottom: 4px;
+}
+
+.hiddenMsg {
+  font-style: italic;
+  color: var(--vet-text-hint);
+}
