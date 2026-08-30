@@ -62,7 +62,6 @@ export default function DoctorScreen() {
     if (autoWriteStarted.current) return;
     if (!isAuthenticated || isStaff || !doctor || searchParams.get('write') !== '1') return;
     autoWriteStarted.current = true;
-    setWriteError(null);
     write.mutate();
   }, [isAuthenticated, isStaff, doctor, searchParams, write]);
 
